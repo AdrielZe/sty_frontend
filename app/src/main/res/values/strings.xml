@@ -1,0 +1,16 @@
+<resources>
+    <string name="app_name">GymTracker</string>
+
+    <string name="title_home">Meus Treinos</string>
+    <string name="title_active_workout">Treino Atual</string>
+
+    <string name="action_start_workout">Iniciar Treino</string>
+    <string name="action_finish_workout">Finalizar Treino</string>
+    <string name="action_add_set">Adicionar Série</string>
+
+    <string name="label_weight">Peso (kg)</string>
+    <string name="label_reps">Repetições</string>
+    <string name="label_exercise_name">Nome do Exercício</string>
+
+    <string name="empty_workout_state">Nenhum treino registrado ainda.</string>
+</resources>
