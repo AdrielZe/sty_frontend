@@ -49,9 +49,8 @@ fun GymTrackerNavHost() {
 
             WorkoutScreen(
                 workoutUiState,
-                onRepsChange = {id, newValue ->
-                    workoutViewModel.updateExerciseReps(id, newValue)
-                }
+                onRepsChange = {id, newReps -> workoutViewModel.updateExercise(exerciseId = id, newReps = newReps)},
+                onWeightChange = {id, newWeight -> workoutViewModel.updateExercise(exerciseId = id, newWeight = newWeight)}
             )
         }
     }

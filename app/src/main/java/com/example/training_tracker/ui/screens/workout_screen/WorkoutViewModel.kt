@@ -38,18 +38,26 @@ class WorkoutViewModel(
             initialValue = WorkoutUiState()
         )
 
-    fun updateExerciseReps(exerciseId: String, newReps: String) {
+    fun updateExercise(exerciseId: String, newReps: String? = null, newWeight: String ?= null) {
         val currentWorkout = uiState.value.workout ?: return
 
-        val updatedExercise = currentWorkout.exercises.map { exercise ->
+        val updatedExercises = currentWorkout.exercises.map {exercise ->
             if (exercise.id == exerciseId) {
-                exercise.copy(repsDone = newReps)
-            } else exercise
+                exercise.copy(
+                    reps = newReps ?: exercise.reps,
+                    weight = newWeight ?: exercise.weight
+                )
+            } else {
+                exercise
+            }
         }
 
-        val updatedWorkout = currentWorkout.copy(exercises = updatedExercise)
+        val updatedWorkout = currentWorkout.copy(
+            exercises = updatedExercises
+        )
 
         workoutRepository.updateWorkout(updatedWorkout)
+
     }
 
     companion object {

@@ -12,10 +12,10 @@ import kotlinx.coroutines.flow.update
 class WorkoutRepository {
     private val initialWorkouts = listOf(
         Workout(id = "1", name = "Treino de Peito", exercises = listOf<Exercise>(
-            Exercise(name = "Supino reto", reps = "10"),
-            Exercise(name = "Supino inclinado", reps = "12"),
-            Exercise(name = "Voador", reps = "15"),
-            Exercise(name = "Crucifixo", reps = "10")
+            Exercise(name = "Supino reto",),
+            Exercise(name = "Supino inclinado"),
+            Exercise(name = "Voador"),
+            Exercise(name = "Crucifixo")
         )),
         Workout(id = "2", name = "Treino de Costas"),
         Workout(id = "3", name = "Perna Completo")
@@ -31,7 +31,7 @@ class WorkoutRepository {
 
     fun updateWorkout(updatedWorkout: Workout) {
         _workouts.value = _workouts.value.map { workout ->
-            if(workout.id == updatedWorkout.id) {
+            if(workout.id == updatedWorkout.id){
                 updatedWorkout
             } else {
                 workout
