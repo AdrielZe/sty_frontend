@@ -2,6 +2,7 @@ package com.example.training_tracker.ui.screens.workout_screen
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.runtime.*
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -22,11 +23,16 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AddCircle
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -34,6 +40,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -51,9 +59,11 @@ import com.example.training_tracker.ui.theme.Typography
 @Composable
 fun WorkoutScreen(
     workoutUiState: WorkoutUiState,
-    onWeightChange: (String, String) -> Unit,
-    onRepsChange: (String, String) -> Unit)
-{
+    onWeightChange: (String, Int, String) -> Unit,
+    onRepsChange: (String, Int, String) -> Unit,
+    onAddSetClick: (String) -> Unit,
+    onRemoveSet: (String, Int) -> Unit
+) {
     Scaffold { innerPadding ->
         Column(
             modifier = Modifier
@@ -69,8 +79,26 @@ fun WorkoutScreen(
                     ExerciseCard(
                         modifier = Modifier,
                         exercise = exercise,
-                        onRepsChange = { newValue -> onRepsChange(exercise.id, newValue) },
-                        onWeightChange = { newValue -> onWeightChange(exercise.id, newValue)}
+                        onRepsChange = { setNumber, newValue ->
+                            onRepsChange(
+                                exercise.id,
+                                setNumber,
+                                newValue,
+                            )
+                        },
+                        onWeightChange = { setNumber, newValue ->
+                            onWeightChange(
+                                exercise.id,
+                                setNumber,
+                                newValue,
+                            )
+                        },
+                        onAddSetClick = { id ->
+                            onAddSetClick(
+                                id,
+                            )
+                        },
+                        onRemoveSet = onRemoveSet
                     )
                 }
             }
@@ -111,9 +139,15 @@ fun WorkoutNameCard(modifier: Modifier = Modifier, workout: Workout?) {
 fun ExerciseCard(
     modifier: Modifier = Modifier,
     exercise: Exercise,
-    onRepsChange: (String) -> Unit,
-    onWeightChange: (String) -> Unit
+    expanded: Boolean = false,
+    onRepsChange: (Int, String) -> Unit,
+    onWeightChange: (Int, String) -> Unit,
+    onAddSetClick: (String) -> Unit,
+    onRemoveSet: (String, Int) -> Unit
 ) {
+    var isDeleteMode by remember { mutableStateOf(false) }
+    var isMenuExpanded by remember { mutableStateOf(false)}
+
     Card(
         modifier = modifier
             .padding(16.dp)
@@ -126,14 +160,54 @@ fun ExerciseCard(
             verticalArrangement = Arrangement.Center
         ) {
 
-            Text(
-                text = exercise.name,
-                style = Typography.titleLarge
-            )
+            Row(modifier = Modifier
+                .fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = exercise.name,
+                    style = Typography.titleLarge
+                )
+                    Box {
+                        IconButton(onClick = { isMenuExpanded = true}) {
+                            Surface(
+                                shape = CircleShape,
+                                color = MaterialTheme.colorScheme.surfaceVariant,
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .clip(CircleShape)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Person,
+                                    contentDescription = "Perfil",
+                                    tint = CyanAccent,
+                                    modifier = Modifier.padding(8.dp)
+                                )
+                            }
+                        }
+
+                        DropdownMenu(
+                            expanded = isMenuExpanded,
+                            onDismissRequest = { isMenuExpanded = false }
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text(if (isDeleteMode) "Sair da edição" else "Remover séries") },
+                                onClick = {
+                                    isDeleteMode = !isDeleteMode
+                                    isMenuExpanded = false
+                                },
+                                leadingIcon = {
+                                    Icon( if (isDeleteMode) Icons.Default.CheckCircle else Icons.Default.Delete, contentDescription = null)
+                                }
+                            )
+                        }
+                    }
+            }
 
             (Spacer(modifier = Modifier.height(12.dp)))
 
-            Row (modifier = Modifier.fillMaxWidth()){
+            Row(modifier = Modifier.fillMaxWidth()) {
                 Text(
                     modifier = Modifier
                         .weight(0.1f),
@@ -165,14 +239,26 @@ fun ExerciseCard(
                 )
             }
 
+            exercise.exerciseSets.forEach { set ->
                 SetLine(
                     modifier = Modifier
                         .fillMaxWidth(),
                     exercise = exercise,
-                    onRepsChange = { onRepsChange(it) },
-                    onWeightChange = { onWeightChange(it)}
+                    inputValueReps = set.reps,
+                    inputValueWeight = set.weight,
+                    isDeleteMode = isDeleteMode,
+                    onRepsChange = { _, newText -> onRepsChange(set.set, newText) },
+                    onWeightChange = { _, newText -> onWeightChange(set.set, newText) },
+                    onDeleteClick = { onRemoveSet( exercise.id, set.set)},
+                    setNumber = set.set
                 )
+            }
         }
+
+        if (!isDeleteMode) {
+            AddSetButton(modifier = Modifier, onAddSetClick = { onAddSetClick(exercise.id)} )
+        }
+
     }
 }
 
@@ -180,8 +266,13 @@ fun ExerciseCard(
 fun SetLine(
     modifier: Modifier = Modifier,
     exercise: Exercise,
-    onRepsChange: (String) -> Unit,
-    onWeightChange: (String) -> Unit
+    isDeleteMode: Boolean,
+    onDeleteClick: () -> Unit,
+    setNumber: Int,
+    inputValueWeight: String,
+    inputValueReps: String,
+    onRepsChange: (Int, String) -> Unit,
+    onWeightChange: (Int, String) -> Unit
 ) {
     Card(
         modifier = modifier
@@ -204,7 +295,7 @@ fun SetLine(
                     .weight(0.1f)
                     .height(36.dp)
                     .wrapContentSize(Alignment.Center),
-                text = exercise.sets.toString(),
+                text = setNumber.toString(),
                 textAlign = TextAlign.Center,
                 style = Typography.bodyLarge,
                 fontWeight = FontWeight.Bold,
@@ -216,8 +307,8 @@ fun SetLine(
                     .weight(0.15f)
                     .height(50.dp),
                 inputName = "Weight",
-                inputValue = exercise.weight,
-                onRepsChange = { onWeightChange(it) }
+                inputValue = inputValueWeight,
+                onRepsChange = { onWeightChange(setNumber, it) }
             )
 
             InputTextBox(
@@ -225,8 +316,8 @@ fun SetLine(
                     .weight(0.15f)
                     .height(50.dp),
                 inputName = "Reps",
-                inputValue = exercise.reps,
-                onRepsChange = { onRepsChange(it) }
+                inputValue = inputValueReps,
+                onRepsChange = { onRepsChange(setNumber, it) }
             )
 
             Box(
@@ -234,13 +325,16 @@ fun SetLine(
                     .weight(0.1f)
                     .height(36.dp)
                     .clip(CircleShape)
-                    .clickable { /* ação */ },
+                    .clickable {
+                        if (isDeleteMode) onDeleteClick() else {
+                        }
+                    },
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    imageVector = Icons.Default.CheckCircle,
-                    contentDescription = "Check",
-                    tint = CyanAccent,
+                    imageVector = if (isDeleteMode) Icons.Default.Delete else Icons.Default.CheckCircle,
+                    contentDescription = if (isDeleteMode) "Deletar" else "Check",
+                    tint = if (isDeleteMode) Color.Red else CyanAccent,
                     modifier = Modifier.size(32.dp)
                 )
             }
@@ -273,7 +367,7 @@ fun InputTextBox(
         BasicTextField(
             value = inputValue,
             onValueChange = { onRepsChange(it) },
-            textStyle = MaterialTheme.typography.bodyMedium.copy(
+            textStyle = MaterialTheme.typography.titleMedium.copy(
                 color = MaterialTheme.colorScheme.onSurface,
                 textAlign = TextAlign.Center
             ),
@@ -284,7 +378,8 @@ fun InputTextBox(
                 if (inputValue.isEmpty()) {
                     Text(
                         text = "0",
-                        style = MaterialTheme.typography.bodyMedium,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
                         textAlign = TextAlign.Center,
                         modifier = Modifier.fillMaxWidth()
@@ -297,4 +392,41 @@ fun InputTextBox(
 }
 
 @Composable
-fun AddSetButton()
+fun AddSetButton(
+    modifier: Modifier,
+    onAddSetClick: () -> Unit
+) {
+    Card(
+        modifier = modifier
+            .padding(horizontal = 16.dp, vertical = 16.dp),
+        onClick = {
+            onAddSetClick()
+        },
+        colors = CardDefaults.cardColors(
+            containerColor = CyanAccent
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+
+            Icon(
+                imageVector = Icons.Default.Add,
+                contentDescription = "Check",
+                tint = Color.White,
+                modifier = Modifier.size(32.dp)
+            )
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            Text(
+                text = "Add set",
+                style = Typography.titleSmall
+            )
+        }
+    }
+}

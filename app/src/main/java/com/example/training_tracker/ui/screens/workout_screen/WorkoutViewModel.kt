@@ -10,6 +10,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.training_tracker.GymTrackerApplication
+import com.example.training_tracker.data.models.ExerciseSet
 import com.example.training_tracker.data.models.Workout
 import com.example.training_tracker.data.repository.WorkoutRepository
 import com.example.training_tracker.ui.screens.home.HomeViewModel
@@ -38,26 +39,64 @@ class WorkoutViewModel(
             initialValue = WorkoutUiState()
         )
 
-    fun updateExercise(exerciseId: String, newReps: String? = null, newWeight: String ?= null) {
+    fun addNewSetLine(exerciseId: String) {
         val currentWorkout = uiState.value.workout ?: return
 
-        val updatedExercises = currentWorkout.exercises.map {exercise ->
+        val updatedExerciseSetLine = currentWorkout.exercises.map { exercise ->
             if (exercise.id == exerciseId) {
-                exercise.copy(
-                    reps = newReps ?: exercise.reps,
-                    weight = newWeight ?: exercise.weight
-                )
+                println("SIZE IS: ${exercise.exerciseSets.size}")
+                val updatedSetList = exercise.exerciseSets + ExerciseSet(set = exercise.exerciseSets.size + 1)
+                exercise.copy(exerciseSets = updatedSetList)
             } else {
                 exercise
             }
         }
 
-        val updatedWorkout = currentWorkout.copy(
-            exercises = updatedExercises
-        )
-
+        val updatedWorkout = currentWorkout.copy(exercises = updatedExerciseSetLine)
         workoutRepository.updateWorkout(updatedWorkout)
+    }
 
+    fun removeSetLine(exerciseId: String, setNumber: Int) {
+        val currentWorkout = uiState.value.workout ?: return
+
+        val updatedExercises = currentWorkout.exercises.map { exercise ->
+            if (exercise.id == exerciseId) {
+                val updatedExercisesSet = exercise.exerciseSets.filter { it.set != setNumber}
+                exercise.copy(exerciseSets = updatedExercisesSet)
+            } else {
+                exercise
+            }
+        }
+
+        val updatedWorkout = currentWorkout.copy(exercises = updatedExercises)
+        workoutRepository.updateWorkout(updatedWorkout)
+    }
+
+    fun updateExercise(exerciseId: String, setNumber: Int ?= 1, newReps: String? = null, newWeight: String? = null) {
+        val currentWorkout = uiState.value.workout ?: return
+
+        val updatedExercises = currentWorkout.exercises.map { exercise ->
+            if (exercise.id == exerciseId) {
+                val updatedSets = exercise.exerciseSets.map { set ->
+                    if (set.set == setNumber) {
+                        set.copy(
+                            reps = newReps ?: set.reps,
+                            weight = newWeight ?: set.weight
+                        )
+                    } else {
+                        set
+                    }
+                }
+
+                // 2. Devolvemos o exercício com a NOVA lista de séries atualizada
+                exercise.copy(exerciseSets = updatedSets)
+            } else {
+                exercise
+            }
+        }
+
+        val updatedWorkout = currentWorkout.copy(exercises = updatedExercises)
+        workoutRepository.updateWorkout(updatedWorkout)
     }
 
     companion object {
