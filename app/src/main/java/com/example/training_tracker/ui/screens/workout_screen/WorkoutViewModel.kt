@@ -72,6 +72,28 @@ class WorkoutViewModel(
         workoutRepository.updateWorkout(updatedWorkout)
     }
 
+    fun completeSet(exerciseId: String, setNumber: Int) {
+        val currentWorkout = uiState.value.workout ?: return
+
+        val updatedExercises = currentWorkout.exercises.map { exercise ->
+            if (exercise.id == exerciseId) {
+                val updatedExerciseSets = exercise.exerciseSets.map { set ->
+                    if (set.set == setNumber) {
+                        set.copy(isCompleted = true)
+                    } else {
+                        set
+                    }
+                }
+                exercise.copy(exerciseSets = updatedExerciseSets)
+            } else {
+                exercise
+            }
+        }
+
+        val updatedWorkout = currentWorkout.copy(exercises = updatedExercises)
+        workoutRepository.updateWorkout(updatedWorkout)
+    }
+
     fun updateExercise(exerciseId: String, setNumber: Int ?= 1, newReps: String? = null, newWeight: String? = null) {
         val currentWorkout = uiState.value.workout ?: return
 
@@ -88,7 +110,6 @@ class WorkoutViewModel(
                     }
                 }
 
-                // 2. Devolvemos o exercício com a NOVA lista de séries atualizada
                 exercise.copy(exerciseSets = updatedSets)
             } else {
                 exercise
@@ -102,7 +123,6 @@ class WorkoutViewModel(
     companion object {
         val Factory = viewModelFactory {
             initializer {
-                // Pega a instância da nossa GymTrackerApplication
                 val application = (this[APPLICATION_KEY] as GymTrackerApplication)
                 val workoutRepository = application.container.workoutRepository
 

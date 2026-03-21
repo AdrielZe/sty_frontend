@@ -2,7 +2,6 @@ package com.example.training_tracker.ui.screens.workout_screen
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.runtime.*
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -24,11 +23,12 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.ExitToApp
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
@@ -39,9 +39,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -61,6 +64,7 @@ fun WorkoutScreen(
     workoutUiState: WorkoutUiState,
     onWeightChange: (String, Int, String) -> Unit,
     onRepsChange: (String, Int, String) -> Unit,
+    onCompleteSet: (String, Int) -> Unit,
     onAddSetClick: (String) -> Unit,
     onRemoveSet: (String, Int) -> Unit
 ) {
@@ -98,7 +102,8 @@ fun WorkoutScreen(
                                 id,
                             )
                         },
-                        onRemoveSet = onRemoveSet
+                        onRemoveSet = onRemoveSet,
+                        onCompleteSet = onCompleteSet
                     )
                 }
             }
@@ -140,13 +145,18 @@ fun ExerciseCard(
     modifier: Modifier = Modifier,
     exercise: Exercise,
     expanded: Boolean = false,
+    onCompleteSet: (String, Int) -> Unit,
     onRepsChange: (Int, String) -> Unit,
     onWeightChange: (Int, String) -> Unit,
     onAddSetClick: (String) -> Unit,
     onRemoveSet: (String, Int) -> Unit
 ) {
     var isDeleteMode by remember { mutableStateOf(false) }
-    var isMenuExpanded by remember { mutableStateOf(false)}
+    var isMenuExpanded by remember { mutableStateOf(false) }
+
+    if (exercise.exerciseSets.isEmpty()) {
+        isDeleteMode = false
+    }
 
     Card(
         modifier = modifier
@@ -160,8 +170,9 @@ fun ExerciseCard(
             verticalArrangement = Arrangement.Center
         ) {
 
-            Row(modifier = Modifier
-                .fillMaxWidth(),
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
@@ -169,8 +180,9 @@ fun ExerciseCard(
                     text = exercise.name,
                     style = Typography.titleLarge
                 )
-                    Box {
-                        IconButton(onClick = { isMenuExpanded = true}) {
+                Box {
+                    if (isDeleteMode == false) {
+                        IconButton(onClick = { isMenuExpanded = true }) {
                             Surface(
                                 shape = CircleShape,
                                 color = MaterialTheme.colorScheme.surfaceVariant,
@@ -179,30 +191,51 @@ fun ExerciseCard(
                                     .clip(CircleShape)
                             ) {
                                 Icon(
-                                    imageVector = Icons.Default.Person,
-                                    contentDescription = "Perfil",
+                                    imageVector = Icons.Default.MoreVert,
+                                    contentDescription = "Opções",
                                     tint = CyanAccent,
                                     modifier = Modifier.padding(8.dp)
                                 )
                             }
                         }
-
-                        DropdownMenu(
-                            expanded = isMenuExpanded,
-                            onDismissRequest = { isMenuExpanded = false }
-                        ) {
-                            DropdownMenuItem(
-                                text = { Text(if (isDeleteMode) "Sair da edição" else "Remover séries") },
-                                onClick = {
-                                    isDeleteMode = !isDeleteMode
-                                    isMenuExpanded = false
-                                },
-                                leadingIcon = {
-                                    Icon( if (isDeleteMode) Icons.Default.CheckCircle else Icons.Default.Delete, contentDescription = null)
-                                }
-                            )
+                    } else {
+                        IconButton(onClick = { isDeleteMode = false }) {
+                            Surface(
+                                shape = CircleShape,
+                                color = MaterialTheme.colorScheme.surfaceVariant,
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .clip(CircleShape)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Check,
+                                    contentDescription = "Confirmar",
+                                    tint = CyanAccent,
+                                    modifier = Modifier.padding(8.dp)
+                                )
+                            }
                         }
                     }
+
+                    DropdownMenu(
+                        expanded = isMenuExpanded,
+                        onDismissRequest = { isMenuExpanded = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("Remover séries") },
+                            onClick = {
+                                isDeleteMode = !isDeleteMode
+                                isMenuExpanded = false
+                            },
+                            leadingIcon = {
+                                Icon(
+                                    if (isDeleteMode) Icons.Default.CheckCircle else Icons.Default.Delete,
+                                    contentDescription = null
+                                )
+                            }
+                        )
+                    }
+                }
             }
 
             (Spacer(modifier = Modifier.height(12.dp)))
@@ -247,16 +280,18 @@ fun ExerciseCard(
                     inputValueReps = set.reps,
                     inputValueWeight = set.weight,
                     isDeleteMode = isDeleteMode,
+                    isCompleted = set.isCompleted,
                     onRepsChange = { _, newText -> onRepsChange(set.set, newText) },
                     onWeightChange = { _, newText -> onWeightChange(set.set, newText) },
-                    onDeleteClick = { onRemoveSet( exercise.id, set.set)},
-                    setNumber = set.set
+                    onDeleteClick = { onRemoveSet(exercise.id, set.set) },
+                    onCompleteClick = { onCompleteSet(exercise.id, set.set)},
+                    setNumber = set.set,
                 )
             }
         }
 
         if (!isDeleteMode) {
-            AddSetButton(modifier = Modifier, onAddSetClick = { onAddSetClick(exercise.id)} )
+            AddSetButton(modifier = Modifier, onAddSetClick = { onAddSetClick(exercise.id) })
         }
 
     }
@@ -267,13 +302,87 @@ fun SetLine(
     modifier: Modifier = Modifier,
     exercise: Exercise,
     isDeleteMode: Boolean,
+    isCompleted: Boolean = false,
     onDeleteClick: () -> Unit,
+    onCompleteClick: () -> Unit,
     setNumber: Int,
     inputValueWeight: String,
     inputValueReps: String,
     onRepsChange: (Int, String) -> Unit,
     onWeightChange: (Int, String) -> Unit
 ) {
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    var showCompleteDialog by remember { mutableStateOf(false) }
+    var showErrorDialog by remember { mutableStateOf(false) }
+
+    if (showErrorDialog) {
+        AlertDialog(
+            onDismissRequest = { showErrorDialog = false },
+            title = { Text(text = "Opa!", style = Typography.titleMedium) },
+            text = { Text(text = "Não é possível deletar uma série que já está salva.", style = Typography.bodyLarge) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showErrorDialog = false
+                    }
+                ) {
+                    Text("Ok", color = CyanAccent, fontWeight = FontWeight.Bold)
+                }
+            },
+        )
+    }
+
+    if (showCompleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showCompleteDialog = false },
+            title = { Text(text = "Salvar Série", style = Typography.titleMedium) },
+            text = { Text(text = "Deseja salvar a série $setNumber? Ela será bloqueada para edição.", style = Typography.bodyLarge) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showCompleteDialog = false
+                        onCompleteClick()
+                    }
+                ) {
+                    Text("Salvar", color = CyanAccent, fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showCompleteDialog = false }) {
+                    Text("Cancelar", color = Color.Gray)
+                }
+            }
+        )
+    }
+
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = {
+                Text(text = "Remover Série", style = Typography.titleMedium)
+            },
+            text = {
+                Text(text = "Tem certeza que deseja remover a série $setNumber?", style = Typography.bodyLarge)
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showDeleteDialog = false
+                        onDeleteClick()
+                    }
+                ) {
+                    Text("Remover", color = Color.Red, fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showDeleteDialog = false }
+                ) {
+                    Text("Cancelar", color = CyanAccent)
+                }
+            }
+        )
+    }
     Card(
         modifier = modifier
             .padding(vertical = Dimens.paddingMedium)
@@ -307,6 +416,7 @@ fun SetLine(
                     .weight(0.15f)
                     .height(50.dp),
                 inputName = "Weight",
+                isLocked = isCompleted,
                 inputValue = inputValueWeight,
                 onRepsChange = { onWeightChange(setNumber, it) }
             )
@@ -316,6 +426,7 @@ fun SetLine(
                     .weight(0.15f)
                     .height(50.dp),
                 inputName = "Reps",
+                isLocked = isCompleted,
                 inputValue = inputValueReps,
                 onRepsChange = { onRepsChange(setNumber, it) }
             )
@@ -326,7 +437,16 @@ fun SetLine(
                     .height(36.dp)
                     .clip(CircleShape)
                     .clickable {
-                        if (isDeleteMode) onDeleteClick() else {
+                        if (isDeleteMode) {
+                            if (isCompleted) {
+                                showErrorDialog = true
+                            } else {
+                                showDeleteDialog = true
+                            }
+                        } else {
+                            if (!isCompleted) {
+                                showCompleteDialog = true
+                            }
                         }
                     },
                 contentAlignment = Alignment.Center
@@ -334,7 +454,11 @@ fun SetLine(
                 Icon(
                     imageVector = if (isDeleteMode) Icons.Default.Delete else Icons.Default.CheckCircle,
                     contentDescription = if (isDeleteMode) "Deletar" else "Check",
-                    tint = if (isDeleteMode) Color.Red else CyanAccent,
+                    tint = if (isDeleteMode) {
+                        Color.Gray
+                    } else {
+                        if (isCompleted) Color.Gray else CyanAccent
+                    },
                     modifier = Modifier.size(32.dp)
                 )
             }
@@ -345,6 +469,7 @@ fun SetLine(
 @Composable
 fun InputTextBox(
     modifier: Modifier = Modifier,
+    isLocked: Boolean = false,
     inputName: String,
     inputValue: String,
     onRepsChange: (String) -> Unit
@@ -367,8 +492,9 @@ fun InputTextBox(
         BasicTextField(
             value = inputValue,
             onValueChange = { onRepsChange(it) },
+            enabled = !isLocked,
             textStyle = MaterialTheme.typography.titleMedium.copy(
-                color = MaterialTheme.colorScheme.onSurface,
+                color = if (isLocked) Color.Gray else MaterialTheme.colorScheme.onSurface,
                 textAlign = TextAlign.Center
             ),
             modifier = Modifier.fillMaxWidth(),
