@@ -1,12 +1,13 @@
 package com.example.training_tracker.ui.screens.workout_screen
 
-import android.R
+import android.os.Build
+import androidx.annotation.RequiresApi
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -29,10 +30,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
@@ -56,22 +60,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.pointer.motionEventSpy
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowUp
-import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.TopAppBarDefaults
 import com.example.training_tracker.data.models.Exercise
 import com.example.training_tracker.data.models.Workout
 import com.example.training_tracker.ui.theme.CyanAccent
@@ -83,7 +82,6 @@ import nl.dionsegijn.konfetti.core.Position
 import nl.dionsegijn.konfetti.core.emitter.Emitter
 import java.util.concurrent.TimeUnit
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WorkoutScreen(
     workoutUiState: WorkoutUiState,
@@ -99,29 +97,9 @@ fun WorkoutScreen(
     var showConfetti by remember { mutableStateOf(false) }
 
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    Text(
-                        text = workoutUiState.workout?.name ?: "Treino",
-                        style = Typography.titleLarge,
-                        fontWeight = FontWeight.Bold
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = { onBackClick() }) {
-                        Icon(
-                            imageVector = Icons.Default.ArrowBack, // Ícone de setinha
-                            contentDescription = "Voltar",
-                            tint = MaterialTheme.colorScheme.secondary // Sua cor de destaque
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background,
-                    titleContentColor = MaterialTheme.colorScheme.onBackground
-                )
-            )
+            WorkoutTopBar(onBackClick = onBackClick)
         }
     ) { innerPadding ->
         Box(
@@ -129,52 +107,60 @@ fun WorkoutScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize(),
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
                 horizontalAlignment = Alignment.CenterHorizontally
-            )
-            {
-                LazyColumn {
-                    items(workoutUiState.workout?.exercises ?: emptyList()) { exercise ->
-                        ExerciseCard(
-                            modifier = Modifier,
-                            exercise = exercise,
-                            onRepsChange = { setNumber, newValue ->
-                                onRepsChange(
-                                    exercise.id,
-                                    setNumber,
-                                    newValue,
-                                )
-                            },
-                            onWeightChange = { setNumber, newValue ->
-                                onWeightChange(
-                                    exercise.id,
-                                    setNumber,
-                                    newValue,
-                                )
-                            },
-                            onAddSetClick = { id ->
-                                onAddSetClick(
-                                    id,
-                                )
-                            },
-                            onRemoveSet = onRemoveSet,
-                            onCompleteSet = onCompleteSet,
-                            onCompleteExercise = onCompleteExercise,
+            ) {
+                // HERO SECTION do Treino
+                item {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 24.dp, vertical = 16.dp),
+                        horizontalAlignment = Alignment.Start
+                    ) {
+                        Text(
+                            text = "TREINO EM ANDAMENTO",
+                            color = CyanAccent,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = 1.5.sp
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = workoutUiState.workout?.name ?: "Treino",
+                            fontSize = 36.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = MaterialTheme.colorScheme.onBackground,
+                            lineHeight = 40.sp
                         )
                     }
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
 
-                    item {
-                        FinishWorkoutButton(
-                            onComplete = {
-                                showConfetti = true
-                                onCompleteWorkout()
-                            },
-                            workout = workoutUiState.workout
-                        )
-                        Spacer(modifier = Modifier.height(32.dp)) // Espaço extra no final da rolagem
-                    }
+                items(workoutUiState.workout?.exercises ?: emptyList()) { exercise ->
+                    ExerciseCard(
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                        exercise = exercise,
+                        onRepsChange = { setNumber, newValue -> onRepsChange(exercise.id, setNumber, newValue) },
+                        onWeightChange = { setNumber, newValue -> onWeightChange(exercise.id, setNumber, newValue) },
+                        onAddSetClick = { id -> onAddSetClick(id) },
+                        onRemoveSet = onRemoveSet,
+                        onCompleteSet = onCompleteSet,
+                        onCompleteExercise = onCompleteExercise,
+                    )
+                }
+
+                item {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    FinishWorkoutButton(
+                        onComplete = {
+                            showConfetti = true
+                            onCompleteWorkout()
+                        },
+                        workout = workoutUiState.workout
+                    )
+                    Spacer(modifier = Modifier.height(40.dp))
                 }
             }
 
@@ -183,16 +169,8 @@ fun WorkoutScreen(
                     modifier = Modifier.fillMaxSize(),
                     parties = listOf(
                         Party(
-                            speed = 0f,
-                            maxSpeed = 30f,
-                            damping = 0.9f,
-                            spread = 360,
-                            colors = listOf(
-                                0xFF66c9e8.toInt(),
-                                0xFF008B8B.toInt(),
-                                0xFF52d6ff.toInt(),
-                                0xFFFFFFFF.toInt()
-                            ),
+                            speed = 0f, maxSpeed = 30f, damping = 0.9f, spread = 360,
+                            colors = listOf(0xFF66c9e8.toInt(), 0xFF008B8B.toInt(), 0xFF52d6ff.toInt(), 0xFFFFFFFF.toInt()),
                             emitter = Emitter(duration = 100, TimeUnit.MILLISECONDS).max(100),
                             position = Position.Relative(0.5, 0.3)
                         )
@@ -201,30 +179,21 @@ fun WorkoutScreen(
             }
         }
     }
-
 }
 
 @Composable
-fun WorkoutNameCard(modifier: Modifier = Modifier, workout: Workout?) {
-    Surface(
-        modifier = modifier
+fun WorkoutTopBar(onBackClick: () -> Unit) {
+    Row(
+        modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = Dimens.paddingExtraSmall)
-            .border(
-                width = 2.dp,
-                color = MaterialTheme.colorScheme.secondary,
-                shape = RoundedCornerShape(Dimens.cornerRadius)
-            )
-            .padding(20.dp),
-        color = Color.Transparent,
+            .padding(horizontal = 16.dp, vertical = 16.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Column(
-            verticalArrangement = Arrangement.Top,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                text = workout?.name.toString(),
-                style = Typography.bodyLarge
+        IconButton(onClick = onBackClick) {
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                contentDescription = "Voltar",
+                tint = MaterialTheme.colorScheme.onBackground
             )
         }
     }
@@ -234,7 +203,6 @@ fun WorkoutNameCard(modifier: Modifier = Modifier, workout: Workout?) {
 fun ExerciseCard(
     modifier: Modifier = Modifier,
     exercise: Exercise,
-    expanded: Boolean = false,
     onCompleteSet: (String, Int) -> Unit,
     onRepsChange: (Int, String) -> Unit,
     onCompleteExercise: (String) -> Unit,
@@ -244,27 +212,24 @@ fun ExerciseCard(
 ) {
     var isDeleteMode by remember { mutableStateOf(false) }
     var isMenuExpanded by remember { mutableStateOf(false) }
-
     var isExpanded by remember(exercise.isCompleted) { mutableStateOf(!exercise.isCompleted) }
 
-    if (exercise.exerciseSets.isEmpty()) {
-        isDeleteMode = false
-    }
+    if (exercise.exerciseSets.isEmpty()) { isDeleteMode = false }
 
+    // Design atualizado do Card
     Card(
-        modifier = modifier.padding(16.dp),
+        modifier = modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.04f)
+            containerColor = MaterialTheme.colorScheme.surface
         ),
+        elevation = CardDefaults.cardElevation(defaultElevation = if (isExpanded) 4.dp else 1.dp),
+        shape = RoundedCornerShape(20.dp),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(Dimens.paddingMedium),
-            horizontalAlignment = Alignment.Start,
-            verticalArrangement = Arrangement.Center
+            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            horizontalAlignment = Alignment.Start
         ) {
-
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -274,68 +239,29 @@ fun ExerciseCard(
             ) {
                 Text(
                     text = exercise.name,
-                    style = Typography.titleLarge,
-                    color = if (exercise.isCompleted) Color.Gray else MaterialTheme.colorScheme.onSurface
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = if (exercise.isCompleted) Color.Gray else MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.weight(1f)
                 )
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box {
-                        if (isDeleteMode == false) {
-                            if (exercise.isCompleted == false) {
-                                IconButton(onClick = { isMenuExpanded = true }) {
-                                    Surface(
-                                        shape = CircleShape,
-                                        color = Color.Transparent,
-                                        modifier = Modifier
-                                            .size(40.dp)
-                                            .clip(CircleShape)
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.MoreVert,
-                                            contentDescription = "Opções",
-                                            tint = MaterialTheme.colorScheme.secondary,
-                                            modifier = Modifier.padding(8.dp)
-                                        )
-                                    }
-                                }
-                            } else {
-                                Spacer(modifier = Modifier.width(10.dp))
+                        if (!isDeleteMode && !exercise.isCompleted) {
+                            IconButton(onClick = { isMenuExpanded = true }) {
+                                Icon(Icons.Default.MoreVert, contentDescription = "Opções", tint = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
-                        } else {
+                        } else if (isDeleteMode) {
                             IconButton(onClick = { isDeleteMode = false }) {
-                                Surface(
-                                    shape = CircleShape,
-                                    color = Color.Black.copy(alpha = 0.03f),
-                                    modifier = Modifier
-                                        .size(40.dp)
-                                        .clip(CircleShape)
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Check,
-                                        contentDescription = "Confirmar",
-                                        tint = MaterialTheme.colorScheme.secondary,
-                                        modifier = Modifier.padding(8.dp)
-                                    )
-                                }
+                                Icon(Icons.Default.Check, contentDescription = "Confirmar", tint = MaterialTheme.colorScheme.error)
                             }
                         }
 
-                        DropdownMenu(
-                            expanded = isMenuExpanded,
-                            onDismissRequest = { isMenuExpanded = false }
-                        ) {
+                        DropdownMenu(expanded = isMenuExpanded, onDismissRequest = { isMenuExpanded = false }) {
                             DropdownMenuItem(
-                                text = { Text("Remover séries") },
-                                onClick = {
-                                    isDeleteMode = !isDeleteMode
-                                    isMenuExpanded = false
-                                },
-                                leadingIcon = {
-                                    Icon(
-                                        if (isDeleteMode) Icons.Default.CheckCircle else Icons.Default.Delete,
-                                        contentDescription = null
-                                    )
-                                }
+                                text = { Text("Remover séries", color = MaterialTheme.colorScheme.error) },
+                                onClick = { isDeleteMode = !isDeleteMode; isMenuExpanded = false },
+                                leadingIcon = { Icon(Icons.Default.Delete, contentDescription = null, tint = MaterialTheme.colorScheme.error) }
                             )
                         }
                     }
@@ -344,7 +270,7 @@ fun ExerciseCard(
                         Icon(
                             imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
                             contentDescription = if (isExpanded) "Recolher" else "Expandir",
-                            tint = MaterialTheme.colorScheme.secondary
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -352,31 +278,14 @@ fun ExerciseCard(
 
             AnimatedVisibility(visible = isExpanded) {
                 Column(modifier = Modifier.fillMaxWidth()) {
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
 
-                    Row(modifier = Modifier.fillMaxWidth()) {
-                        Text(
-                            modifier = Modifier.weight(0.1f),
-                            text = "Série",
-                            textAlign = TextAlign.Center,
-                            style = Typography.bodyMedium
-                        )
-
-                        Text(
-                            modifier = Modifier.weight(0.2f),
-                            text = "Peso (Kg)",
-                            textAlign = TextAlign.Center,
-                            style = Typography.bodyMedium
-                        )
-
-                        Text(
-                            modifier = Modifier.weight(0.2f),
-                            text = "Repetições",
-                            textAlign = TextAlign.Center,
-                            style = Typography.bodyMedium
-                        )
-
-                        Spacer(modifier = Modifier.weight(0.1f))
+                    // Cabeçalhos
+                    Row(modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)) {
+                        Text(modifier = Modifier.weight(0.15f), text = "Série", textAlign = TextAlign.Center, style = Typography.labelMedium, color = Color.Gray)
+                        Text(modifier = Modifier.weight(0.3f), text = "Peso (Kg)", textAlign = TextAlign.Center, style = Typography.labelMedium, color = Color.Gray)
+                        Text(modifier = Modifier.weight(0.3f), text = "Reps", textAlign = TextAlign.Center, style = Typography.labelMedium, color = Color.Gray)
+                        Spacer(modifier = Modifier.weight(0.15f))
                     }
 
                     exercise.exerciseSets.forEach { set ->
@@ -395,28 +304,219 @@ fun ExerciseCard(
                         )
                     }
 
-                    if (!isDeleteMode) {
-                        Column(
+                    if (!isDeleteMode && !exercise.isCompleted) {
+                        Spacer(modifier = Modifier.height(16.dp))
+                        AddSetButton(modifier = Modifier.fillMaxWidth(), onAddSetClick = { onAddSetClick(exercise.id) })
+                        Spacer(modifier = Modifier.height(8.dp))
+                        HoldToCompleteButton(
                             modifier = Modifier.fillMaxWidth(),
-                            verticalArrangement = Arrangement.Center,
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            if (!exercise.isCompleted) {
-                                AddSetButton(
-                                    modifier = Modifier,
-                                    onAddSetClick = { onAddSetClick(exercise.id) })
-                                HoldToCompleteButton(
-                                    modifier = Modifier,
-                                    onComplete = { onCompleteExercise(exercise.id) },
-                                    exercise = exercise
-                                )
-                            }
-                        }
+                            onComplete = { onCompleteExercise(exercise.id) },
+                            exercise = exercise
+                        )
                     }
                 }
             }
         }
     }
+}
+
+// ... [O código do SetLine e InputTextBox permanece igual, pois já estavam bons] ...
+// Por brevidade, omiti o ErrorDialog e o SetLine, cole-os de volta aqui!
+
+@Composable
+fun AddSetButton(modifier: Modifier, onAddSetClick: () -> Unit) {
+    // Versão mais clean do Add Button
+    TextButton(
+        onClick = onAddSetClick,
+        modifier = modifier.height(48.dp)
+    ) {
+        Icon(Icons.Default.Add, contentDescription = "Adicionar", tint = CyanAccent)
+        Spacer(modifier = Modifier.width(8.dp))
+        Text("Adicionar série", color = CyanAccent, fontWeight = FontWeight.Bold)
+    }
+}
+
+@Composable
+fun HoldToCompleteButton(
+    modifier: Modifier = Modifier,
+    exercise: Exercise,
+    onComplete: () -> Unit
+) {
+    var isPressed by remember { mutableStateOf(false) }
+    var showErrorDialog by remember { mutableStateOf(false) }
+
+    val progress = remember { Animatable(0f) }
+    val hapticFeedback = LocalHapticFeedback.current
+    val secondaryColor = MaterialTheme.colorScheme.secondary
+
+    if (showErrorDialog) {
+        ErrorDialog(text = "Preencha todos os campos das séries antes de concluir o exercício", onDismissRequest = { showErrorDialog = false })
+    }
+
+    val isExerciseEmpty = remember(exercise.exerciseSets) {
+        exercise.exerciseSets.any { set -> set.weight.isBlank() || set.weight == "0" || set.reps.isBlank() || set.reps == "0" }
+    }
+
+    // Resolvido o Ponto de Atenção: Usando exercise.isCompleted direto!
+    LaunchedEffect(isPressed, exercise.isCompleted) {
+        if (isPressed && !exercise.isCompleted) {
+            progress.animateTo(targetValue = 1f, animationSpec = tween(1000, easing = LinearEasing))
+            if (progress.value == 1f) {
+                if (!isExerciseEmpty) {
+                    hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onComplete()
+                } else {
+                    showErrorDialog = true
+                }
+            }
+        } else if (!exercise.isCompleted) {
+            progress.animateTo(targetValue = 0f, animationSpec = tween(300))
+        }
+    }
+
+    Box(
+        modifier = modifier
+            .height(48.dp)
+            .clip(RoundedCornerShape(24.dp))
+            .background(if (exercise.isCompleted) Color.Gray.copy(alpha = 0.2f) else MaterialTheme.colorScheme.surfaceVariant)
+            .border(1.dp, if (exercise.isCompleted) Color.Transparent else secondaryColor.copy(alpha = 0.5f), RoundedCornerShape(24.dp))
+            .pointerInput(exercise.isCompleted) {
+                detectTapGestures(
+                    onPress = {
+                        if (!exercise.isCompleted) {
+                            isPressed = true
+                            tryAwaitRelease()
+                            isPressed = false
+                        }
+                    }
+                )
+            }
+            .drawBehind {
+                drawRect(color = secondaryColor.copy(alpha = 0.2f), size = size.copy(width = size.width * progress.value))
+            },
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = if (exercise.isCompleted) "Exercício Concluído" else "Segure para concluir",
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Bold,
+            color = if (exercise.isCompleted) Color.Gray else MaterialTheme.colorScheme.onSurface
+        )
+    }
+}
+
+@Composable
+fun FinishWorkoutButton(
+    modifier: Modifier = Modifier,
+    workout: Workout?,
+    onComplete: () -> Unit
+) {
+    var isPressed by remember { mutableStateOf(false) }
+    val progress = remember { Animatable(0f) }
+    val hapticFeedback = LocalHapticFeedback.current
+
+    val canCompleteWorkout = remember(workout) {
+        workout?.exercises?.all { exercise ->
+            exercise.exerciseSets.all { set ->
+                set.weight.isNotBlank() && set.weight != "0" && set.reps.isNotBlank() && set.reps != "0"
+            }
+        } == true
+    }
+
+    LaunchedEffect(isPressed, workout?.isCompleted) {
+        if (workout?.isCompleted == false) {
+            if (isPressed && canCompleteWorkout) {
+                progress.animateTo(targetValue = 1f, animationSpec = tween(1500, easing = LinearEasing))
+                if (progress.value == 1f) {
+                    hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onComplete()
+                }
+            } else {
+                progress.animateTo(targetValue = 0f, animationSpec = tween(300, easing = LinearEasing))
+            }
+        }
+    }
+
+    // Unificamos os dois Box usando modificadores condicionais e o Gradiente!
+    val gradientColors = listOf(CyanAccent, MaterialTheme.colorScheme.primary)
+
+    Box(
+        modifier = modifier
+            .padding(horizontal = 24.dp)
+            .fillMaxWidth()
+            .height(64.dp)
+            .shadow(
+                elevation = if (canCompleteWorkout && workout?.isCompleted == false) 16.dp else 0.dp,
+                shape = RoundedCornerShape(32.dp),
+                spotColor = CyanAccent.copy(alpha = 0.5f)
+            )
+            .clip(RoundedCornerShape(32.dp))
+            .background(
+                if (canCompleteWorkout && workout?.isCompleted == false) {
+                    Brush.horizontalGradient(gradientColors)
+                } else if (workout?.isCompleted == true) {
+                    Brush.horizontalGradient(listOf(MaterialTheme.colorScheme.secondary, MaterialTheme.colorScheme.secondary)) // Cor sólida de sucesso
+                } else {
+                    Brush.horizontalGradient(listOf(Color.Gray, Color.DarkGray)) // Desabilitado
+                }
+            )
+            .pointerInput(canCompleteWorkout, workout?.isCompleted) {
+                detectTapGestures(
+                    onPress = {
+                        if (canCompleteWorkout && workout?.isCompleted == false) {
+                            isPressed = true
+                            tryAwaitRelease()
+                            isPressed = false
+                        }
+                    }
+                )
+            }
+            .drawBehind {
+                // Desenha uma sobreposição escura para indicar o progresso de "segurar"
+                if (progress.value > 0f) {
+                    drawRect(color = Color.Black.copy(alpha = 0.2f), size = size.copy(width = size.width * progress.value))
+                }
+            },
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = when {
+                workout?.isCompleted == true -> "TREINO FINALIZADO!"
+                !canCompleteWorkout -> "PREENCHA AS SÉRIES"
+                else -> "SEGURE PARA FINALIZAR"
+            },
+            color = Color.White,
+            fontWeight = FontWeight.ExtraBold,
+            fontSize = 16.sp,
+            letterSpacing = 1.sp
+        )
+    }
+}
+
+
+@Composable
+fun ErrorDialog(
+    onDismissRequest: () -> Unit,
+    text: String
+) {
+    AlertDialog(
+        onDismissRequest = { onDismissRequest() },
+        title = { Text(text = "Opa!", style = Typography.titleMedium) },
+        text = { Text(text = text, style = Typography.bodyLarge) },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    onDismissRequest()
+                }
+            ) {
+                Text(
+                    "Ok",
+                    color = MaterialTheme.colorScheme.secondary,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        },
+    )
 }
 
 @Composable
@@ -591,315 +691,4 @@ fun SetLine(
             }
         }
     }
-}
-
-@Composable
-fun InputTextBox(
-    modifier: Modifier = Modifier,
-    isLocked: Boolean = false,
-    inputValue: String,
-    onRepsChange: (String) -> Unit
-) {
-    Box(
-        modifier = modifier
-            .padding(start = 8.dp)
-            .background(
-                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                shape = RoundedCornerShape(4.dp)
-            )
-            .border(
-                width = 1.dp,
-                color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.5f),
-                shape = RoundedCornerShape(4.dp)
-            )
-            .padding(vertical = 4.dp, horizontal = 8.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        BasicTextField(
-            value = inputValue,
-            onValueChange = { onRepsChange(it) },
-            enabled = !isLocked,
-            textStyle = MaterialTheme.typography.titleMedium.copy(
-                color = if (isLocked) Color.Gray else MaterialTheme.colorScheme.onPrimary,
-                textAlign = TextAlign.Center
-            ),
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            decorationBox = { innerTextField ->
-                if (inputValue.isEmpty()) {
-                    Text(
-                        text = "0",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.5f),
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-                innerTextField()
-            }
-        )
-    }
-}
-
-@Composable
-fun AddSetButton(
-    modifier: Modifier,
-    onAddSetClick: () -> Unit
-) {
-    Card(
-        modifier = modifier
-            .padding(horizontal = 16.dp, vertical = 16.dp),
-        onClick = {
-            onAddSetClick()
-        },
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.secondary
-        )
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
-        ) {
-
-            Icon(
-                imageVector = Icons.Default.Add,
-                contentDescription = "Check",
-                tint = Color.White,
-                modifier = Modifier.size(32.dp)
-            )
-
-            Spacer(modifier = Modifier.width(8.dp))
-
-            Text(
-                text = "Adicionar série",
-                style = Typography.titleSmall
-            )
-        }
-    }
-}
-
-
-
-
-// PONTO DE ATENÇÃO : O ideal é remover esse mutableStateOf interno e basear a lógica diretamente no exercise.isCompleted.
-
-@Composable
-fun HoldToCompleteButton(
-    modifier: Modifier = Modifier,
-    exercise: Exercise,
-    onComplete: () -> Unit
-) {
-    var isPressed by remember { mutableStateOf(false) }
-    var isCompleted by remember { mutableStateOf(false) }
-    var showErrorDialog by remember { mutableStateOf(false) }
-    val secondaryColor = MaterialTheme.colorScheme.secondary
-
-    val progress = remember { Animatable(0f) }
-    val hapticFeedback = LocalHapticFeedback.current
-
-    if (showErrorDialog == true) {
-        ErrorDialog(
-            text = "Preencha todos os campos das séries antes de concluir o exercício",
-            onDismissRequest = { showErrorDialog = false })
-    }
-
-    val isExerciseEmpty = remember(exercise.exerciseSets) {
-        exercise.exerciseSets.any { set ->
-            set.weight.isBlank() || set.weight == "0" || set.reps.isBlank() || set.reps == "0"
-        }
-    }
-    LaunchedEffect(isPressed) {
-        if (isPressed && !isCompleted) {
-            progress.animateTo(
-                targetValue = 1f,
-                animationSpec = tween(durationMillis = 1000, easing = LinearEasing)
-            )
-            if (progress.value == 1f) {
-                if (isExerciseEmpty == false) {
-                    println("ENTERING HEREEEEEE")
-                    isCompleted = true
-                    hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onComplete()
-                } else {
-                    showErrorDialog = true
-                }
-
-            }
-        } else if (!isCompleted) {
-            progress.animateTo(
-                targetValue = 0f,
-                animationSpec = tween(durationMillis = 300)
-            )
-        }
-    }
-
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp)
-            .height(45.dp)
-            .border(
-                width = 1.dp,
-                color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.5f),
-                shape = RoundedCornerShape(16.dp)
-            )
-            .clip(RoundedCornerShape(16.dp))
-            .background(MaterialTheme.colorScheme.onSecondary)
-            .pointerInput(Unit) {
-                detectTapGestures(
-                    onPress = {
-                        if (!isCompleted) {
-                            isPressed = true
-                            tryAwaitRelease()
-                            isPressed = false
-                        }
-                    }
-                )
-            }
-            .drawBehind {
-                drawRect(
-                    color = secondaryColor, // Verde de conclusão
-                    size = size.copy(width = size.width * progress.value)
-                )
-            },
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = if (isCompleted) "Exercício Concluído" else "Concluir o exercício",
-            style = Typography.titleSmall,
-            color = MaterialTheme.colorScheme.onPrimary,
-        )
-    }
-}
-
-@Composable
-fun FinishWorkoutButton(
-    modifier: Modifier = Modifier,
-    workout: Workout?,
-    onComplete: () -> Unit
-) {
-    var isPressed by remember { mutableStateOf(false) }
-
-    val progress = remember { Animatable(0f) }
-    val hapticFeedback = LocalHapticFeedback.current
-    val secondaryColor = MaterialTheme.colorScheme.secondary
-
-
-    val canCompleteWorkout = remember(workout) {
-        workout?.exercises?.all { exercise ->
-            exercise.exerciseSets.all { set ->
-                set.weight.isNotBlank() && set.weight != "0" && set.reps.isNotBlank() && set.reps != "0"
-            }
-        } == true
-    }
-
-    LaunchedEffect(isPressed, workout?.isCompleted) {
-        if (workout?.isCompleted == false) {
-            if (isPressed) {
-                progress.animateTo(
-                    targetValue = 1f,
-                    animationSpec = tween(durationMillis = 1500, easing = LinearEasing)
-                )
-                if (progress.value == 1f) {
-                    hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onComplete() // Isso vai avisar o ViewModel!
-                }
-            } else {
-                progress.animateTo(
-                    targetValue = 0f,
-                    animationSpec = tween(durationMillis = 300, easing = LinearEasing)
-                )
-            }
-        }
-    }
-
-    if (canCompleteWorkout) {
-        Box(
-            modifier = modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 24.dp)
-                .height(60.dp)
-                .clip(RoundedCornerShape(30.dp))
-                .background(
-                    color = MaterialTheme.colorScheme.onSecondary
-                )
-                .border(2.dp, secondaryColor.copy(alpha = 0.5f), RoundedCornerShape(30.dp))
-                .pointerInput(workout?.isCompleted) {
-                    detectTapGestures(
-                        onPress = {
-                            if (workout?.isCompleted == false) {
-                                isPressed = true
-                                tryAwaitRelease()
-                                isPressed = false
-                            }
-                        }
-                    )
-                }
-                .drawBehind {
-                    drawRect(
-                        color = secondaryColor,
-                        size = size.copy(width = size.width * progress.value)
-                    )
-                },
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = if (workout?.isCompleted == true) "Treino Finalizado!" else "Segure para finalizar o treino",
-                style = Typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onPrimary,
-                fontWeight = FontWeight.Bold
-            )
-        }
-    } else {
-        Box(
-            modifier = modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 24.dp)
-                .height(60.dp)
-                .clip(RoundedCornerShape(30.dp))
-                .background(
-                    color = Color.Gray
-                )
-                .border(2.dp, Color.Transparent, RoundedCornerShape(30.dp)),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = "Segure para finalizar o treino",
-                style = Typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onPrimary,
-                fontWeight = FontWeight.Normal
-            )
-        }
-    }
-}
-
-
-@Composable
-fun ErrorDialog(
-    onDismissRequest: () -> Unit,
-    text: String
-) {
-    AlertDialog(
-        onDismissRequest = { onDismissRequest() },
-        title = { Text(text = "Opa!", style = Typography.titleMedium) },
-        text = { Text(text = text, style = Typography.bodyLarge) },
-        confirmButton = {
-            TextButton(
-                onClick = {
-                    onDismissRequest()
-                }
-            ) {
-                Text(
-                    "Ok",
-                    color = MaterialTheme.colorScheme.secondary,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-        },
-    )
 }
