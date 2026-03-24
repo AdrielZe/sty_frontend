@@ -116,6 +116,26 @@ class WorkoutViewModel(
         workoutRepository.updateWorkout(updatedWorkout)
     }
 
+    fun completeWorkout() {
+            val currentWorkout = uiState.value.workout ?: return
+
+            val updatedExercises = currentWorkout.exercises.map { exercise ->
+                val updatedSets = exercise.exerciseSets.map { set ->
+                    set.copy(isCompleted = true)
+                }
+                exercise.copy(
+                    isCompleted = true,
+                    exerciseSets = updatedSets
+                )
+            }
+            val updatedWorkout = currentWorkout.copy(
+                exercises = updatedExercises,
+                isCompleted = true
+            )
+
+            workoutRepository.updateWorkout(updatedWorkout)
+
+    }
 
 
     fun updateExercise(exerciseId: String, setNumber: Int ?= 1, newReps: String? = null, newWeight: String? = null) {

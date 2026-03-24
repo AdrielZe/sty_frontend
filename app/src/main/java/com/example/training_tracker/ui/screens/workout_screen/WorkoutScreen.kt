@@ -94,6 +94,7 @@ fun WorkoutScreen(
     onBackClick: () -> Unit,
     onRemoveSet: (String, Int) -> Unit,
     onCompleteExercise: (String) -> Unit,
+    onCompleteWorkout: () -> Unit,
 ) {
     var showConfetti by remember { mutableStateOf(false) }
 
@@ -160,7 +161,7 @@ fun WorkoutScreen(
                             },
                             onRemoveSet = onRemoveSet,
                             onCompleteSet = onCompleteSet,
-                            onCompleteExercise = onCompleteExercise
+                            onCompleteExercise = onCompleteExercise,
                         )
                     }
 
@@ -168,8 +169,9 @@ fun WorkoutScreen(
                         FinishWorkoutButton(
                             onComplete = {
                                 showConfetti = true
-                                // Aqui você pode chamar um evento da ViewModel se precisar salvar no banco
-                            }
+                                onCompleteWorkout()
+                            },
+                            workout = workoutUiState.workout
                         )
                         Spacer(modifier = Modifier.height(32.dp)) // Espaço extra no final da rolagem
                     }
@@ -238,7 +240,7 @@ fun ExerciseCard(
     onCompleteExercise: (String) -> Unit,
     onWeightChange: (Int, String) -> Unit,
     onAddSetClick: (String) -> Unit,
-    onRemoveSet: (String, Int) -> Unit
+    onRemoveSet: (String, Int) -> Unit,
 ) {
     var isDeleteMode by remember { mutableStateOf(false) }
     var isMenuExpanded by remember { mutableStateOf(false) }
@@ -681,30 +683,10 @@ fun AddSetButton(
     }
 }
 
-@Composable
-fun ErrorDialog(
-    onDismissRequest: () -> Unit,
-    text: String
-) {
-    AlertDialog(
-        onDismissRequest = { onDismissRequest() },
-        title = { Text(text = "Opa!", style = Typography.titleMedium) },
-        text = { Text(text = text, style = Typography.bodyLarge) },
-        confirmButton = {
-            TextButton(
-                onClick = {
-                    onDismissRequest()
-                }
-            ) {
-                Text(
-                    "Ok",
-                    color = MaterialTheme.colorScheme.secondary,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-        },
-    )
-}
+
+
+
+// PONTO DE ATENÇÃO : O ideal é remover esse mutableStateOf interno e basear a lógica diretamente no exercise.isCompleted.
 
 @Composable
 fun HoldToCompleteButton(
@@ -715,7 +697,6 @@ fun HoldToCompleteButton(
     var isPressed by remember { mutableStateOf(false) }
     var isCompleted by remember { mutableStateOf(false) }
     var showErrorDialog by remember { mutableStateOf(false) }
-    var isExerciseEmpty by remember { mutableStateOf(false) }
     val secondaryColor = MaterialTheme.colorScheme.secondary
 
     val progress = remember { Animatable(0f) }
@@ -727,10 +708,11 @@ fun HoldToCompleteButton(
             onDismissRequest = { showErrorDialog = false })
     }
 
-    exercise.exerciseSets.forEach { set ->
-        isExerciseEmpty = set.weight == "" || set.weight == "0" || set.reps == "0" || set.reps == ""
+    val isExerciseEmpty = remember(exercise.exerciseSets) {
+        exercise.exerciseSets.any { set ->
+            set.weight.isBlank() || set.weight == "0" || set.reps.isBlank() || set.reps == "0"
+        }
     }
-
     LaunchedEffect(isPressed) {
         if (isPressed && !isCompleted) {
             progress.animateTo(
@@ -798,65 +780,126 @@ fun HoldToCompleteButton(
 @Composable
 fun FinishWorkoutButton(
     modifier: Modifier = Modifier,
+    workout: Workout?,
     onComplete: () -> Unit
 ) {
     var isPressed by remember { mutableStateOf(false) }
-    var isCompleted by remember { mutableStateOf(false) }
 
     val progress = remember { Animatable(0f) }
     val hapticFeedback = LocalHapticFeedback.current
     val secondaryColor = MaterialTheme.colorScheme.secondary
 
-    LaunchedEffect(isPressed) {
-        if (isPressed && !isCompleted) {
-            // Um pouco mais de tempo (1.5s) para dar "peso" à ação de finalizar o treino todo
-            progress.animateTo(
-                targetValue = 1f,
-                animationSpec = tween(durationMillis = 1500, easing = LinearEasing)
-            )
-            if (progress.value == 1f) {
-                isCompleted = true
-                // Vibração ao concluir
-                hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-                onComplete()
+
+    val canCompleteWorkout = remember(workout) {
+        workout?.exercises?.all { exercise ->
+            exercise.exerciseSets.all { set ->
+                set.weight.isNotBlank() && set.weight != "0" && set.reps.isNotBlank() && set.reps != "0"
             }
-        } else if (!isCompleted) {
-            progress.animateTo(0f, tween(durationMillis = 300))
+        } == true
+    }
+
+    LaunchedEffect(isPressed, workout?.isCompleted) {
+        if (workout?.isCompleted == false) {
+            if (isPressed) {
+                progress.animateTo(
+                    targetValue = 1f,
+                    animationSpec = tween(durationMillis = 1500, easing = LinearEasing)
+                )
+                if (progress.value == 1f) {
+                    hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onComplete() // Isso vai avisar o ViewModel!
+                }
+            } else {
+                progress.animateTo(
+                    targetValue = 0f,
+                    animationSpec = tween(durationMillis = 300, easing = LinearEasing)
+                )
+            }
         }
     }
 
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 24.dp)
-            .height(60.dp) // Botão um pouco mais alto
-            .clip(RoundedCornerShape(30.dp)) // Mais arredondado
-            .background(MaterialTheme.colorScheme.onSecondary)
-            .border(2.dp, secondaryColor.copy(alpha = 0.5f), RoundedCornerShape(30.dp))
-            .pointerInput(Unit) {
-                detectTapGestures(
-                    onPress = {
-                        if (!isCompleted) {
-                            isPressed = true
-                            tryAwaitRelease()
-                            isPressed = false
+    if (canCompleteWorkout) {
+        Box(
+            modifier = modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 24.dp)
+                .height(60.dp)
+                .clip(RoundedCornerShape(30.dp))
+                .background(
+                    color = MaterialTheme.colorScheme.onSecondary
+                )
+                .border(2.dp, secondaryColor.copy(alpha = 0.5f), RoundedCornerShape(30.dp))
+                .pointerInput(workout?.isCompleted) {
+                    detectTapGestures(
+                        onPress = {
+                            if (workout?.isCompleted == false) {
+                                isPressed = true
+                                tryAwaitRelease()
+                                isPressed = false
+                            }
                         }
-                    }
+                    )
+                }
+                .drawBehind {
+                    drawRect(
+                        color = secondaryColor,
+                        size = size.copy(width = size.width * progress.value)
+                    )
+                },
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = if (workout?.isCompleted == true) "Treino Finalizado!" else "Segure para finalizar o treino",
+                style = Typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onPrimary,
+                fontWeight = FontWeight.Bold
+            )
+        }
+    } else {
+        Box(
+            modifier = modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 24.dp)
+                .height(60.dp)
+                .clip(RoundedCornerShape(30.dp))
+                .background(
+                    color = Color.Gray
+                )
+                .border(2.dp, Color.Transparent, RoundedCornerShape(30.dp)),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "Segure para finalizar o treino",
+                style = Typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onPrimary,
+                fontWeight = FontWeight.Normal
+            )
+        }
+    }
+}
+
+
+@Composable
+fun ErrorDialog(
+    onDismissRequest: () -> Unit,
+    text: String
+) {
+    AlertDialog(
+        onDismissRequest = { onDismissRequest() },
+        title = { Text(text = "Opa!", style = Typography.titleMedium) },
+        text = { Text(text = text, style = Typography.bodyLarge) },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    onDismissRequest()
+                }
+            ) {
+                Text(
+                    "Ok",
+                    color = MaterialTheme.colorScheme.secondary,
+                    fontWeight = FontWeight.Bold
                 )
             }
-            .drawBehind {
-                drawRect(
-                    color = secondaryColor,
-                    size = size.copy(width = size.width * progress.value)
-                )
-            },
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = if (isCompleted) "Treino Finalizado!" else "Segure para finalizar o treino",
-            style = Typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onPrimary,
-            fontWeight = FontWeight.Bold
-        )
-    }
+        },
+    )
 }

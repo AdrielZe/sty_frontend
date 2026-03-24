@@ -81,7 +81,8 @@ fun GymTrackerNavHost() {
                         exerciseId
                     )
                 },
-                onBackClick = { navController.popBackStack() }
+                onBackClick = { navController.popBackStack() },
+                onCompleteWorkout = {workoutViewModel.completeWorkout()}
             )
         }
     }
