@@ -44,8 +44,10 @@ class WorkoutViewModel(
 
         val updatedExerciseSetLine = currentWorkout.exercises.map { exercise ->
             if (exercise.id == exerciseId) {
-                println("SIZE IS: ${exercise.exerciseSets.size}")
-                val updatedSetList = exercise.exerciseSets + ExerciseSet(set = exercise.exerciseSets.size + 1)
+                val maxSetNumber = exercise.exerciseSets.maxOfOrNull { it.set } ?: 0
+
+                val updatedSetList = exercise.exerciseSets + ExerciseSet(set = maxSetNumber + 1)
+
                 exercise.copy(exerciseSets = updatedSetList)
             } else {
                 exercise
@@ -94,6 +96,28 @@ class WorkoutViewModel(
         workoutRepository.updateWorkout(updatedWorkout)
     }
 
+    fun completeExercise(exerciseId: String) {
+        val currentWorkout = uiState.value.workout ?: return
+
+        val updatedExerciseList = currentWorkout.exercises.map {exercise ->
+            if (exercise.id == exerciseId) {
+                val updatedSets = exercise.exerciseSets.map { set ->
+                    set.copy(isCompleted = true)
+                }
+
+                exercise.copy(isCompleted = true, exerciseSets = updatedSets)
+            } else {
+                exercise
+            }
+        }
+
+        val updatedWorkout = currentWorkout.copy(exercises = updatedExerciseList)
+
+        workoutRepository.updateWorkout(updatedWorkout)
+    }
+
+
+
     fun updateExercise(exerciseId: String, setNumber: Int ?= 1, newReps: String? = null, newWeight: String? = null) {
         val currentWorkout = uiState.value.workout ?: return
 
@@ -117,6 +141,14 @@ class WorkoutViewModel(
         }
 
         val updatedWorkout = currentWorkout.copy(exercises = updatedExercises)
+        workoutRepository.updateWorkout(updatedWorkout)
+    }
+
+    private fun updateCurrentWorkout(updateAction: (Workout) -> Workout) {
+        val currentWorkout = uiState.value.workout ?: return
+
+        val updatedWorkout = updateAction(currentWorkout)
+
         workoutRepository.updateWorkout(updatedWorkout)
     }
 

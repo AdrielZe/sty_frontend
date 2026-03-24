@@ -16,18 +16,22 @@ private val LightColorScheme = lightColorScheme(
     primary = CyanDark,
     secondary = CyanAccent,
     background = LightBackground,
+    onSecondaryContainer = ExerciseCardBackgroundDark,
     surface = LightSurface,
-    onPrimary = Color.White,
+    onPrimary = Color.Black,
+    onSecondary = Color.White,
     onBackground = LightText,
     onSurface = LightText
 )
 
 private val DarkColorScheme = darkColorScheme(
     primary = CyanAccent,
-    secondary = CyanAccent,
+    secondary = CyanDark,
     background = DarkBackground,
+    onSecondaryContainer = ExerciseCardBackgroundLight,
     surface = DarkSurface,
-    onPrimary = Color.Black,
+    onPrimary = Color.White,
+    onSecondary = Color.Black,
     onBackground = DarkText,
     onSurface = DarkText
 )
@@ -35,7 +39,7 @@ private val DarkColorScheme = darkColorScheme(
 fun Training_trackerTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = true,
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {

@@ -5,7 +5,10 @@ import androidx.compose.ui.graphics.Color
 
 // Cores Principais
 val CyanAccent = Color(0xFF66c9e8)
-val CyanDark = Color(0xFF008B8B)
+val CyanDark = Color(0xFF1B92B6)
+
+val ExerciseCardBackgroundLight = Color(0XFFFFFFFF)
+val ExerciseCardBackgroundDark = Color(0XFF000000)
 
 // Cores para quando clicar nos treino
 val ClickBlue = Color(0XFF52d6ff)
