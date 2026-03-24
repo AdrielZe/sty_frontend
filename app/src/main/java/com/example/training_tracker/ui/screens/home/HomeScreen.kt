@@ -16,8 +16,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Add
@@ -87,37 +89,36 @@ fun HomeScreen(
             modifier = modifier
                 .padding(innerPadding)
                 .padding(horizontal = 24.dp)
-                .fillMaxSize(),
-            horizontalAlignment = Alignment.Start
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState()),
+            horizontalAlignment = Alignment.Start,
         ) {
             Spacer(modifier = Modifier.height(16.dp))
 
             // Textos de Saudação (Hero Section)
             Text(
-                text = "VISÃO GERAL DO TREINO",
+                text = "SEUS TREINOS",
                 color = CyanAccent,
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Bold,
-                letterSpacing = 1.5.sp // Dá aquele espaçamento estiloso entre as letras
+                letterSpacing = 1.5.sp
             )
 
             Spacer(modifier = Modifier.height(4.dp))
 
             // O nome fica dinâmico, vai aparecer "Foco, Adriel."
             Text(
-                text = "Foco, ${homeUiState.user?.name ?: "Atleta"}.",
-                fontSize = 40.sp, // Fonte bem grande como no design
-                fontWeight = FontWeight.ExtraBold,
+                text = "Olá, ${homeUiState.user?.name ?: "Atleta"}.",
+                fontSize = 30.sp, // Fonte bem grande como no design
                 color = MaterialTheme.colorScheme.onBackground
             )
-
-            Spacer(modifier = Modifier.height(32.dp))
-
-            // Botão Gradiente Principal
-            MainGradientButton(
-                text = "INICIAR NOVO TREINO",
-                onClick = { /* Lógica para criar/iniciar treino */ }
-            )
+//
+//            Spacer(modifier = Modifier.height(32.dp))
+//
+//            MainGradientButton(
+//                text = "INICIAR NOVO TREINO",
+//                onClick = { /* Lógica para criar/iniciar treino */ }
+//            )
 
             Spacer(modifier = Modifier.height(40.dp))
 
@@ -148,49 +149,52 @@ fun CustomTopBar(
     onMenuClick: () -> Unit,
     onProfileClick: () -> Unit
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 24.dp, vertical = 16.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        // Ícone de Menu Hamburguer
-        IconButton(onClick = onMenuClick, modifier = Modifier.size(28.dp)) {
-            Icon(
-                imageVector = Icons.Default.Menu,
-                contentDescription = "Menu",
-                tint = MaterialTheme.colorScheme.onBackground
-            )
-        }
-
-        // Logo / Nome do App
-        Text(
-            text = "TRACKER", // Mude para o nome do seu app
-            color = CyanAccent,
-            fontSize = 20.sp,
-            fontWeight = FontWeight.ExtraBold,
-            letterSpacing = 2.sp
-        )
-
-        // Avatar do Perfil com borda
-        Surface(
-            shape = CircleShape,
-            color = MaterialTheme.colorScheme.surfaceVariant,
-            border = BorderStroke(2.dp, CyanAccent.copy(alpha = 0.5f)), // Borda azulada da imagem
+        Row(
             modifier = Modifier
-                .size(40.dp)
-                .clip(CircleShape)
-                .clickable { onProfileClick() }
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp, vertical = 36.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(
-                imageVector = Icons.Default.Person,
-                contentDescription = "Perfil",
-                tint = CyanAccent,
-                modifier = Modifier.padding(8.dp)
+            // Ícone de Menu Hamburguer
+            IconButton(onClick = onMenuClick, modifier = Modifier.size(28.dp)) {
+                Icon(
+                    imageVector = Icons.Default.Menu,
+                    contentDescription = "Menu",
+                    tint = MaterialTheme.colorScheme.onBackground
+                )
+            }
+
+            // Logo / Nome do App
+            Text(
+                text = "TRACKER", // Mude para o nome do seu app
+                color = CyanAccent,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.ExtraBold,
+                letterSpacing = 2.sp
             )
+
+            // Avatar do Perfil com borda
+            Surface(
+                shape = CircleShape,
+                color = MaterialTheme.colorScheme.surfaceVariant,
+                border = BorderStroke(
+                    2.dp,
+                    CyanAccent.copy(alpha = 0.5f)
+                ), // Borda azulada da imagem
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .clickable { onProfileClick() }
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Person,
+                    contentDescription = "Perfil",
+                    tint = CyanAccent,
+                    modifier = Modifier.padding(8.dp)
+                )
+            }
         }
-    }
 }
 
 @Composable
@@ -244,7 +248,7 @@ fun MainGradientButton(
 fun TodayWorkoutCard(modifier: Modifier = Modifier, workout: Workout?, onClick: () -> Unit) {
     Card(
         onClick = onClick,
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth().padding(vertical = 12.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
@@ -275,7 +279,7 @@ fun TodayWorkoutCard(modifier: Modifier = Modifier, workout: Workout?, onClick: 
 
             Surface(
                 shape = CircleShape,
-                color = MaterialTheme.colorScheme.secondaryContainer,
+                color = MaterialTheme.colorScheme.secondary,
                 modifier = Modifier.size(40.dp)
             ) {
                 Icon(

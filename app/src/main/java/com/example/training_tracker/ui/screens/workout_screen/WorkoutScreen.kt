@@ -378,8 +378,8 @@ fun HoldToCompleteButton(
         modifier = modifier
             .height(48.dp)
             .clip(RoundedCornerShape(24.dp))
-            .background(if (exercise.isCompleted) Color.Gray.copy(alpha = 0.2f) else MaterialTheme.colorScheme.surfaceVariant)
-            .border(1.dp, if (exercise.isCompleted) Color.Transparent else secondaryColor.copy(alpha = 0.5f), RoundedCornerShape(24.dp))
+            .background(if (exercise.isCompleted) Color.Gray.copy(alpha = 0.2f) else MaterialTheme.colorScheme.onSecondary)
+            .border(1.dp, if (exercise.isCompleted) Color.Transparent else secondaryColor, RoundedCornerShape(24.dp))
             .pointerInput(exercise.isCompleted) {
                 detectTapGestures(
                     onPress = {
@@ -392,7 +392,7 @@ fun HoldToCompleteButton(
                 )
             }
             .drawBehind {
-                drawRect(color = secondaryColor.copy(alpha = 0.2f), size = size.copy(width = size.width * progress.value))
+                drawRect(color = secondaryColor, size = size.copy(width = size.width * progress.value))
             },
         contentAlignment = Alignment.Center
     ) {
@@ -400,7 +400,7 @@ fun HoldToCompleteButton(
             text = if (exercise.isCompleted) "Exercício Concluído" else "Segure para concluir",
             fontSize = 14.sp,
             fontWeight = FontWeight.Bold,
-            color = if (exercise.isCompleted) Color.Gray else MaterialTheme.colorScheme.onSurface
+            color = if (exercise.isCompleted) Color.Gray else MaterialTheme.colorScheme.onPrimary
         )
     }
 }
@@ -493,7 +493,6 @@ fun FinishWorkoutButton(
     }
 }
 
-
 @Composable
 fun ErrorDialog(
     onDismissRequest: () -> Unit,
@@ -517,6 +516,56 @@ fun ErrorDialog(
             }
         },
     )
+}
+
+@Composable
+fun InputTextBox(
+    modifier: Modifier = Modifier,
+    isLocked: Boolean = false,
+    inputValue: String,
+    onRepsChange: (String) -> Unit
+) {
+    Box(
+        modifier = modifier
+            .padding(start = 8.dp)
+            .background(
+                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                shape = RoundedCornerShape(4.dp)
+            )
+            .border(
+                width = 1.dp,
+                color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.5f),
+                shape = RoundedCornerShape(4.dp)
+            )
+            .padding(vertical = 4.dp, horizontal = 8.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        BasicTextField(
+            value = inputValue,
+            onValueChange = { onRepsChange(it) },
+            enabled = !isLocked,
+            textStyle = MaterialTheme.typography.titleMedium.copy(
+                color = if (isLocked) Color.Gray else MaterialTheme.colorScheme.onPrimary,
+                textAlign = TextAlign.Center
+            ),
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            decorationBox = { innerTextField ->
+                if (inputValue.isEmpty()) {
+                    Text(
+                        text = "0",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.5f),
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+                innerTextField()
+            }
+        )
+    }
 }
 
 @Composable
