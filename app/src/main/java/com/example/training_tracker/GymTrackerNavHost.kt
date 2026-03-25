@@ -12,6 +12,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.training_tracker.data.routes.Routes
+import com.example.training_tracker.ui.screens.create_workout.CreateWorkoutScreen
 import com.example.training_tracker.ui.screens.home.HomeScreen
 import com.example.training_tracker.ui.screens.home.HomeViewModel
 import com.example.training_tracker.ui.screens.workout_screen.WorkoutScreen
@@ -33,9 +34,19 @@ fun GymTrackerNavHost() {
                 homeUiState = homeUiState,
                 onClickWorkoutCard = { workoutId ->
                     navController.navigate("${Routes.Workout.name}/$workoutId")
+                },
+                onNavigateToCreateWorkout = {
+                    navController.navigate(Routes.CreateWorkout.name)
                 }
             )
         }
+        
+        composable(route = Routes.CreateWorkout.name) {
+            CreateWorkoutScreen(
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+
         composable(
             route = "${Routes.Workout.name}/{workoutId}",
             arguments = listOf(
@@ -87,4 +98,3 @@ fun GymTrackerNavHost() {
         }
     }
 }
-

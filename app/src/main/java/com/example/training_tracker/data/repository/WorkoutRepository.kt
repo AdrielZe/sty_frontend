@@ -7,19 +7,23 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.update
+import java.time.DayOfWeek
 
 class WorkoutRepository {
-    private val initialWorkouts = listOf(
-        Workout(id = "1", name = "Treino de Peito", exercises = listOf<Exercise>(
-            Exercise(name = "Supino reto",),
-            Exercise(name = "Supino inclinado"),
-            Exercise(name = "Voador"),
-            Exercise(name = "Crucifixo")
-        )),
-        Workout(id = "2", name = "Treino de Costas"),
-        Workout(id = "3", name = "Perna Completo")
-    )
+    // Mockando o treino de peito para todos os dias da semana conforme solicitado
+    private val initialWorkouts = DayOfWeek.entries.map { day ->
+        Workout(
+            id = "mock_chest_${day.name}",
+            name = "Treino de Peito",
+            dayOfWeek = day,
+            exercises = listOf(
+                Exercise(name = "Supino reto"),
+                Exercise(name = "Supino inclinado"),
+                Exercise(name = "Voador"),
+                Exercise(name = "Crucifixo")
+            )
+        )
+    }
 
     private val _workouts = MutableStateFlow<List<Workout>>(initialWorkouts)
 
@@ -45,11 +49,16 @@ class WorkoutRepository {
         }
     }
 
-    fun getTodayWorkout(): Flow<Workout?> {
+    fun getWorkoutsByDay(day: DayOfWeek): Flow<List<Workout>> {
         return _workouts.map { list ->
-            list.firstOrNull()
+            list.filter { it.dayOfWeek == day }
         }
     }
 
-
+    fun getTodayWorkout(day: DayOfWeek): Flow<Workout?> {
+        return _workouts.map { list ->
+            // Prioriza o treino mockado de peito ou o primeiro treino encontrado para o dia
+            list.firstOrNull { it.dayOfWeek == day }
+        }
+    }
 }

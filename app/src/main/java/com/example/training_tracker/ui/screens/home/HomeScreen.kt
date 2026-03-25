@@ -50,13 +50,10 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.training_tracker.data.models.User
 import com.example.training_tracker.data.models.Workout
 import com.example.training_tracker.ui.theme.CyanAccent
-import com.example.training_tracker.ui.theme.Dimens
 import com.example.training_tracker.ui.theme.Typography
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -64,13 +61,13 @@ import com.example.training_tracker.ui.theme.Typography
 fun HomeScreen(
     modifier: Modifier = Modifier,
     onClickWorkoutCard: (String?) -> Unit,
+    onNavigateToCreateWorkout: () -> Unit,
     homeUiState: HomeUiState
 ) {
     var selectedBottomTab by remember { mutableIntStateOf(0) }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
-        // Usamos a cor de fundo padrão, idealmente um cinza beeeem claro ou off-white no seu tema
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             CustomTopBar(
@@ -81,7 +78,10 @@ fun HomeScreen(
         bottomBar = {
             HomeBottomBar(
                 selectedTab = selectedBottomTab,
-                onTabSelected = { selectedBottomTab = it }
+                onTabSelected = { 
+                    selectedBottomTab = it 
+                    if (it == 1) onNavigateToCreateWorkout()
+                }
             )
         }
     ) { innerPadding ->
@@ -95,7 +95,6 @@ fun HomeScreen(
         ) {
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Textos de Saudação (Hero Section)
             Text(
                 text = "SEUS TREINOS",
                 color = CyanAccent,
@@ -106,10 +105,9 @@ fun HomeScreen(
 
             Spacer(modifier = Modifier.height(4.dp))
 
-            // O nome fica dinâmico, vai aparecer "Foco, Adriel."
             Text(
                 text = "Olá, ${homeUiState.user?.name ?: "Atleta"}.",
-                fontSize = 30.sp, // Fonte bem grande como no design
+                fontSize = 30.sp,
                 color = MaterialTheme.colorScheme.onBackground
             )
 //
@@ -117,12 +115,11 @@ fun HomeScreen(
 //
 //            MainGradientButton(
 //                text = "INICIAR NOVO TREINO",
-//                onClick = { /* Lógica para criar/iniciar treino */ }
+//                onClick = onNavigateToCreateWorkout
 //            )
 
             Spacer(modifier = Modifier.height(40.dp))
 
-            // Mantendo a funcionalidade antiga do "Treino de hoje" logo abaixo
             Text(
                 text = "Treino agendado para hoje",
                 style = Typography.titleMedium,
@@ -132,11 +129,14 @@ fun HomeScreen(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            if (homeUiState.todayWorkout != null) {
-                TodayWorkoutCard(
-                    workout = homeUiState.todayWorkout,
-                    onClick = { onClickWorkoutCard(homeUiState.todayWorkout.id) }
-                )
+            if (homeUiState.todayWorkouts.isNotEmpty()) {
+                homeUiState.todayWorkouts.forEach { workout ->
+                    WorkoutCard(
+                        workout = workout,
+                        onClick = { onClickWorkoutCard(workout.id) }
+                    )
+
+                }
             } else {
                 EmptyWorkoutCard()
             }
@@ -156,7 +156,6 @@ fun CustomTopBar(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Ícone de Menu Hamburguer
             IconButton(onClick = onMenuClick, modifier = Modifier.size(28.dp)) {
                 Icon(
                     imageVector = Icons.Default.Menu,
@@ -165,23 +164,21 @@ fun CustomTopBar(
                 )
             }
 
-            // Logo / Nome do App
             Text(
-                text = "TRACKER", // Mude para o nome do seu app
+                text = "TRACKER",
                 color = CyanAccent,
                 fontSize = 20.sp,
                 fontWeight = FontWeight.ExtraBold,
                 letterSpacing = 2.sp
             )
 
-            // Avatar do Perfil com borda
             Surface(
                 shape = CircleShape,
                 color = MaterialTheme.colorScheme.surfaceVariant,
                 border = BorderStroke(
                     2.dp,
                     CyanAccent.copy(alpha = 0.5f)
-                ), // Borda azulada da imagem
+                ),
                 modifier = Modifier
                     .size(40.dp)
                     .clip(CircleShape)
@@ -202,7 +199,6 @@ fun MainGradientButton(
     text: String,
     onClick: () -> Unit
 ) {
-    // Cria um gradiente horizontal misturando o seu Cyan com uma cor mais escura/primária
     val gradientColors = listOf(
         CyanAccent,
         MaterialTheme.colorScheme.primary
@@ -215,7 +211,7 @@ fun MainGradientButton(
             .shadow(
                 elevation = 16.dp,
                 shape = RoundedCornerShape(32.dp),
-                spotColor = CyanAccent.copy(alpha = 0.5f) // Sombra colorida suave
+                spotColor = CyanAccent.copy(alpha = 0.5f)
             )
             .clip(RoundedCornerShape(32.dp))
             .background(Brush.horizontalGradient(gradientColors))
@@ -245,7 +241,7 @@ fun MainGradientButton(
 }
 
 @Composable
-fun TodayWorkoutCard(modifier: Modifier = Modifier, workout: Workout?, onClick: () -> Unit) {
+fun WorkoutCard(modifier: Modifier = Modifier, workout: Workout?, onClick: () -> Unit) {
     Card(
         onClick = onClick,
         modifier = modifier.fillMaxWidth().padding(vertical = 12.dp),

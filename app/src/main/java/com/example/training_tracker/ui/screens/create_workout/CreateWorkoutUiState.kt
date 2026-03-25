@@ -1,2 +1,18 @@
 package com.example.training_tracker.ui.screens.create_workout
 
+import com.example.training_tracker.data.models.Exercise
+import java.time.DayOfWeek
+
+data class CreateWorkoutUiState(
+    val workoutName: String = "",
+    val selectedDay: DayOfWeek? = null,
+    val exercises: List<Exercise> = emptyList(),
+    val isWorkoutSaved: Boolean = false,
+    val showErrors: Boolean = false
+) {
+    val isNameValid = workoutName.isNotBlank()
+    val isDayValid = selectedDay != null
+    val isExercisesValid = exercises.isNotEmpty()
+    
+    val canSave = isNameValid && isDayValid && isExercisesValid
+}
