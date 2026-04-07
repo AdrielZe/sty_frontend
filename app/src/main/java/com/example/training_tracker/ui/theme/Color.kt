@@ -4,7 +4,7 @@ import androidx.compose.ui.graphics.Color
 
 
 // Cores Principais
-val CyanAccent = Color(0xFF66c9e8)
+val CyanAccent = Color(0xFF61B2F3)
 val CyanDark = Color(0xFF1B92B6)
 
 val ExerciseCardBackgroundLight = Color(0XFFFFFFFF)

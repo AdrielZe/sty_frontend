@@ -23,8 +23,9 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.AddCircle
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Card
@@ -62,6 +63,8 @@ fun HomeScreen(
     modifier: Modifier = Modifier,
     onClickWorkoutCard: (String?) -> Unit,
     onNavigateToCreateWorkout: () -> Unit,
+    onNavigateToRegisteredWorkouts: () -> Unit,
+    onNavigateToWorkoutsHistory: () -> Unit,
     homeUiState: HomeUiState
 ) {
     var selectedBottomTab by remember { mutableIntStateOf(0) }
@@ -80,7 +83,8 @@ fun HomeScreen(
                 selectedTab = selectedBottomTab,
                 onTabSelected = { 
                     selectedBottomTab = it 
-                    if (it == 1) onNavigateToCreateWorkout()
+                    if (it == 1) onNavigateToRegisteredWorkouts()
+                    if (it == 2) onNavigateToWorkoutsHistory()
                 }
             )
         }
@@ -110,13 +114,6 @@ fun HomeScreen(
                 fontSize = 30.sp,
                 color = MaterialTheme.colorScheme.onBackground
             )
-//
-//            Spacer(modifier = Modifier.height(32.dp))
-//
-//            MainGradientButton(
-//                text = "INICIAR NOVO TREINO",
-//                onClick = onNavigateToCreateWorkout
-//            )
 
             Spacer(modifier = Modifier.height(40.dp))
 
@@ -135,11 +132,19 @@ fun HomeScreen(
                         workout = workout,
                         onClick = { onClickWorkoutCard(workout.id) }
                     )
-
                 }
             } else {
                 EmptyWorkoutCard()
             }
+            
+            Spacer(modifier = Modifier.height(32.dp))
+
+            MainGradientButton(
+                text = "CRIAR NOVO TREINO",
+                onClick = onNavigateToCreateWorkout
+            )
+            
+            Spacer(modifier = Modifier.height(16.dp))
         }
     }
 }
@@ -165,7 +170,7 @@ fun CustomTopBar(
             }
 
             Text(
-                text = "TRACKER",
+                text = "GUGROFFIT",
                 color = CyanAccent,
                 fontSize = 20.sp,
                 fontWeight = FontWeight.ExtraBold,
@@ -331,8 +336,8 @@ fun HomeBottomBar(selectedTab: Int, onTabSelected: (Int) -> Unit) {
             )
         )
         NavigationBarItem(
-            icon = { Icon(Icons.Default.AddCircle, contentDescription = "Criar Treino") },
-            label = { Text("Criar Treino") },
+            icon = { Icon(Icons.Default.List, contentDescription = "Treinos Registrados") },
+            label = { Text("Treinos") },
             selected = selectedTab == 1,
             onClick = { onTabSelected(1) },
             colors = NavigationBarItemDefaults.colors(
@@ -341,5 +346,16 @@ fun HomeBottomBar(selectedTab: Int, onTabSelected: (Int) -> Unit) {
                 indicatorColor = CyanAccent.copy(alpha = 0.2f)
             )
         )
+//        NavigationBarItem(
+//            icon = { Icon(Icons.Default.CheckCircle, contentDescription = "Histórico") },
+//            label = { Text("Histórico") },
+//            selected = selectedTab == 2,
+//            onClick = { onTabSelected(2) },
+//            colors = NavigationBarItemDefaults.colors(
+//                selectedIconColor = CyanAccent,
+//                selectedTextColor = MaterialTheme.colorScheme.onSurface,
+//                indicatorColor = CyanAccent.copy(alpha = 0.2f)
+//            )
+//        )
     }
 }

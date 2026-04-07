@@ -2,6 +2,7 @@ package com.example.training_tracker.ui.screens.create_workout
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.training_tracker.GymTrackerApplication
@@ -12,6 +13,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import java.time.DayOfWeek
 
 class CreateWorkoutViewModel(
@@ -55,7 +57,13 @@ class CreateWorkoutViewModel(
                 exercises = currentState.exercises,
                 dayOfWeek = currentState.selectedDay
             )
-            workoutRepository.addWorkout(newWorkout)
+            viewModelScope.launch {
+                try {
+                    workoutRepository.addWorkout(newWorkout)
+                } catch (e: Exception) {
+
+                }
+            }
             _uiState.update { it.copy(isWorkoutSaved = true) }
         } else {
             _uiState.update { it.copy(showErrors = true) }

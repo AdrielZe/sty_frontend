@@ -4,5 +4,8 @@ enum class Routes {
     Home,
     CreateWorkout,
     RegisteredWorkouts,
-    Workout
+    Workout,
+    WorkoutDetails,
+
+    WorkoutHistory
 }

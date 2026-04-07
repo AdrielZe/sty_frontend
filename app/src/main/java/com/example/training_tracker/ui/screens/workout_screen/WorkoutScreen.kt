@@ -124,7 +124,7 @@ fun WorkoutScreen(
                             color = CyanAccent,
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold,
-                            letterSpacing = 1.5.sp
+                            letterSpacing = 1.sp
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
@@ -147,7 +147,6 @@ fun WorkoutScreen(
                         onAddSetClick = { id -> onAddSetClick(id) },
                         onRemoveSet = onRemoveSet,
                         onCompleteSet = onCompleteSet,
-                        onCompleteExercise = onCompleteExercise,
                     )
                 }
 
@@ -205,7 +204,6 @@ fun ExerciseCard(
     exercise: Exercise,
     onCompleteSet: (String, Int) -> Unit,
     onRepsChange: (Int, String) -> Unit,
-    onCompleteExercise: (String) -> Unit,
     onWeightChange: (Int, String) -> Unit,
     onAddSetClick: (String) -> Unit,
     onRemoveSet: (String, Int) -> Unit,
@@ -216,7 +214,6 @@ fun ExerciseCard(
 
     if (exercise.exerciseSets.isEmpty()) { isDeleteMode = false }
 
-    // Design atualizado do Card
     Card(
         modifier = modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
@@ -280,7 +277,6 @@ fun ExerciseCard(
                 Column(modifier = Modifier.fillMaxWidth()) {
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // Cabeçalhos
                     Row(modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)) {
                         Text(modifier = Modifier.weight(0.15f), text = "Série", textAlign = TextAlign.Center, style = Typography.labelMedium, color = Color.Gray)
                         Text(modifier = Modifier.weight(0.3f), text = "Peso (Kg)", textAlign = TextAlign.Center, style = Typography.labelMedium, color = Color.Gray)
@@ -307,12 +303,6 @@ fun ExerciseCard(
                     if (!isDeleteMode && !exercise.isCompleted) {
                         Spacer(modifier = Modifier.height(16.dp))
                         AddSetButton(modifier = Modifier.fillMaxWidth(), onAddSetClick = { onAddSetClick(exercise.id) })
-                        Spacer(modifier = Modifier.height(8.dp))
-                        HoldToCompleteButton(
-                            modifier = Modifier.fillMaxWidth(),
-                            onComplete = { onCompleteExercise(exercise.id) },
-                            exercise = exercise
-                        )
                     }
                 }
             }
@@ -320,12 +310,8 @@ fun ExerciseCard(
     }
 }
 
-// ... [O código do SetLine e InputTextBox permanece igual, pois já estavam bons] ...
-// Por brevidade, omiti o ErrorDialog e o SetLine, cole-os de volta aqui!
-
 @Composable
 fun AddSetButton(modifier: Modifier, onAddSetClick: () -> Unit) {
-    // Versão mais clean do Add Button
     TextButton(
         onClick = onAddSetClick,
         modifier = modifier.height(48.dp)
@@ -333,75 +319,6 @@ fun AddSetButton(modifier: Modifier, onAddSetClick: () -> Unit) {
         Icon(Icons.Default.Add, contentDescription = "Adicionar", tint = CyanAccent)
         Spacer(modifier = Modifier.width(8.dp))
         Text("Adicionar série", color = CyanAccent, fontWeight = FontWeight.Bold)
-    }
-}
-
-@Composable
-fun HoldToCompleteButton(
-    modifier: Modifier = Modifier,
-    exercise: Exercise,
-    onComplete: () -> Unit
-) {
-    var isPressed by remember { mutableStateOf(false) }
-    var showErrorDialog by remember { mutableStateOf(false) }
-
-    val progress = remember { Animatable(0f) }
-    val hapticFeedback = LocalHapticFeedback.current
-    val secondaryColor = MaterialTheme.colorScheme.secondary
-
-    if (showErrorDialog) {
-        ErrorDialog(text = "Preencha todos os campos das séries antes de concluir o exercício", onDismissRequest = { showErrorDialog = false })
-    }
-
-    val isExerciseEmpty = remember(exercise.exerciseSets) {
-        exercise.exerciseSets.any { set -> set.weight.isBlank() || set.weight == "0" || set.reps.isBlank() || set.reps == "0" }
-    }
-
-    // Resolvido o Ponto de Atenção: Usando exercise.isCompleted direto!
-    LaunchedEffect(isPressed, exercise.isCompleted) {
-        if (isPressed && !exercise.isCompleted) {
-            progress.animateTo(targetValue = 1f, animationSpec = tween(1000, easing = LinearEasing))
-            if (progress.value == 1f) {
-                if (!isExerciseEmpty) {
-                    hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onComplete()
-                } else {
-                    showErrorDialog = true
-                }
-            }
-        } else if (!exercise.isCompleted) {
-            progress.animateTo(targetValue = 0f, animationSpec = tween(300))
-        }
-    }
-
-    Box(
-        modifier = modifier
-            .height(48.dp)
-            .clip(RoundedCornerShape(24.dp))
-            .background(if (exercise.isCompleted) Color.Gray.copy(alpha = 0.2f) else MaterialTheme.colorScheme.onSecondary)
-            .border(1.dp, if (exercise.isCompleted) Color.Transparent else secondaryColor, RoundedCornerShape(24.dp))
-            .pointerInput(exercise.isCompleted) {
-                detectTapGestures(
-                    onPress = {
-                        if (!exercise.isCompleted) {
-                            isPressed = true
-                            tryAwaitRelease()
-                            isPressed = false
-                        }
-                    }
-                )
-            }
-            .drawBehind {
-                drawRect(color = secondaryColor, size = size.copy(width = size.width * progress.value))
-            },
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = if (exercise.isCompleted) "Exercício Concluído" else "Segure para concluir",
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Bold,
-            color = if (exercise.isCompleted) Color.Gray else MaterialTheme.colorScheme.onPrimary
-        )
     }
 }
 
@@ -437,7 +354,6 @@ fun FinishWorkoutButton(
         }
     }
 
-    // Unificamos os dois Box usando modificadores condicionais e o Gradiente!
     val gradientColors = listOf(CyanAccent, MaterialTheme.colorScheme.primary)
 
     Box(
@@ -455,9 +371,9 @@ fun FinishWorkoutButton(
                 if (canCompleteWorkout && workout?.isCompleted == false) {
                     Brush.horizontalGradient(gradientColors)
                 } else if (workout?.isCompleted == true) {
-                    Brush.horizontalGradient(listOf(MaterialTheme.colorScheme.secondary, MaterialTheme.colorScheme.secondary)) // Cor sólida de sucesso
+                    Brush.horizontalGradient(listOf(MaterialTheme.colorScheme.secondary, MaterialTheme.colorScheme.secondary))
                 } else {
-                    Brush.horizontalGradient(listOf(Color.Gray, Color.DarkGray)) // Desabilitado
+                    Brush.horizontalGradient(listOf(Color.Gray, Color.DarkGray))
                 }
             )
             .pointerInput(canCompleteWorkout, workout?.isCompleted) {
@@ -472,7 +388,6 @@ fun FinishWorkoutButton(
                 )
             }
             .drawBehind {
-                // Desenha uma sobreposição escura para indicar o progresso de "segurar"
                 if (progress.value > 0f) {
                     drawRect(color = Color.Black.copy(alpha = 0.2f), size = size.copy(width = size.width * progress.value))
                 }

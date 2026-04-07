@@ -2,9 +2,13 @@ package com.example.training_tracker
 
 import android.os.Build
 import androidx.annotation.RequiresApi
-import androidx.compose.runtime.Composable
+import androidx.compose.animation.*
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
 import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -15,6 +19,11 @@ import com.example.training_tracker.data.routes.Routes
 import com.example.training_tracker.ui.screens.create_workout.CreateWorkoutScreen
 import com.example.training_tracker.ui.screens.home.HomeScreen
 import com.example.training_tracker.ui.screens.home.HomeViewModel
+import com.example.training_tracker.ui.screens.registered_workouts.RegisteredWorkoutsScreen
+import com.example.training_tracker.ui.screens.workout_details.WorkoutDetailsScreen
+import com.example.training_tracker.ui.screens.workout_details.WorkoutDetailsViewModel
+import com.example.training_tracker.ui.screens.workout_history.WorkoutHistoryScreen
+import com.example.training_tracker.ui.screens.workout_history.WorkoutHistoryViewModel
 import com.example.training_tracker.ui.screens.workout_screen.WorkoutScreen
 import com.example.training_tracker.ui.screens.workout_screen.WorkoutViewModel
 
@@ -27,25 +36,89 @@ fun GymTrackerNavHost() {
 
     NavHost(
         navController = navController,
-        startDestination = Routes.Home.name
+        startDestination = Routes.Home.name,
+        modifier = Modifier.background(MaterialTheme.colorScheme.background),
+        enterTransition = {
+            slideInHorizontally(initialOffsetX = { it }, animationSpec = tween(400)) + fadeIn(
+                animationSpec = tween(400)
+            )
+        },
+        exitTransition = {
+            slideOutHorizontally(targetOffsetX = { -it }, animationSpec = tween(400)) + fadeOut(
+                animationSpec = tween(400)
+            )
+        },
+        popEnterTransition = {
+            slideInHorizontally(initialOffsetX = { -it }, animationSpec = tween(400)) + fadeIn(
+                animationSpec = tween(400)
+            )
+        },
+        popExitTransition = {
+            slideOutHorizontally(targetOffsetX = { it }, animationSpec = tween(400)) + fadeOut(
+                animationSpec = tween(400)
+            )
+        }
     ) {
         composable(route = Routes.Home.name) {
             HomeScreen(
                 homeUiState = homeUiState,
                 onClickWorkoutCard = { workoutId ->
-                    navController.navigate("${Routes.Workout.name}/$workoutId")
+                    navController.navigate("${Routes.WorkoutDetails.name}/$workoutId/true")
                 },
                 onNavigateToCreateWorkout = {
                     navController.navigate(Routes.CreateWorkout.name)
+                },
+                onNavigateToRegisteredWorkouts = {
+                    navController.navigate(Routes.RegisteredWorkouts.name)
+                },
+                onNavigateToWorkoutsHistory = {
+                    navController.navigate(Routes.WorkoutHistory.name)
                 }
             )
         }
-        
+
         composable(route = Routes.CreateWorkout.name) {
             CreateWorkoutScreen(
                 onNavigateBack = { navController.popBackStack() }
             )
         }
+
+        composable(route = Routes.RegisteredWorkouts.name) {
+            RegisteredWorkoutsScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onWorkoutClick = { workoutId ->
+                    navController.navigate("${Routes.WorkoutDetails.name}/$workoutId/false")
+                }
+            )
+        }
+
+        composable(
+            route = "${Routes.WorkoutDetails.name}/{workoutId}/{canStart}",
+            arguments = listOf(
+                navArgument("workoutId") { type = NavType.StringType },
+                navArgument("canStart") { type = NavType.StringType }
+            )
+        ) {
+            WorkoutDetailsScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onStartWorkout = { workoutId ->
+                    navController.navigate("${Routes.Workout.name}/$workoutId")
+                }
+            )
+        }
+
+//        composable(route = Routes.WorkoutHistory.name) {
+//            val historyViewModel: WorkoutHistoryViewModel = viewModel(factory = WorkoutHistoryViewModel.Factory)
+//            val historyUiState by historyViewModel.uiState.collectAsState()
+//
+//            WorkoutHistoryScreen(
+//                uiState = historyUiState,
+//                onSearchQueryChange = { historyViewModel.onSearchQueryChange(it) },
+//                onSortOrderChange = { historyViewModel.onSortOrderChange(it) },
+//                onNavigateBack = { navController.popBackStack() }
+//            )
+//        }
+
 
         composable(
             route = "${Routes.Workout.name}/{workoutId}",
@@ -93,7 +166,7 @@ fun GymTrackerNavHost() {
                     )
                 },
                 onBackClick = { navController.popBackStack() },
-                onCompleteWorkout = {workoutViewModel.completeWorkout()}
+                onCompleteWorkout = { workoutViewModel.completeWorkout() }
             )
         }
     }

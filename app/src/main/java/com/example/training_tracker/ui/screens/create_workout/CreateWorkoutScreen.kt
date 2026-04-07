@@ -3,43 +3,18 @@ package com.example.training_tracker.ui.screens.create_workout
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -50,6 +25,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.training_tracker.data.models.Exercise
 import com.example.training_tracker.ui.screens.home.MainGradientButton
+import com.example.training_tracker.ui.screens.workout_details.AddExerciseSelectionDialog
 import com.example.training_tracker.ui.theme.CyanAccent
 import com.example.training_tracker.ui.theme.Dimens
 import java.time.DayOfWeek
@@ -63,8 +39,8 @@ fun CreateWorkoutScreen(
     viewModel: CreateWorkoutViewModel = viewModel(factory = CreateWorkoutViewModel.Factory)
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    var exerciseName by remember { mutableStateOf("") }
-    var showExerciseError by remember { mutableStateOf(false) }
+    var showAddExerciseDialog by remember { mutableStateOf(false) }
+    val scrollState = rememberScrollState()
 
     LaunchedEffect(uiState.isWorkoutSaved) {
         if (uiState.isWorkoutSaved) {
@@ -103,8 +79,10 @@ fun CreateWorkoutScreen(
         Column(
             modifier = Modifier
                 .padding(padding)
+                .imePadding()
                 .padding(horizontal = Dimens.paddingLarge)
                 .fillMaxSize()
+                .verticalScroll(scrollState)
         ) {
             Spacer(modifier = Modifier.height(Dimens.paddingMedium))
 
@@ -153,73 +131,65 @@ fun CreateWorkoutScreen(
                 text = "Adicionar Exercícios",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                color = if ((uiState.showErrors && !uiState.isExercisesValid) || showExerciseError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onBackground
+                color = if (uiState.showErrors && !uiState.isExercisesValid) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onBackground
             )
             Spacer(modifier = Modifier.height(Dimens.paddingSmall))
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(Dimens.paddingSmall)
-            ) {
-                OutlinedTextField(
-                    value = exerciseName,
-                    onValueChange = { 
-                        exerciseName = it
-                        if (it.isNotBlank()) showExerciseError = false
-                    },
-                    modifier = Modifier.weight(1f),
-                    placeholder = { Text("Nome do exercício") },
-                    shape = RoundedCornerShape(Dimens.cornerRadius),
-                    isError = showExerciseError,
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = CyanAccent,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.outline,
-                        errorBorderColor = MaterialTheme.colorScheme.error
+            
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp)
+                    .background(
+                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                        shape = RoundedCornerShape(Dimens.cornerRadius)
                     )
-                )
-                IconButton(
-                    onClick = {
-                        if (exerciseName.isNotBlank()) {
-                            viewModel.addExercise(exerciseName)
-                            exerciseName = ""
-                            showExerciseError = false
-                        } else {
-                            showExerciseError = true
-                        }
-                    },
-                    modifier = Modifier
-                        .size(56.dp)
-                        .background(
-                            if (showExerciseError) MaterialTheme.colorScheme.error else CyanAccent, 
-                            RoundedCornerShape(Dimens.cornerRadius)
-                        )
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = "Adicionar",
-                        tint = Color.White
+                    .border(
+                        width = 1.dp,
+                        color = if (uiState.showErrors && !uiState.isExercisesValid) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
+                        shape = RoundedCornerShape(Dimens.cornerRadius)
+                    )
+                    .clickable { showAddExerciseDialog = true }
+                    .padding(horizontal = 16.dp),
+                contentAlignment = Alignment.CenterStart
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.Add, contentDescription = null, tint = CyanAccent)
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text(
+                        text = "Clique para selecionar um exercício",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontSize = 14.sp
                     )
                 }
             }
 
             Spacer(modifier = Modifier.height(Dimens.paddingLarge))
 
-            // Lista de Exercícios
-            LazyColumn(
-                modifier = Modifier
-                    .weight(1f)
-                    .then(
-                        if (uiState.showErrors && !uiState.isExercisesValid)
-                            Modifier.border(1.dp, MaterialTheme.colorScheme.error, RoundedCornerShape(Dimens.cornerRadius))
-                        else Modifier
-                    ),
-                verticalArrangement = Arrangement.spacedBy(Dimens.paddingSmall)
-            ) {
-                items(uiState.exercises) { exercise ->
-                    ExerciseItem(
-                        exercise = exercise,
-                        onDelete = { viewModel.removeExercise(exercise) }
-                    )
-                }
+            // Lista de Exercícios Adicionados
+            Text(
+                text = "EXERCÍCIOS ADICIONADOS",
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.Bold,
+                color = CyanAccent,
+                letterSpacing = 1.sp
+            )
+            Spacer(modifier = Modifier.height(Dimens.paddingSmall))
+
+            uiState.exercises.forEach { exercise ->
+                ExerciseItem(
+                    exercise = exercise,
+                    onDelete = { viewModel.removeExercise(exercise) }
+                )
+                Spacer(modifier = Modifier.height(Dimens.paddingSmall))
+            }
+
+            if (uiState.showErrors && !uiState.isExercisesValid) {
+                Text(
+                    text = "Adicione pelo menos um exercício",
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(start = 4.dp)
+                )
             }
 
             Spacer(modifier = Modifier.height(Dimens.paddingLarge))
@@ -230,6 +200,16 @@ fun CreateWorkoutScreen(
                 onClick = { viewModel.saveWorkout() }
             )
             Spacer(modifier = Modifier.height(Dimens.paddingLarge))
+        }
+
+        if (showAddExerciseDialog) {
+            AddExerciseSelectionDialog(
+                onDismiss = { showAddExerciseDialog = false },
+                onSelect = { name ->
+                    viewModel.addExercise(name)
+                    showAddExerciseDialog = false
+                }
+            )
         }
     }
 }

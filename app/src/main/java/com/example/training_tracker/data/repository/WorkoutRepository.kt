@@ -1,64 +1,38 @@
 package com.example.training_tracker.data.repository
 
-import com.example.training_tracker.data.models.Exercise
+import com.example.training_tracker.data.local.dao.WorkoutDao
 import com.example.training_tracker.data.models.Workout
+import com.example.training_tracker.data.models.mocks.initialWorkouts
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import java.time.DayOfWeek
+import java.time.LocalDateTime
 
-class WorkoutRepository {
-    // Mockando o treino de peito para todos os dias da semana conforme solicitado
-    private val initialWorkouts = DayOfWeek.entries.map { day ->
-        Workout(
-            id = "mock_chest_${day.name}",
-            name = "Treino de Peito",
-            dayOfWeek = day,
-            exercises = listOf(
-                Exercise(name = "Supino reto"),
-                Exercise(name = "Supino inclinado"),
-                Exercise(name = "Voador"),
-                Exercise(name = "Crucifixo")
-            )
-        )
-    }
+interface WorkoutRepository{
+    val workouts : Flow<List<Workout>>
 
-    private val _workouts = MutableStateFlow<List<Workout>>(initialWorkouts)
+    //val workoutHistory: StateFlow<List<Workout>> = _workoutHistory.asStateFlow()
 
-    val workouts : StateFlow<List<Workout>> = _workouts.asStateFlow()
+    suspend fun addWorkout(workout: Workout)
 
-    fun addWorkout(workout: Workout) {
-        _workouts.value = _workouts.value + workout
-    }
+    suspend fun updateWorkout(workout: Workout)
 
-    fun updateWorkout(updatedWorkout: Workout) {
-        _workouts.value = _workouts.value.map { workout ->
-            if(workout.id == updatedWorkout.id){
-                updatedWorkout
-            } else {
-                workout
-            }
-        }
-    }
+    suspend fun deleteWorkout(workout: Workout)
 
-    fun getWorkoutById(id: String) : Flow<Workout?> {
-        return _workouts.map { list ->
-            list.find { it.id == id }
-        }
-    }
+    fun getWorkoutById(id: String) : Flow<Workout?>
 
-    fun getWorkoutsByDay(day: DayOfWeek): Flow<List<Workout>> {
-        return _workouts.map { list ->
-            list.filter { it.dayOfWeek == day }
-        }
-    }
+    fun getWorkoutsByDay(day: DayOfWeek): Flow<List<Workout>>
 
-    fun getTodayWorkout(day: DayOfWeek): Flow<Workout?> {
-        return _workouts.map { list ->
-            // Prioriza o treino mockado de peito ou o primeiro treino encontrado para o dia
-            list.firstOrNull { it.dayOfWeek == day }
-        }
-    }
+    fun getTodayWorkout(day: DayOfWeek): Flow<Workout?>
+
+//    fun saveWorkoutToHistory(workout: Workout) {
+//        // We create a copy with a new ID to avoid conflicts if the user performs the same workout again
+//        val historyEntry = workout.copy(
+//            id = java.util.UUID.randomUUID().toString()
+//        )
+//        _workoutHistory.value = listOf(historyEntry) + _workoutHistory.value
+//    }
 }

@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
 class WorkoutViewModel(
     savedStateHandle: SavedStateHandle,
@@ -55,7 +56,9 @@ class WorkoutViewModel(
         }
 
         val updatedWorkout = currentWorkout.copy(exercises = updatedExerciseSetLine)
-        workoutRepository.updateWorkout(updatedWorkout)
+        viewModelScope.launch {
+            workoutRepository.updateWorkout(updatedWorkout)
+        }
     }
 
     fun removeSetLine(exerciseId: String, setNumber: Int) {
@@ -71,7 +74,9 @@ class WorkoutViewModel(
         }
 
         val updatedWorkout = currentWorkout.copy(exercises = updatedExercises)
-        workoutRepository.updateWorkout(updatedWorkout)
+        viewModelScope.launch {
+            workoutRepository.updateWorkout(updatedWorkout)
+        }
     }
 
     fun completeSet(exerciseId: String, setNumber: Int) {
@@ -93,7 +98,9 @@ class WorkoutViewModel(
         }
 
         val updatedWorkout = currentWorkout.copy(exercises = updatedExercises)
-        workoutRepository.updateWorkout(updatedWorkout)
+        viewModelScope.launch {
+            workoutRepository.updateWorkout(updatedWorkout)
+        }
     }
 
     fun completeExercise(exerciseId: String) {
@@ -113,7 +120,9 @@ class WorkoutViewModel(
 
         val updatedWorkout = currentWorkout.copy(exercises = updatedExerciseList)
 
-        workoutRepository.updateWorkout(updatedWorkout)
+        viewModelScope.launch {
+            workoutRepository.updateWorkout(updatedWorkout)
+        }
     }
 
     fun completeWorkout() {
@@ -128,12 +137,16 @@ class WorkoutViewModel(
                     exerciseSets = updatedSets
                 )
             }
-            val updatedWorkout = currentWorkout.copy(
+            val completedWorkout = currentWorkout.copy(
                 exercises = updatedExercises,
-                isCompleted = true
+                isCompleted = true,
+                completionDate = System.currentTimeMillis()
             )
 
-            workoutRepository.updateWorkout(updatedWorkout)
+        viewModelScope.launch {
+            workoutRepository.updateWorkout(completedWorkout)
+        }
+         //   workoutRepository.saveWorkoutToHistory(completedWorkout)
 
     }
 
@@ -161,7 +174,9 @@ class WorkoutViewModel(
         }
 
         val updatedWorkout = currentWorkout.copy(exercises = updatedExercises)
-        workoutRepository.updateWorkout(updatedWorkout)
+        viewModelScope.launch {
+            workoutRepository.updateWorkout(updatedWorkout)
+        }
     }
 
     private fun updateCurrentWorkout(updateAction: (Workout) -> Workout) {
@@ -169,7 +184,9 @@ class WorkoutViewModel(
 
         val updatedWorkout = updateAction(currentWorkout)
 
-        workoutRepository.updateWorkout(updatedWorkout)
+        viewModelScope.launch {
+            workoutRepository.updateWorkout(updatedWorkout)
+        }
     }
 
     companion object {
