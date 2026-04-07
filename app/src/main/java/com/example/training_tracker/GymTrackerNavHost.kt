@@ -71,9 +71,9 @@ fun GymTrackerNavHost() {
                 onNavigateToRegisteredWorkouts = {
                     navController.navigate(Routes.RegisteredWorkouts.name)
                 },
-                onNavigateToWorkoutsHistory = {
-                    navController.navigate(Routes.WorkoutHistory.name)
-                }
+//                onNavigateToWorkoutsHistory = {
+//                    navController.navigate(Routes.WorkoutHistory.name)
+//                }
             )
         }
 
@@ -107,7 +107,7 @@ fun GymTrackerNavHost() {
             )
         }
 
-//        composable(route = Routes.WorkoutHistory.name) {
+////        composable(route = Routes.WorkoutHistory.name) {
 //            val historyViewModel: WorkoutHistoryViewModel = viewModel(factory = WorkoutHistoryViewModel.Factory)
 //            val historyUiState by historyViewModel.uiState.collectAsState()
 //

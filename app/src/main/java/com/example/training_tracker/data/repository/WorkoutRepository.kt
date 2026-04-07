@@ -15,17 +15,11 @@ interface WorkoutRepository{
     val workouts : Flow<List<Workout>>
 
     //val workoutHistory: StateFlow<List<Workout>> = _workoutHistory.asStateFlow()
-
     suspend fun addWorkout(workout: Workout)
-
     suspend fun updateWorkout(workout: Workout)
-
     suspend fun deleteWorkout(workout: Workout)
-
     fun getWorkoutById(id: String) : Flow<Workout?>
-
     fun getWorkoutsByDay(day: DayOfWeek): Flow<List<Workout>>
-
     fun getTodayWorkout(day: DayOfWeek): Flow<Workout?>
 
 //    fun saveWorkoutToHistory(workout: Workout) {

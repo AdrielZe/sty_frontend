@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.training_tracker.data.models.Exercise
+import com.example.training_tracker.data.models.mocks.availableExercises
 import com.example.training_tracker.ui.screens.home.MainGradientButton
 import com.example.training_tracker.ui.screens.workout_details.AddExerciseSelectionDialog
 import com.example.training_tracker.ui.theme.CyanAccent
@@ -39,12 +40,19 @@ fun CreateWorkoutScreen(
     viewModel: CreateWorkoutViewModel = viewModel(factory = CreateWorkoutViewModel.Factory)
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
     var showAddExerciseDialog by remember { mutableStateOf(false) }
     val scrollState = rememberScrollState()
 
     LaunchedEffect(uiState.isWorkoutSaved) {
         if (uiState.isWorkoutSaved) {
             onNavigateBack()
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.uiEvent.collect { message ->
+            snackbarHostState.showSnackbar(message)
         }
     }
 
@@ -208,7 +216,8 @@ fun CreateWorkoutScreen(
                 onSelect = { name ->
                     viewModel.addExercise(name)
                     showAddExerciseDialog = false
-                }
+                },
+                availableExercises = uiState.availableExercises
             )
         }
     }

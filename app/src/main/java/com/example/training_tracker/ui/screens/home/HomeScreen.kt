@@ -64,7 +64,7 @@ fun HomeScreen(
     onClickWorkoutCard: (String?) -> Unit,
     onNavigateToCreateWorkout: () -> Unit,
     onNavigateToRegisteredWorkouts: () -> Unit,
-    onNavigateToWorkoutsHistory: () -> Unit,
+////    onNavigateToWorkoutsHistory: () -> Unit,
     homeUiState: HomeUiState
 ) {
     var selectedBottomTab by remember { mutableIntStateOf(0) }
@@ -84,7 +84,7 @@ fun HomeScreen(
                 onTabSelected = { 
                     selectedBottomTab = it 
                     if (it == 1) onNavigateToRegisteredWorkouts()
-                    if (it == 2) onNavigateToWorkoutsHistory()
+////                    if (it == 2) onNavigateToWorkoutsHistory()
                 }
             )
         }
@@ -130,7 +130,11 @@ fun HomeScreen(
                 homeUiState.todayWorkouts.forEach { workout ->
                     WorkoutCard(
                         workout = workout,
-                        onClick = { onClickWorkoutCard(workout.id) }
+                        onClick = { 
+                            if (workout.isCompleted != true) {
+                                onClickWorkoutCard(workout.id)
+                            }
+                        }
                     )
                 }
             } else {
@@ -247,13 +251,16 @@ fun MainGradientButton(
 
 @Composable
 fun WorkoutCard(modifier: Modifier = Modifier, workout: Workout?, onClick: () -> Unit) {
+    val isCompleted = workout?.isCompleted == true
+
     Card(
         onClick = onClick,
         modifier = modifier.fillMaxWidth().padding(vertical = 12.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = if (isCompleted) MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f) 
+                             else MaterialTheme.colorScheme.surface
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = if (isCompleted) 0.dp else 2.dp),
         shape = RoundedCornerShape(20.dp)
     ) {
         Row(
@@ -268,27 +275,38 @@ fun WorkoutCard(modifier: Modifier = Modifier, workout: Workout?, onClick: () ->
                     text = workout?.name ?: "Treino",
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = if (isCompleted) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f) 
+                            else MaterialTheme.colorScheme.onSurface
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "${workout?.exercises?.size ?: 0} exercícios",
+                    text = if (isCompleted) "Treino concluído" else "${workout?.exercises?.size ?: 0} exercícios",
                     fontSize = 14.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = if (isCompleted) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                            else MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
-            Surface(
-                shape = CircleShape,
-                color = MaterialTheme.colorScheme.secondary,
-                modifier = Modifier.size(40.dp)
-            ) {
+            if (isCompleted) {
                 Icon(
-                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                    contentDescription = "Iniciar Treino",
-                    tint = MaterialTheme.colorScheme.onSecondaryContainer,
-                    modifier = Modifier.padding(8.dp)
+                    imageVector = Icons.Default.CheckCircle,
+                    contentDescription = "Concluído",
+                    tint = Color(0xFF4CAF50),
+                    modifier = Modifier.size(32.dp)
                 )
+            } else {
+                Surface(
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.secondary,
+                    modifier = Modifier.size(40.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                        contentDescription = "Iniciar Treino",
+                        tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                        modifier = Modifier.padding(8.dp)
+                    )
+                }
             }
         }
     }

@@ -55,12 +55,19 @@ fun WorkoutDetailsScreen(
     
     var draggedExercise by remember { mutableStateOf<Exercise?>(null) }
     var dragStartOffsetInItem by remember { mutableStateOf(Offset.Zero) }
+    val snackbarHostState = remember { SnackbarHostState() }
     var currentPointerPos by remember { mutableStateOf(Offset.Zero) }
     var hoveredIndex by remember { mutableStateOf<Int?>(null) }
     
     val itemBounds = remember { mutableMapOf<String, Offset>() }
     val indexBounds = remember { mutableMapOf<Int, Rect>() }
     var parentRootPosition by remember { mutableStateOf(Offset.Zero) }
+
+    LaunchedEffect(Unit) {
+        viewModel.uiEvent.collect { message ->
+            snackbarHostState.showSnackbar(message)
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -248,7 +255,8 @@ fun WorkoutDetailsScreen(
                 onSelect = { name ->
                     viewModel.addExercise(name)
                     showAddExerciseDialog = false
-                }
+                },
+                availableExercises = uiState.availableExercises
             )
         }
     }
@@ -363,11 +371,25 @@ fun ExerciseDetailItem(
 @Composable
 fun AddExerciseSelectionDialog(
     onDismiss: () -> Unit,
-    onSelect: (String) -> Unit
+    onSelect: (String) -> Unit,
+    availableExercises: List<Exercise>
 ) {
     var searchQuery by remember { mutableStateOf("") }
-    val filteredExercises = remember(searchQuery) {
-        availableExercises.filter { it.contains(searchQuery, ignoreCase = true) }
+
+    // Filtro normal para a lista de baixo
+    val filteredExercises = remember(searchQuery, availableExercises) {
+        val query = searchQuery.trim()
+        if (query.isEmpty()) {
+            availableExercises
+        } else {
+            availableExercises.filter { it.name.contains(query, ignoreCase = true) }
+        }
+    }
+
+    // A BLINDAGEM: Essa variável agora reage instantaneamente ao que é digitado.
+    // Ela só será 'true' se houver texto E nenhum exercício tiver o nome exato.
+    val showCreateOption = remember(searchQuery, filteredExercises) {
+        searchQuery.isNotBlank() && filteredExercises.isEmpty()
     }
 
     AlertDialog(
@@ -388,20 +410,44 @@ fun AddExerciseSelectionDialog(
                     )
                 )
                 Spacer(modifier = Modifier.height(16.dp))
+
                 LazyColumn(
                     modifier = Modifier.fillMaxWidth().weight(1f),
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
+
+                    // USAMOS A VARIÁVEL BLINDADA AQUI
+                    if (showCreateOption) {
+                        item {
+                            Surface(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { onSelect(searchQuery.trim()) },
+                                shape = RoundedCornerShape(8.dp),
+                                color = Color.Transparent
+                            ) {
+                                Text(
+                                    text = searchQuery.trim(),
+                                    modifier = Modifier.padding(12.dp),
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = CyanAccent,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                        }
+                    }
+
                     items(filteredExercises) { exercise ->
                         Surface(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clickable { onSelect(exercise) },
+                                .clickable { onSelect(exercise.name) },
                             shape = RoundedCornerShape(8.dp),
                             color = Color.Transparent
                         ) {
                             Text(
-                                text = exercise,
+                                text = exercise.name,
                                 modifier = Modifier.padding(12.dp),
                                 style = MaterialTheme.typography.bodyLarge
                             )

@@ -7,6 +7,7 @@ data class CreateWorkoutUiState(
     val workoutName: String = "",
     val selectedDay: DayOfWeek? = null,
     val exercises: List<Exercise> = emptyList(),
+    val availableExercises: List<Exercise> = emptyList(),
     val isWorkoutSaved: Boolean = false,
     val showErrors: Boolean = false
 ) {

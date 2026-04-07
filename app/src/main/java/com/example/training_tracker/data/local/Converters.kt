@@ -2,10 +2,11 @@ package com.example.training_tracker.data.local
 
 import androidx.room.TypeConverter
 import com.example.training_tracker.data.models.Exercise
+import com.example.training_tracker.data.models.ExerciseSet
 import java.time.DayOfWeek
 
 class Converters {
-    private val gson = com.google.gson.Gson() // Você precisará da lib Gson ou Kotlinx Serialization
+    private val gson = com.google.gson.Gson()
 
     @TypeConverter
     fun fromExerciseList(value: List<Exercise>): String = gson.toJson(value)
@@ -16,6 +17,14 @@ class Converters {
         return gson.fromJson(value, listType)
     }
 
+    @TypeConverter
+    fun fromExerciseSet(value: List<ExerciseSet>): String = gson.toJson(value)
+
+    @TypeConverter
+    fun toExerciseSet(value: String): List<ExerciseSet> {
+        val listType = object: com.google.gson.reflect.TypeToken<List<ExerciseSet>>() {}.type
+        return gson.fromJson(value, listType)
+    }
     @TypeConverter
     fun fromDayOfWeek(value: DayOfWeek?): String? = value?.name
 
