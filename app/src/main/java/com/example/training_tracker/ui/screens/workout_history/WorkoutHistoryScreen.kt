@@ -28,6 +28,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.training_tracker.data.models.Workout
+import com.example.training_tracker.data.models.WorkoutHistory
 import com.example.training_tracker.ui.theme.CyanAccent
 import java.text.SimpleDateFormat
 import java.util.*
@@ -219,7 +220,7 @@ fun HistorySearchBar(
 }
 
 @Composable
-fun HistoryWorkoutCard(workout: Workout) {
+fun HistoryWorkoutCard(workout: WorkoutHistory) {
     var expanded by remember { mutableStateOf(false) }
     val dateText = remember(workout.completionDate) {
         if (workout.completionDate != null) {

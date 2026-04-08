@@ -11,6 +11,7 @@ data class Workout(
     @ColumnInfo(name = "name") val name: String,
     @ColumnInfo(name = "exercises") val exercises: List<Exercise> = emptyList(),
     @ColumnInfo(name = "isCompleted") val isCompleted: Boolean = false,
+    @ColumnInfo(name = "isOnGoing") val isOnGoing: Boolean = false,
     @ColumnInfo(name = "dayOfWeek") val dayOfWeek: DayOfWeek? = null,
-    @ColumnInfo(name = "completionDate") val completionDate: Long? = null
+    @ColumnInfo(name = "completionDate") val completionDate: Long? = null,
 )

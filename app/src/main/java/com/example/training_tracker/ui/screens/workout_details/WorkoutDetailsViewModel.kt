@@ -50,6 +50,18 @@ class WorkoutDetailsViewModel(
         initialValue = WorkoutDetailsUiState(isLoading = true)
     )
 
+    fun startWorkout() {
+        val currentWorkout = uiState.value.workout ?: return
+        val updatedWorkout = currentWorkout.copy(isOnGoing = true)
+        viewModelScope.launch {
+            try {
+                workoutRepository.updateWorkout(updatedWorkout)
+            } catch (e: Exception) {
+                _uiEvent.send("Erro ao iniciar treino: ${e.message}")
+            }
+        }
+    }
+
     fun addExercise(name: String) {
         val currentWorkout = uiState.value.workout ?: return
         val newExercise = Exercise(name = name)

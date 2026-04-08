@@ -64,7 +64,7 @@ fun HomeScreen(
     onClickWorkoutCard: (String?) -> Unit,
     onNavigateToCreateWorkout: () -> Unit,
     onNavigateToRegisteredWorkouts: () -> Unit,
-////    onNavigateToWorkoutsHistory: () -> Unit,
+    onNavigateToWorkoutsHistory: () -> Unit,
     homeUiState: HomeUiState
 ) {
     var selectedBottomTab by remember { mutableIntStateOf(0) }
@@ -84,7 +84,7 @@ fun HomeScreen(
                 onTabSelected = { 
                     selectedBottomTab = it 
                     if (it == 1) onNavigateToRegisteredWorkouts()
-////                    if (it == 2) onNavigateToWorkoutsHistory()
+                    if (it == 2) onNavigateToWorkoutsHistory()
                 }
             )
         }
@@ -364,16 +364,16 @@ fun HomeBottomBar(selectedTab: Int, onTabSelected: (Int) -> Unit) {
                 indicatorColor = CyanAccent.copy(alpha = 0.2f)
             )
         )
-//        NavigationBarItem(
-//            icon = { Icon(Icons.Default.CheckCircle, contentDescription = "Histórico") },
-//            label = { Text("Histórico") },
-//            selected = selectedTab == 2,
-//            onClick = { onTabSelected(2) },
-//            colors = NavigationBarItemDefaults.colors(
-//                selectedIconColor = CyanAccent,
-//                selectedTextColor = MaterialTheme.colorScheme.onSurface,
-//                indicatorColor = CyanAccent.copy(alpha = 0.2f)
-//            )
-//        )
+        NavigationBarItem(
+            icon = { Icon(Icons.Default.CheckCircle, contentDescription = "Histórico") },
+            label = { Text("Histórico") },
+            selected = selectedTab == 2,
+            onClick = { onTabSelected(2) },
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = CyanAccent,
+                selectedTextColor = MaterialTheme.colorScheme.onSurface,
+                indicatorColor = CyanAccent.copy(alpha = 0.2f)
+            )
+        )
     }
 }

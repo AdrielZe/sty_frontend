@@ -5,8 +5,10 @@ import com.example.training_tracker.data.local.AppDatabase
 import com.example.training_tracker.data.models.Exercise
 import com.example.training_tracker.data.repository.ExerciseRepository
 import com.example.training_tracker.data.repository.UserRepository
+import com.example.training_tracker.data.repository.WorkoutHistoryRepository
 import com.example.training_tracker.data.repository.WorkoutRepository
 import com.example.training_tracker.domain.repository.ExerciseRepositoryImpl
+import com.example.training_tracker.domain.repository.WorkoutHistoryImpl
 import com.example.training_tracker.domain.repository.WorkoutRepositoryImpl
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.first
@@ -17,6 +19,8 @@ interface AppContainer {
     val userRepository: UserRepository
     val workoutRepository: WorkoutRepository
     val exerciseRepository: ExerciseRepository
+
+    val workoutHistoryRepository: WorkoutHistoryRepository
 }
 
 // Esta é a implementação real do container
@@ -40,6 +44,10 @@ class DefaultAppContainer(
 
     override val workoutRepository: WorkoutRepository by lazy {
         WorkoutRepositoryImpl(database.workoutDao())
+    }
+
+    override val workoutHistoryRepository: WorkoutHistoryRepository by lazy {
+        WorkoutHistoryImpl(database.workoutHistoryDao())
     }
 
     init {

@@ -217,7 +217,10 @@ fun WorkoutDetailsScreen(
 
                             MainGradientButton(
                                 text = "INICIAR TREINO AGORA",
-                                onClick = { onStartWorkout(workout.id) }
+                                onClick = { 
+                                    viewModel.startWorkout()
+                                    onStartWorkout(workout.id) 
+                                }
                             )
                         }
                         

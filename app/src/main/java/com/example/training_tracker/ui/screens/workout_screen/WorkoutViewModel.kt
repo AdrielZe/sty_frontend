@@ -12,6 +12,8 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.training_tracker.GymTrackerApplication
 import com.example.training_tracker.data.models.ExerciseSet
 import com.example.training_tracker.data.models.Workout
+import com.example.training_tracker.data.models.WorkoutHistory
+import com.example.training_tracker.data.repository.WorkoutHistoryRepository
 import com.example.training_tracker.data.repository.WorkoutRepository
 import com.example.training_tracker.ui.screens.home.HomeViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,7 +26,8 @@ import kotlinx.coroutines.launch
 
 class WorkoutViewModel(
     savedStateHandle: SavedStateHandle,
-    private val workoutRepository: WorkoutRepository
+    private val workoutRepository: WorkoutRepository,
+    private val workoutHistoryRepository: WorkoutHistoryRepository
 ) : ViewModel() {
     private val workoutId: String = checkNotNull(savedStateHandle["workoutId"])
 
@@ -145,8 +148,13 @@ class WorkoutViewModel(
 
         viewModelScope.launch {
             workoutRepository.updateWorkout(completedWorkout)
+            workoutHistoryRepository.addWorkoutHistory(workoutHistory = WorkoutHistory(
+                id = completedWorkout.id,
+                name = completedWorkout.name,
+                completionDate = completedWorkout.completionDate!!,
+                exercises = completedWorkout.exercises
+            ))
         }
-         //   workoutRepository.saveWorkoutToHistory(completedWorkout)
 
     }
 
@@ -194,10 +202,15 @@ class WorkoutViewModel(
             initializer {
                 val application = (this[APPLICATION_KEY] as GymTrackerApplication)
                 val workoutRepository = application.container.workoutRepository
+                val workoutHistoryRepository = application.container.workoutHistoryRepository
 
                 val savedStateHandle = createSavedStateHandle()
 
-                WorkoutViewModel(savedStateHandle = savedStateHandle, workoutRepository = workoutRepository )
+                WorkoutViewModel(
+                    savedStateHandle = savedStateHandle,
+                    workoutRepository = workoutRepository,
+                    workoutHistoryRepository = workoutHistoryRepository
+                )
             }
         }
     }

@@ -63,7 +63,12 @@ fun GymTrackerNavHost() {
             HomeScreen(
                 homeUiState = homeUiState,
                 onClickWorkoutCard = { workoutId ->
-                    navController.navigate("${Routes.WorkoutDetails.name}/$workoutId/true")
+                    val workout = homeUiState.todayWorkouts.find { it.id == workoutId }
+                    if (workout?.isOnGoing == true) {
+                        navController.navigate("${Routes.Workout.name}/$workoutId")
+                    } else {
+                        navController.navigate("${Routes.WorkoutDetails.name}/$workoutId/true")
+                    }
                 },
                 onNavigateToCreateWorkout = {
                     navController.navigate(Routes.CreateWorkout.name)
@@ -71,9 +76,9 @@ fun GymTrackerNavHost() {
                 onNavigateToRegisteredWorkouts = {
                     navController.navigate(Routes.RegisteredWorkouts.name)
                 },
-//                onNavigateToWorkoutsHistory = {
-//                    navController.navigate(Routes.WorkoutHistory.name)
-//                }
+                onNavigateToWorkoutsHistory = {
+                    navController.navigate(Routes.WorkoutHistory.name)
+                }
             )
         }
 
@@ -102,22 +107,24 @@ fun GymTrackerNavHost() {
             WorkoutDetailsScreen(
                 onNavigateBack = { navController.popBackStack() },
                 onStartWorkout = { workoutId ->
-                    navController.navigate("${Routes.Workout.name}/$workoutId")
+                    navController.navigate("${Routes.Workout.name}/$workoutId") {
+                        popUpTo(Routes.Home.name)
+                    }
                 }
             )
         }
 
-////        composable(route = Routes.WorkoutHistory.name) {
-//            val historyViewModel: WorkoutHistoryViewModel = viewModel(factory = WorkoutHistoryViewModel.Factory)
-//            val historyUiState by historyViewModel.uiState.collectAsState()
-//
-//            WorkoutHistoryScreen(
-//                uiState = historyUiState,
-//                onSearchQueryChange = { historyViewModel.onSearchQueryChange(it) },
-//                onSortOrderChange = { historyViewModel.onSortOrderChange(it) },
-//                onNavigateBack = { navController.popBackStack() }
-//            )
-//        }
+        composable(route = Routes.WorkoutHistory.name) {
+            val historyViewModel: WorkoutHistoryViewModel = viewModel(factory = WorkoutHistoryViewModel.Factory)
+            val historyUiState by historyViewModel.uiState.collectAsState()
+
+            WorkoutHistoryScreen(
+                uiState = historyUiState,
+                onSearchQueryChange = { historyViewModel.onSearchQueryChange(it) },
+                onSortOrderChange = { historyViewModel.onSortOrderChange(it) },
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
 
 
         composable(
