@@ -1,7 +1,5 @@
 package com.example.training_tracker.ui.screens.workout_screen
 
-import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
@@ -47,7 +45,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -66,8 +63,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -409,6 +408,84 @@ fun FinishWorkoutButton(
 }
 
 @Composable
+fun InputTextBox(
+    modifier: Modifier = Modifier,
+    isLocked: Boolean = false,
+    inputValue: String,
+    onValueChange: (String) -> Unit
+) {
+    // 1. Criamos um estado local que guarda o texto E a posição do cursor
+    var textFieldValue by remember {
+        mutableStateOf(TextFieldValue(text = inputValue, selection = TextRange(inputValue.length)))
+    }
+
+    // 2. Mantemos o estado local sincronizado caso o valor mude externamente
+    // (ex: limpa o campo ou carrega dados do banco)
+    LaunchedEffect(inputValue) {
+        if (inputValue != textFieldValue.text) {
+            textFieldValue = textFieldValue.copy(
+                text = inputValue,
+                selection = TextRange(inputValue.length) // Força o cursor pro final
+            )
+        }
+    }
+
+    Box(
+        modifier = modifier
+            .padding(start = 8.dp)
+            .background(
+                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                shape = RoundedCornerShape(4.dp)
+            )
+            .border(
+                width = 1.dp,
+                color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.5f),
+                shape = RoundedCornerShape(4.dp)
+            )
+            .padding(vertical = 4.dp, horizontal = 8.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        BasicTextField(
+            // 3. Usamos o TextFieldValue em vez da String
+            value = textFieldValue,
+            onValueChange = { newValue ->
+                // Filtramos a string interna de TextFieldValue
+                if (newValue.text.all { it.isDigit() || it == '.' || it == ',' }) {
+                    // Atualiza o estado local imediatamente (preservando o cursor onde o usuário digitou)
+                    textFieldValue = newValue
+                    // Notifica o ViewModel/pai passando apena a String, como você já fazia
+                    onValueChange(newValue.text)
+                }
+            },
+            enabled = !isLocked,
+            textStyle = MaterialTheme.typography.titleMedium.copy(
+                color = if (isLocked) Color.Gray else MaterialTheme.colorScheme.onPrimary,
+                textAlign = TextAlign.Center
+            ),
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            decorationBox = { innerTextField ->
+                Box(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (textFieldValue.text.isEmpty()) {
+                        Text(
+                            text = "0",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.5f),
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                    innerTextField()
+                }
+            }
+        )
+    }
+}
+@Composable
 fun ErrorDialog(
     onDismissRequest: () -> Unit,
     text: String
@@ -433,55 +510,7 @@ fun ErrorDialog(
     )
 }
 
-@Composable
-fun InputTextBox(
-    modifier: Modifier = Modifier,
-    isLocked: Boolean = false,
-    inputValue: String,
-    onRepsChange: (String) -> Unit
-) {
-    Box(
-        modifier = modifier
-            .padding(start = 8.dp)
-            .background(
-                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                shape = RoundedCornerShape(4.dp)
-            )
-            .border(
-                width = 1.dp,
-                color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.5f),
-                shape = RoundedCornerShape(4.dp)
-            )
-            .padding(vertical = 4.dp, horizontal = 8.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        BasicTextField(
-            value = inputValue,
-            onValueChange = { onRepsChange(it) },
-            enabled = !isLocked,
-            textStyle = MaterialTheme.typography.titleMedium.copy(
-                color = if (isLocked) Color.Gray else MaterialTheme.colorScheme.onPrimary,
-                textAlign = TextAlign.Center
-            ),
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            decorationBox = { innerTextField ->
-                if (inputValue.isEmpty()) {
-                    Text(
-                        text = "0",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.5f),
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-                innerTextField()
-            }
-        )
-    }
-}
+
 
 @Composable
 fun SetLine(
@@ -603,7 +632,7 @@ fun SetLine(
                     .height(50.dp),
                 isLocked = isCompleted,
                 inputValue = inputValueWeight,
-                onRepsChange = { onWeightChange(setNumber, it) }
+                onValueChange = { onWeightChange(setNumber, it) }
             )
 
             InputTextBox(
@@ -612,7 +641,7 @@ fun SetLine(
                     .height(50.dp),
                 isLocked = isCompleted,
                 inputValue = inputValueReps,
-                onRepsChange = { onRepsChange(setNumber, it) }
+                onValueChange = { onRepsChange(setNumber, it) }
             )
 
             Box(

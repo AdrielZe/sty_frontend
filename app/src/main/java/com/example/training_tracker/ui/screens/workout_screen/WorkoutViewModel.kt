@@ -21,6 +21,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -31,18 +32,27 @@ class WorkoutViewModel(
     private val workoutHistoryRepository: WorkoutHistoryRepository
 ) : ViewModel() {
     private val workoutId: String = checkNotNull(savedStateHandle["workoutId"])
+    private val _finishedWorkoutSession = MutableStateFlow<Workout?>(null)
 
 
-    val uiState = workoutRepository.getWorkoutById(workoutId)
-        .map { workout ->
-            WorkoutUiState(
-                workout = workout
-            )
-        }.stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = WorkoutUiState()
-        )
+    val uiState = combine(
+        workoutRepository.getWorkoutById(workoutId),
+        _finishedWorkoutSession
+    ) { dbWorkout, finishedWorkout ->
+
+        // Se já finalizamos o treino agora, congelamos a tela com a versão pronta!
+        if (finishedWorkout != null) {
+            WorkoutUiState(workout = finishedWorkout)
+        } else {
+            // Se ainda estamos treinando, a tela reflete o banco de dados normalmente
+            WorkoutUiState(workout = dbWorkout)
+        }
+
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = WorkoutUiState()
+    )
 
     fun addNewSetLine(exerciseId: String) {
         val currentWorkout = uiState.value.workout ?: return
@@ -130,33 +140,63 @@ class WorkoutViewModel(
     }
 
     fun completeWorkout() {
-            val currentWorkout = uiState.value.workout ?: return
+        val currentWorkout = uiState.value.workout ?: return
 
-            val updatedExercises = currentWorkout.exercises.map { exercise ->
-                val updatedSets = exercise.exerciseSets.map { set ->
-                    set.copy(isCompleted = true)
-                }
-                exercise.copy(
-                    isCompleted = true,
-                    exerciseSets = updatedSets
-                )
+        // 1. Prepara os dados CONCLUÍDOS (Para o Histórico e para Congelar a Tela)
+        val completedExercises = currentWorkout.exercises.map { exercise ->
+            val completedSets = exercise.exerciseSets.map { set ->
+                set.copy(isCompleted = true)
             }
-            val completedWorkout = currentWorkout.copy(
-                exercises = updatedExercises,
+            exercise.copy(
                 isCompleted = true,
-                completionDate = java.time.LocalDate.now()
+                exerciseSets = completedSets
             )
-
-        viewModelScope.launch {
-            workoutRepository.updateWorkout(completedWorkout)
-            workoutHistoryRepository.addWorkoutHistory(workoutHistory = WorkoutHistory(
-                name = completedWorkout.name,
-                completionDate = completedWorkout.completionDate!!,
-                exercises = completedWorkout.exercises,
-                workoutId = completedWorkout.id
-            ))
         }
 
+        val completedWorkout = currentWorkout.copy(
+            exercises = completedExercises,
+            isCompleted = true,
+            completionDate = java.time.LocalDate.now()
+        )
+
+        // 2. A MÁGICA: Congela a UI com o treino verde e preenchido!
+        _finishedWorkoutSession.value = completedWorkout
+
+        viewModelScope.launch {
+            // 3. Salva no histórico
+            workoutHistoryRepository.addWorkoutHistory(
+                workoutHistory = WorkoutHistory(
+                    name = completedWorkout.name,
+                    completionDate = completedWorkout.completionDate!!,
+                    exercises = completedWorkout.exercises,
+                    workoutId = completedWorkout.id
+                )
+            )
+
+            // 4. Prepara os dados RESETADOS (Para o Template da próxima semana)
+            val resetExercises = currentWorkout.exercises.map { exercise ->
+                val resetSets = exercise.exerciseSets.map { set ->
+                    set.copy(
+                        isCompleted = false,
+                        reps = "",   // Apaga as reps
+                        weight = ""  // Apaga os pesos
+                    )
+                }
+                exercise.copy(
+                    isCompleted = false,
+                    exerciseSets = resetSets
+                )
+            }
+
+            val resetWorkout = currentWorkout.copy(
+                exercises = resetExercises,
+                isCompleted = false,
+                completionDate = null
+            )
+
+            // 5. Salva o Template limpo no banco (A tela não vai piscar porque está congelada)
+            workoutRepository.updateWorkout(resetWorkout)
+        }
     }
 
     fun checkCompletedWorkout(exerciseId: String) {

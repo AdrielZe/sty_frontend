@@ -131,7 +131,7 @@ fun HomeScreen(
                     WorkoutCard(
                         workout = workout,
                         onClick = { 
-                            if (workout.isCompleted != true) {
+                            if (!workout.isCompleted) {
                                 onClickWorkoutCard(workout.id)
                             }
                         }
