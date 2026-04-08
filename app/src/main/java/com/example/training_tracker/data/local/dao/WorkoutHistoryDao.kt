@@ -8,11 +8,15 @@ import androidx.room.Query
 import androidx.room.Update
 import com.example.training_tracker.data.models.WorkoutHistory
 import kotlinx.coroutines.flow.Flow
+import java.time.LocalDate
 
 @Dao
 interface WorkoutHistoryDao {
     @Query("SELECT * FROM workoutHistories")
     fun getAllWorkoutHistories(): Flow<List<WorkoutHistory>>
+
+    @Query("SELECT * FROM workoutHistories WHERE completionDate = :date")
+    fun getHistoryByDate(date: LocalDate): Flow<List<WorkoutHistory>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(workoutHistory: WorkoutHistory)

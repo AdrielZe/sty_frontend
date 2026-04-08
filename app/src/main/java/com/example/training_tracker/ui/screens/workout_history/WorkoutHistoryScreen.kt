@@ -223,12 +223,8 @@ fun HistorySearchBar(
 fun HistoryWorkoutCard(workout: WorkoutHistory) {
     var expanded by remember { mutableStateOf(false) }
     val dateText = remember(workout.completionDate) {
-        if (workout.completionDate != null) {
-            val sdf = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
-            sdf.format(Date(workout.completionDate))
-        } else {
-            "Data desconhecida"
-        }
+        val formatter = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")
+        workout.completionDate.format(formatter)
     }
 
     Card(

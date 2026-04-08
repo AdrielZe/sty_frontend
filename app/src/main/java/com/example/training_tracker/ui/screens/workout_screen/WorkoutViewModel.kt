@@ -10,6 +10,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.training_tracker.GymTrackerApplication
+import com.example.training_tracker.data.models.Exercise
 import com.example.training_tracker.data.models.ExerciseSet
 import com.example.training_tracker.data.models.Workout
 import com.example.training_tracker.data.models.WorkoutHistory
@@ -143,21 +144,24 @@ class WorkoutViewModel(
             val completedWorkout = currentWorkout.copy(
                 exercises = updatedExercises,
                 isCompleted = true,
-                completionDate = System.currentTimeMillis()
+                completionDate = java.time.LocalDate.now()
             )
 
         viewModelScope.launch {
             workoutRepository.updateWorkout(completedWorkout)
             workoutHistoryRepository.addWorkoutHistory(workoutHistory = WorkoutHistory(
-                id = completedWorkout.id,
                 name = completedWorkout.name,
                 completionDate = completedWorkout.completionDate!!,
-                exercises = completedWorkout.exercises
+                exercises = completedWorkout.exercises,
+                workoutId = completedWorkout.id
             ))
         }
 
     }
 
+    fun checkCompletedWorkout(exerciseId: String) {
+
+    }
 
     fun updateExercise(exerciseId: String, setNumber: Int ?= 1, newReps: String? = null, newWeight: String? = null) {
         val currentWorkout = uiState.value.workout ?: return

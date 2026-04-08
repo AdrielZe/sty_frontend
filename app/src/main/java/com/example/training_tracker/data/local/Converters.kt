@@ -5,6 +5,7 @@ import com.example.training_tracker.data.models.Exercise
 import com.example.training_tracker.data.models.ExerciseSet
 import com.example.training_tracker.data.models.WorkoutHistory
 import java.time.DayOfWeek
+import java.time.LocalDate
 
 class Converters {
     private val gson = com.google.gson.Gson()
@@ -19,12 +20,13 @@ class Converters {
     }
 
     @TypeConverter
-    fun fromWorkoutHistoryList(value: List<WorkoutHistory>): String = gson.toJson(value)
+    fun fromString(value: String?): LocalDate? {
+        return value?.let { LocalDate.parse(it) }
+    }
 
     @TypeConverter
-    fun toWorkoutHistoryList(value: String): List<WorkoutHistory> {
-        val listType = object : com.google.gson.reflect.TypeToken<List<WorkoutHistory>>() {}.type
-        return gson.fromJson(value, listType)
+    fun dateToString(date: LocalDate?): String? {
+        return date?.toString() // Salva como "2026-04-08"
     }
 
     @TypeConverter

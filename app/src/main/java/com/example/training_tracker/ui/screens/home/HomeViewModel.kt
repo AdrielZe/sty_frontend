@@ -7,6 +7,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.training_tracker.GymTrackerApplication
 import com.example.training_tracker.data.repository.UserRepository
+import com.example.training_tracker.data.repository.WorkoutHistoryRepository
 import com.example.training_tracker.data.repository.WorkoutRepository
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
@@ -17,17 +18,26 @@ import kotlinx.coroutines.flow.stateIn
 
 class HomeViewModel(
     private val userRepository: UserRepository,
-    private val workoutRepository: WorkoutRepository
+    private val workoutRepository: WorkoutRepository,
+    private val workoutHistoryRepository: WorkoutHistoryRepository
 ) : ViewModel() {
 
     val uiState = combine(
         userRepository.getUser(),
-        workoutRepository.getWorkoutsByDay(LocalDate.now().dayOfWeek)
-    ) { user, workouts ->
+        workoutRepository.getWorkoutsByDay(LocalDate.now().dayOfWeek),
+        workoutHistoryRepository.getHistoryByDate(LocalDate.now())
+    ) { user, workouts, todayHistory ->
+
+        // Mapeia os treinos do template para ver se foram feitos hoje
+        val workoutsWithStatus = workouts.map { workout ->
+            val isCompletedToday = todayHistory.any { history -> history.workoutId == workout.id }
+            workout.copy(isCompleted = isCompletedToday)
+        }
+
         HomeUiState(
             user = user,
             currentDate = getCurrentDate(),
-            todayWorkouts = workouts
+            todayWorkouts = workoutsWithStatus
         )
     }.stateIn(
         scope = viewModelScope,
@@ -46,8 +56,9 @@ class HomeViewModel(
                 val application = (this[APPLICATION_KEY] as GymTrackerApplication)
                 val userRepository = application.container.userRepository
                 val workoutRepository = application.container.workoutRepository
+                val workoutHistoryRepository = application.container.workoutHistoryRepository
 
-                HomeViewModel(userRepository = userRepository, workoutRepository = workoutRepository)
+                HomeViewModel(userRepository = userRepository, workoutRepository = workoutRepository, workoutHistoryRepository = workoutHistoryRepository)
             }
         }
     }
