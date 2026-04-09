@@ -24,6 +24,7 @@
     <string name="home_your_workouts_label">YOUR WORKOUTS</string>
     <string name="home_greeting">Hello, %1$s.</string>
     <string name="home_default_user_name">Athlete</string>
+    <string name="home_total_workouts_completed">Workouts completed:</string>
     <string name="home_scheduled_workout_today">Today\'s workout</string>
     <string name="home_create_new_workout_button">CREATE NEW WORKOUT</string>
     <string name="content_description_menu">Menu</string>
@@ -41,6 +42,7 @@
     <string name="home_bottom_bar_workouts">Workouts</string>
     <string name="content_description_history">History</string>
     <string name="home_bottom_bar_history">History</string>
+    <string name="home_browse_workouts">Browse all workouts</string>
     <string name="enter_app">Enter app</string>
     <string name="registered_workouts_title">REGISTERED WORKOUTS</string>
     <string name="registered_workouts_drag_empty_state">Drag an workout here</string>

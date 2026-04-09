@@ -20,5 +20,5 @@ val LightText = Color(0xFF1A1A1A)
 
 // Modo Escuro
 val DarkBackground = Color(0xFF121212)
-val DarkSurface = Color(0xFF1E1E1E)
+val DarkSurface = Color(0xFF1E1E24)
 val DarkText = Color(0xFFE0E0E0)

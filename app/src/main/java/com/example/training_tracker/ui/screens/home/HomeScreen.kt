@@ -52,6 +52,8 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.training_tracker.R
@@ -67,6 +69,7 @@ fun HomeScreen(
     onNavigateToCreateWorkout: () -> Unit,
     onNavigateToRegisteredWorkouts: () -> Unit,
     onNavigateToWorkoutsHistory: () -> Unit,
+    onClickBrowseWorkouts: () -> Unit,
     homeUiState: HomeUiState
 ) {
     var selectedBottomTab by remember { mutableIntStateOf(0) }
@@ -120,8 +123,15 @@ fun HomeScreen(
                 color = MaterialTheme.colorScheme.onBackground
             )
 
-            Spacer(modifier = Modifier.height(40.dp))
+            homeUiState.currentDate?.let { date ->
+                Text(
+                    text = date,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
 
+            Spacer(modifier = Modifier.height(24.dp))
             Text(
                 text = stringResource(id = R.string.home_scheduled_workout_today),
                 style = Typography.titleMedium,
@@ -146,14 +156,192 @@ fun HomeScreen(
                 EmptyWorkoutCard()
             }
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
             MainGradientButton(
                 text = stringResource(id = R.string.home_create_new_workout_button),
                 onClick = onNavigateToCreateWorkout
             )
 
+            Spacer(modifier = Modifier.height(8.dp))
+
+
+            Text(
+                modifier = Modifier
+                    .clickable {
+                        onClickBrowseWorkouts()
+                    }
+                    .fillMaxWidth(),
+                text = stringResource(R.string.home_browse_workouts),
+                textAlign = TextAlign.Center,
+                textDecoration = TextDecoration.Underline,
+                style = Typography.labelLarge
+            )
+
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            WorkoutsSummaryCard(count = homeUiState.totalWorkoutsCompleted)
+
             Spacer(modifier = Modifier.height(16.dp))
+            WeeklyProgressCard()
+
+        }
+    }
+}
+
+@Composable
+fun WeeklyProgressCard(
+    currentWorkouts: Int = 3,
+    goalWorkouts: Int = 4,
+    modifier: Modifier = Modifier
+) {
+    val progress = if (goalWorkouts > 0) {
+        (currentWorkouts.toFloat() / goalWorkouts.toFloat()).coerceIn(0f, 1f)
+    } else {
+        0f
+    }
+
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+    ) {
+        Column(
+            modifier = Modifier.padding(20.dp)
+        ) {
+            // Linha superior: Título e Fração de Progresso
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "My Progress",
+                    color =  MaterialTheme.colorScheme.onSurface,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold
+                )
+
+                Column(horizontalAlignment = Alignment.End) {
+                    Row(verticalAlignment = Alignment.Bottom) {
+                        Text(
+                            text = "$currentWorkouts",
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontSize = 22.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = " / $goalWorkouts",
+                            color = Color.LightGray,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Medium,
+                            modifier = Modifier.padding(bottom = 2.dp)
+                        )
+                    }
+                    Text(
+                        text = "workouts/goal",
+                        color = Color.Gray,
+                        fontSize = 12.sp
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Barra de Progresso Customizada
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(10.dp)
+                    .clip(RoundedCornerShape(percent = 50))
+                    .background(Color(0xFF333333)) // Cor do fundo da barra (trilha)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize(fraction = progress)
+                        .clip(RoundedCornerShape(percent = 50))
+                        .background(CyanAccent) // Cor do preenchimento
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Linha inferior: Detalhes da meta
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Weekly Goal Progress",
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium
+                )
+                Text(
+                    text = "Goal: $goalWorkouts sessions/week",
+                    color = Color.Gray,
+                    fontSize = 12.sp
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun WorkoutsSummaryCard(
+    count: Int,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(72.dp),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 20.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Start
+        ) {
+            Surface(
+                modifier = Modifier.size(40.dp),
+                shape = CircleShape,
+                color = CyanAccent.copy(alpha = 0.15f)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.CheckCircle,
+                    contentDescription = null,
+                    tint = CyanAccent,
+                    modifier = Modifier.padding(8.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.width(16.dp))
+
+            Column(verticalArrangement = Arrangement.Center) {
+                Text(
+                    text = stringResource(R.string.home_total_workouts_completed),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    text = "$count",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
         }
     }
 }
@@ -327,23 +515,26 @@ fun EmptyWorkoutCard(modifier: Modifier = Modifier) {
         ),
         shape = RoundedCornerShape(20.dp)
     ) {
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+            contentAlignment = Alignment.Center
         ) {
             Text(
                 text = stringResource(id = R.string.home_no_workout_scheduled_today),
-                fontSize = 14.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                fontSize = 14.sp
             )
         }
     }
 }
 
 @Composable
-fun HomeBottomBar(selectedTab: Int, onTabSelected: (Int) -> Unit) {
+fun HomeBottomBar(
+    selectedTab: Int,
+    onTabSelected: (Int) -> Unit
+) {
     NavigationBar(
         containerColor = MaterialTheme.colorScheme.surface,
         tonalElevation = 8.dp
@@ -355,8 +546,10 @@ fun HomeBottomBar(selectedTab: Int, onTabSelected: (Int) -> Unit) {
             onClick = { onTabSelected(0) },
             colors = NavigationBarItemDefaults.colors(
                 selectedIconColor = CyanAccent,
-                selectedTextColor = MaterialTheme.colorScheme.onSurface,
-                indicatorColor = CyanAccent.copy(alpha = 0.2f)
+                selectedTextColor = CyanAccent,
+                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                indicatorColor = CyanAccent.copy(alpha = 0.1f)
             )
         )
         NavigationBarItem(
@@ -366,19 +559,23 @@ fun HomeBottomBar(selectedTab: Int, onTabSelected: (Int) -> Unit) {
             onClick = { onTabSelected(1) },
             colors = NavigationBarItemDefaults.colors(
                 selectedIconColor = CyanAccent,
-                selectedTextColor = MaterialTheme.colorScheme.onSurface,
-                indicatorColor = CyanAccent.copy(alpha = 0.2f)
+                selectedTextColor = CyanAccent,
+                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                indicatorColor = CyanAccent.copy(alpha = 0.1f)
             )
         )
         NavigationBarItem(
-            icon = { Icon(Icons.Default.CheckCircle, contentDescription = stringResource(id = R.string.content_description_history)) },
+            icon = { Icon(Icons.Default.List, contentDescription = stringResource(id = R.string.content_description_history)) },
             label = { Text(stringResource(id = R.string.home_bottom_bar_history)) },
             selected = selectedTab == 2,
             onClick = { onTabSelected(2) },
             colors = NavigationBarItemDefaults.colors(
                 selectedIconColor = CyanAccent,
-                selectedTextColor = MaterialTheme.colorScheme.onSurface,
-                indicatorColor = CyanAccent.copy(alpha = 0.2f)
+                selectedTextColor = CyanAccent,
+                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                indicatorColor = CyanAccent.copy(alpha = 0.1f)
             )
         )
     }

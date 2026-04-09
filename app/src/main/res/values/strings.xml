@@ -31,6 +31,7 @@
     <string name="home_your_workouts_label">SEUS TREINOS</string>
     <string name="home_greeting">Olá, %1$s.</string>
     <string name="home_default_user_name">Atleta</string>
+    <string name="home_total_workouts_completed">Total de treinos: </string>
     <string name="home_scheduled_workout_today">Treino agendado para hoje</string>
     <string name="home_create_new_workout_button">CRIAR NOVO TREINO</string>
     <string name="content_description_menu">Menu</string>
@@ -48,6 +49,7 @@
     <string name="home_bottom_bar_workouts">Treinos</string>
     <string name="content_description_history">Histórico</string>
     <string name="home_bottom_bar_history">Histórico</string>
+    <string name="home_browse_workouts"> Ver todos os treinos</string>
 
     <!-- LoginScreen -->
     <string name="enter_app">Enter app</string>

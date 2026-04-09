@@ -25,8 +25,9 @@ class HomeViewModel(
     val uiState = combine(
         userRepository.getUser(),
         workoutRepository.getWorkoutsByDay(LocalDate.now().dayOfWeek),
-        workoutHistoryRepository.getHistoryByDate(LocalDate.now())
-    ) { user, workouts, todayHistory ->
+        workoutHistoryRepository.getHistoryByDate(LocalDate.now()),
+        workoutHistoryRepository.workoutHistories
+    ) { user, workouts, todayHistory, workoutHistories ->
 
         // Mapeia os treinos do template para ver se foram feitos hoje
         val workoutsWithStatus = workouts.map { workout ->
@@ -37,7 +38,8 @@ class HomeViewModel(
         HomeUiState(
             user = user,
             currentDate = getCurrentDate(),
-            todayWorkouts = workoutsWithStatus
+            todayWorkouts = workoutsWithStatus,
+            totalWorkoutsCompleted = workoutHistories.size
         )
     }.stateIn(
         scope = viewModelScope,

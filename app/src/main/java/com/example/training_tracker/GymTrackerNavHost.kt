@@ -78,6 +78,9 @@ fun GymTrackerNavHost() {
                 },
                 onNavigateToWorkoutsHistory = {
                     navController.navigate(Routes.WorkoutHistory.name)
+                },
+                onClickBrowseWorkouts = {
+                    navController.navigate(Routes.RegisteredWorkouts.name)
                 }
             )
         }
