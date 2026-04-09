@@ -63,6 +63,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -70,6 +71,7 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.training_tracker.R
 import com.example.training_tracker.data.models.Exercise
 import com.example.training_tracker.data.models.Workout
 import com.example.training_tracker.ui.theme.CyanAccent
@@ -119,7 +121,7 @@ fun WorkoutScreen(
                         horizontalAlignment = Alignment.Start
                     ) {
                         Text(
-                            text = "TREINO EM ANDAMENTO",
+                            text = stringResource(id = R.string.workout_screen_in_progress_label),
                             color = CyanAccent,
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold,
@@ -127,7 +129,7 @@ fun WorkoutScreen(
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = workoutUiState.workout?.name ?: "Treino",
+                            text = workoutUiState.workout?.name ?: stringResource(id = R.string.workout_screen_default_workout_name),
                             fontSize = 36.sp,
                             fontWeight = FontWeight.ExtraBold,
                             color = MaterialTheme.colorScheme.onBackground,
@@ -190,7 +192,7 @@ fun WorkoutTopBar(onBackClick: () -> Unit) {
         IconButton(onClick = onBackClick) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = "Voltar",
+                contentDescription = stringResource(id = R.string.content_description_back),
                 tint = MaterialTheme.colorScheme.onBackground
             )
         }
@@ -245,17 +247,17 @@ fun ExerciseCard(
                     Box {
                         if (!isDeleteMode && !exercise.isCompleted) {
                             IconButton(onClick = { isMenuExpanded = true }) {
-                                Icon(Icons.Default.MoreVert, contentDescription = "Opções", tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Icon(Icons.Default.MoreVert, contentDescription = stringResource(id = R.string.content_description_options), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
                         } else if (isDeleteMode) {
                             IconButton(onClick = { isDeleteMode = false }) {
-                                Icon(Icons.Default.Check, contentDescription = "Confirmar", tint = MaterialTheme.colorScheme.error)
+                                Icon(Icons.Default.Check, contentDescription = stringResource(id = R.string.content_description_confirm), tint = MaterialTheme.colorScheme.error)
                             }
                         }
 
                         DropdownMenu(expanded = isMenuExpanded, onDismissRequest = { isMenuExpanded = false }) {
                             DropdownMenuItem(
-                                text = { Text("Remover séries", color = MaterialTheme.colorScheme.error) },
+                                text = { Text(stringResource(id = R.string.workout_screen_remove_sets_menu), color = MaterialTheme.colorScheme.error) },
                                 onClick = { isDeleteMode = !isDeleteMode; isMenuExpanded = false },
                                 leadingIcon = { Icon(Icons.Default.Delete, contentDescription = null, tint = MaterialTheme.colorScheme.error) }
                             )
@@ -265,7 +267,7 @@ fun ExerciseCard(
                     IconButton(onClick = { isExpanded = !isExpanded }) {
                         Icon(
                             imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                            contentDescription = if (isExpanded) "Recolher" else "Expandir",
+                            contentDescription = if (isExpanded) stringResource(id = R.string.content_description_collapse) else stringResource(id = R.string.content_description_expand),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
@@ -277,9 +279,9 @@ fun ExerciseCard(
                     Spacer(modifier = Modifier.height(16.dp))
 
                     Row(modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)) {
-                        Text(modifier = Modifier.weight(0.15f), text = "Série", textAlign = TextAlign.Center, style = Typography.labelMedium, color = Color.Gray)
-                        Text(modifier = Modifier.weight(0.3f), text = "Peso (Kg)", textAlign = TextAlign.Center, style = Typography.labelMedium, color = Color.Gray)
-                        Text(modifier = Modifier.weight(0.3f), text = "Reps", textAlign = TextAlign.Center, style = Typography.labelMedium, color = Color.Gray)
+                        Text(modifier = Modifier.weight(0.15f), text = stringResource(id = R.string.workout_screen_set_column), textAlign = TextAlign.Center, style = Typography.labelMedium, color = Color.Gray)
+                        Text(modifier = Modifier.weight(0.3f), text = stringResource(id = R.string.workout_screen_weight_column), textAlign = TextAlign.Center, style = Typography.labelMedium, color = Color.Gray)
+                        Text(modifier = Modifier.weight(0.3f), text = stringResource(id = R.string.workout_screen_reps_column), textAlign = TextAlign.Center, style = Typography.labelMedium, color = Color.Gray)
                         Spacer(modifier = Modifier.weight(0.15f))
                     }
 
@@ -315,9 +317,9 @@ fun AddSetButton(modifier: Modifier, onAddSetClick: () -> Unit) {
         onClick = onAddSetClick,
         modifier = modifier.height(48.dp)
     ) {
-        Icon(Icons.Default.Add, contentDescription = "Adicionar", tint = CyanAccent)
+        Icon(Icons.Default.Add, contentDescription = stringResource(id = R.string.content_description_add), tint = CyanAccent)
         Spacer(modifier = Modifier.width(8.dp))
-        Text("Adicionar série", color = CyanAccent, fontWeight = FontWeight.Bold)
+        Text(stringResource(id = R.string.workout_screen_add_set_button), color = CyanAccent, fontWeight = FontWeight.Bold)
     }
 }
 
@@ -395,9 +397,9 @@ fun FinishWorkoutButton(
     ) {
         Text(
             text = when {
-                workout?.isCompleted == true -> "TREINO FINALIZADO!"
-                !canCompleteWorkout -> "PREENCHA AS SÉRIES"
-                else -> "SEGURE PARA FINALIZAR"
+                workout?.isCompleted == true -> stringResource(id = R.string.workout_screen_finish_button_completed)
+                !canCompleteWorkout -> stringResource(id = R.string.workout_screen_finish_button_fill_sets)
+                else -> stringResource(id = R.string.workout_screen_finish_button_hold)
             },
             color = Color.White,
             fontWeight = FontWeight.ExtraBold,
@@ -492,7 +494,7 @@ fun ErrorDialog(
 ) {
     AlertDialog(
         onDismissRequest = { onDismissRequest() },
-        title = { Text(text = "Opa!", style = Typography.titleMedium) },
+        title = { Text(text = stringResource(id = R.string.dialog_error_title), style = Typography.titleMedium) },
         text = { Text(text = text, style = Typography.bodyLarge) },
         confirmButton = {
             TextButton(
@@ -501,7 +503,7 @@ fun ErrorDialog(
                 }
             ) {
                 Text(
-                    "Ok",
+                    stringResource(id = R.string.dialog_error_confirm_button),
                     color = MaterialTheme.colorScheme.secondary,
                     fontWeight = FontWeight.Bold
                 )
@@ -509,8 +511,6 @@ fun ErrorDialog(
         },
     )
 }
-
-
 
 @Composable
 fun SetLine(
@@ -529,7 +529,17 @@ fun SetLine(
     var showDeleteDialog by remember { mutableStateOf(false) }
     var showCompleteDialog by remember { mutableStateOf(false) }
     var showErrorDialog by remember { mutableStateOf(false) }
-    var errorText by remember { mutableStateOf("Ocorreu um erro") }
+    var errorText by remember { mutableStateOf("") }
+
+    // Usando stringResource fora de blocos condicional para inicializar o estado não recomendo aqui devido
+    // a falta do @Composable context no remember, então vamos buscar as strings diretamente abaixo.
+    val defaultErrorText = stringResource(id = R.string.workout_screen_default_error_message)
+    val removeSavedSetError = stringResource(id = R.string.workout_screen_error_remove_saved_set)
+    val saveIncompleteSetError = stringResource(id = R.string.workout_screen_error_save_incomplete_set)
+
+    LaunchedEffect(Unit) {
+        if (errorText.isEmpty()) errorText = defaultErrorText
+    }
 
     if (showErrorDialog) {
         ErrorDialog(text = errorText, onDismissRequest = { showErrorDialog = false })
@@ -538,10 +548,10 @@ fun SetLine(
     if (showCompleteDialog) {
         AlertDialog(
             onDismissRequest = { showCompleteDialog = false },
-            title = { Text(text = "Salvar Série", style = Typography.titleMedium) },
+            title = { Text(text = stringResource(id = R.string.workout_screen_save_set_dialog_title), style = Typography.titleMedium) },
             text = {
                 Text(
-                    text = "Deseja salvar a série $setNumber? Ela será bloqueada para edição.",
+                    text = stringResource(id = R.string.workout_screen_save_set_dialog_message, setNumber),
                     style = Typography.bodyLarge
                 )
             },
@@ -553,7 +563,7 @@ fun SetLine(
                     }
                 ) {
                     Text(
-                        "Salvar",
+                        stringResource(id = R.string.workout_screen_save_button),
                         color = MaterialTheme.colorScheme.secondary,
                         fontWeight = FontWeight.Bold
                     )
@@ -561,7 +571,7 @@ fun SetLine(
             },
             dismissButton = {
                 TextButton(onClick = { showCompleteDialog = false }) {
-                    Text("Cancelar", color = Color.Gray)
+                    Text(stringResource(id = R.string.dialog_cancel_button), color = Color.Gray)
                 }
             }
         )
@@ -571,11 +581,11 @@ fun SetLine(
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
             title = {
-                Text(text = "Remover Série", style = Typography.titleMedium)
+                Text(text = stringResource(id = R.string.workout_screen_remove_set_dialog_title), style = Typography.titleMedium)
             },
             text = {
                 Text(
-                    text = "Tem certeza que deseja remover a série $setNumber?",
+                    text = stringResource(id = R.string.workout_screen_remove_set_dialog_message, setNumber),
                     style = Typography.bodyLarge
                 )
             },
@@ -586,14 +596,14 @@ fun SetLine(
                         onDeleteClick()
                     }
                 ) {
-                    Text("Remover", color = Color.Red, fontWeight = FontWeight.Bold)
+                    Text(stringResource(id = R.string.workout_screen_remove_button), color = Color.Red, fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
                 TextButton(
                     onClick = { showDeleteDialog = false }
                 ) {
-                    Text("Cancelar", color = MaterialTheme.colorScheme.secondary)
+                    Text(stringResource(id = R.string.dialog_cancel_button), color = MaterialTheme.colorScheme.secondary)
                 }
             }
         )
@@ -652,7 +662,7 @@ fun SetLine(
                     .clickable {
                         if (isDeleteMode) {
                             if (isCompleted) {
-                                errorText = "Não é possível remover uma série que já foi salva."
+                                errorText = removeSavedSetError
                                 showErrorDialog = true
                             } else {
                                 showDeleteDialog = true
@@ -662,8 +672,7 @@ fun SetLine(
                                 if (inputValueReps != "0" && inputValueReps != "" && inputValueWeight != "" && inputValueWeight != "0") {
                                     showCompleteDialog = true
                                 } else {
-                                    errorText =
-                                        "Não é possível salvar uma série sem peso ou sem repetições"
+                                    errorText = saveIncompleteSetError
                                     showErrorDialog = true
                                 }
                             }
@@ -673,7 +682,7 @@ fun SetLine(
             ) {
                 Icon(
                     imageVector = if (isDeleteMode) Icons.Default.Delete else Icons.Default.CheckCircle,
-                    contentDescription = if (isDeleteMode) "Deletar" else "Check",
+                    contentDescription = if (isDeleteMode) stringResource(id = R.string.content_description_delete) else stringResource(id = R.string.content_description_check),
                     tint = if (isDeleteMode) {
                         Color.Gray
                     } else {

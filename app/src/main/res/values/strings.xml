@@ -14,5 +14,104 @@
 
     <string name="empty_workout_state">Nenhum treino registrado ainda.</string>
 
+    <!-- CreateWorkoutScreen -->
+    <string name="create_workout_title">CRIAR NOVO TREINO</string>
+    <string name="content_description_back">Voltar</string>
+    <string name="create_workout_name_label">Qual o nome do treino?</string>
+    <string name="create_workout_name_placeholder">Ex: Treino A - Superior</string>
+    <string name="create_workout_day_label">Qual o dia da semana?</string>
+    <string name="create_workout_add_exercise_label">Adicionar Exercícios</string>
+    <string name="create_workout_click_to_select">Clique para selecionar um exercício</string>
+    <string name="create_workout_added_exercises_title">EXERCÍCIOS ADICIONADOS</string>
+    <string name="create_workout_error_no_exercise">Adicione pelo menos um exercício</string>
+    <string name="create_workout_save_button">SALVAR TREINO</string>
+    <string name="content_description_remove">Remover</string>
+
+    <!-- HomeScreen -->
+    <string name="home_your_workouts_label">SEUS TREINOS</string>
+    <string name="home_greeting">Olá, %1$s.</string>
+    <string name="home_default_user_name">Atleta</string>
+    <string name="home_scheduled_workout_today">Treino agendado para hoje</string>
+    <string name="home_create_new_workout_button">CRIAR NOVO TREINO</string>
+    <string name="content_description_menu">Menu</string>
+    <string name="home_app_title">GROFFIT</string>
+    <string name="content_description_profile">Perfil</string>
+    <string name="home_default_workout_name">Treino</string>
+    <string name="home_workout_completed_status">Treino concluído</string>
+    <string name="home_workout_exercise_count">%1$d exercícios</string>
+    <string name="content_description_completed">Concluído</string>
+    <string name="content_description_start_workout">Iniciar Treino</string>
+    <string name="home_no_workout_scheduled_today">Nenhum treino agendado para hoje.</string>
+    <string name="content_description_home">Início</string>
+    <string name="home_bottom_bar_home">Início</string>
+    <string name="content_description_registered_workouts">Treinos Registrados</string>
+    <string name="home_bottom_bar_workouts">Treinos</string>
+    <string name="content_description_history">Histórico</string>
+    <string name="home_bottom_bar_history">Histórico</string>
+
+    <!-- LoginScreen -->
+    <string name="enter_app">Enter app</string>
+
+    <!-- RegisteredWorkoutsScreen -->
+    <string name="registered_workouts_title">TREINOS REGISTRADOS</string>
+    <string name="registered_workouts_drag_empty_state">Arraste um treino para cá</string>
+    <string name="registered_workouts_exercise_count">%1$d exercícios</string>
+    <string name="content_description_more_options">Mais opções</string>
+    <string name="registered_workouts_remove_workout_menu">Remover Treino</string>
+
+    <!-- WorkoutDetailsScreen -->
+    <string name="workout_details_title">DETALHES DO TREINO</string>
+    <string name="workout_details_total_exercises">%1$d exercícios no total</string>
+    <string name="workout_details_exercise_list_title">LISTA DE EXERCÍCIOS</string>
+    <string name="workout_details_start_workout_button">INICIAR TREINO AGORA</string>
+    <string name="workout_details_add_exercise_button">ADICIONAR EXERCÍCIO</string>
+    <string name="content_description_options">Opções</string>
+    <string name="workout_details_remove_exercise">Remover Exercício</string>
+    <string name="workout_details_select_exercise_dialog_title">Selecionar Exercício</string>
+    <string name="workout_details_search_exercise_placeholder">Buscar exercício...</string>
+    <string name="workout_details_cancel_button">Cancelar</string>
+
+    <!-- WorkoutHistoryScreen -->
+    <string name="workout_history_title">HISTÓRICO DE TREINOS</string>
+    <string name="content_description_sort">Ordenar</string>
+    <string name="workout_history_sort_date_desc">Data (Mais recente)</string>
+    <string name="workout_history_sort_date_asc">Data (Mais antiga)</string>
+    <string name="workout_history_sort_name_asc">Nome (A-Z)</string>
+    <string name="workout_history_sort_name_desc">Nome (Z-A)</string>
+    <string name="workout_history_empty_state_no_workouts">Nenhum treino concluído ainda.</string>
+    <string name="workout_history_empty_state_not_found">Nenhum treino encontrado.</string>
+    <string name="workout_history_search_placeholder">Buscar por nome do treino...</string>
+    <string name="content_description_clear">Limpar</string>
+    <string name="workout_history_set_details">Série %1$s: %2$s reps x %3$skg</string>
+
+    <!-- WorkoutScreen -->
+    <string name="workout_screen_in_progress_label">TREINO EM ANDAMENTO</string>
+    <string name="workout_screen_default_workout_name">Treino</string>
+    <string name="content_description_confirm">Confirmar</string>
+    <string name="workout_screen_remove_sets_menu">Remover séries</string>
+    <string name="content_description_collapse">Recolher</string>
+    <string name="content_description_expand">Expandir</string>
+    <string name="workout_screen_set_column">Série</string>
+    <string name="workout_screen_weight_column">Peso (Kg)</string>
+    <string name="workout_screen_reps_column">Reps</string>
+    <string name="content_description_add">Adicionar</string>
+    <string name="workout_screen_add_set_button">Adicionar série</string>
+    <string name="workout_screen_finish_button_completed">TREINO FINALIZADO!</string>
+    <string name="workout_screen_finish_button_fill_sets">PREENCHA AS SÉRIES</string>
+    <string name="workout_screen_finish_button_hold">SEGURE PARA FINALIZAR</string>
+    <string name="dialog_error_title">Opa!</string>
+    <string name="dialog_error_confirm_button">Ok</string>
+    <string name="workout_screen_save_set_dialog_title">Salvar Série</string>
+    <string name="workout_screen_save_set_dialog_message">Deseja salvar a série %1$d? Ela será bloqueada para edição.</string>
+    <string name="workout_screen_save_button">Salvar</string>
+    <string name="dialog_cancel_button">Cancelar</string>
+    <string name="workout_screen_remove_set_dialog_title">Remover Série</string>
+    <string name="workout_screen_remove_set_dialog_message">Tem certeza que deseja remover a série %1$d?</string>
+    <string name="workout_screen_remove_button">Remover</string>
+    <string name="workout_screen_error_remove_saved_set">Não é possível remover uma série que já foi salva.</string>
+    <string name="workout_screen_error_save_incomplete_set">Não é possível salvar uma série sem peso ou sem repetições</string>
+    <string name="content_description_delete">Deletar</string>
+    <string name="content_description_check">Check</string>
+    <string name="workout_screen_default_error_message">Ocorreu um erro</string>
 
 </resources>

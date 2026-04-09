@@ -50,9 +50,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.training_tracker.R
 import com.example.training_tracker.data.models.Workout
 import com.example.training_tracker.ui.theme.CyanAccent
 import com.example.training_tracker.ui.theme.Typography
@@ -81,8 +83,8 @@ fun HomeScreen(
         bottomBar = {
             HomeBottomBar(
                 selectedTab = selectedBottomTab,
-                onTabSelected = { 
-                    selectedBottomTab = it 
+                onTabSelected = {
+                    selectedBottomTab = it
                     if (it == 1) onNavigateToRegisteredWorkouts()
                     if (it == 2) onNavigateToWorkoutsHistory()
                 }
@@ -100,7 +102,7 @@ fun HomeScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             Text(
-                text = "SEUS TREINOS",
+                text = stringResource(id = R.string.home_your_workouts_label),
                 color = CyanAccent,
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Bold,
@@ -110,7 +112,10 @@ fun HomeScreen(
             Spacer(modifier = Modifier.height(4.dp))
 
             Text(
-                text = "Olá, ${homeUiState.user?.name ?: "Atleta"}.",
+                text = stringResource(
+                    id = R.string.home_greeting,
+                    homeUiState.user?.name ?: stringResource(id = R.string.home_default_user_name)
+                ),
                 fontSize = 30.sp,
                 color = MaterialTheme.colorScheme.onBackground
             )
@@ -118,7 +123,7 @@ fun HomeScreen(
             Spacer(modifier = Modifier.height(40.dp))
 
             Text(
-                text = "Treino agendado para hoje",
+                text = stringResource(id = R.string.home_scheduled_workout_today),
                 style = Typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onBackground
@@ -130,7 +135,7 @@ fun HomeScreen(
                 homeUiState.todayWorkouts.forEach { workout ->
                     WorkoutCard(
                         workout = workout,
-                        onClick = { 
+                        onClick = {
                             if (!workout.isCompleted) {
                                 onClickWorkoutCard(workout.id)
                             }
@@ -140,14 +145,14 @@ fun HomeScreen(
             } else {
                 EmptyWorkoutCard()
             }
-            
+
             Spacer(modifier = Modifier.height(32.dp))
 
             MainGradientButton(
-                text = "CRIAR NOVO TREINO",
+                text = stringResource(id = R.string.home_create_new_workout_button),
                 onClick = onNavigateToCreateWorkout
             )
-            
+
             Spacer(modifier = Modifier.height(16.dp))
         }
     }
@@ -158,49 +163,49 @@ fun CustomTopBar(
     onMenuClick: () -> Unit,
     onProfileClick: () -> Unit
 ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 24.dp, vertical = 36.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(onClick = onMenuClick, modifier = Modifier.size(28.dp)) {
-                Icon(
-                    imageVector = Icons.Default.Menu,
-                    contentDescription = "Menu",
-                    tint = MaterialTheme.colorScheme.onBackground
-                )
-            }
-
-            Text(
-                text = "GUGROFFIT",
-                color = CyanAccent,
-                fontSize = 20.sp,
-                fontWeight = FontWeight.ExtraBold,
-                letterSpacing = 2.sp
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 24.dp, vertical = 36.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        IconButton(onClick = onMenuClick, modifier = Modifier.size(28.dp)) {
+            Icon(
+                imageVector = Icons.Default.Menu,
+                contentDescription = stringResource(id = R.string.content_description_menu),
+                tint = MaterialTheme.colorScheme.onBackground
             )
-
-            Surface(
-                shape = CircleShape,
-                color = MaterialTheme.colorScheme.surfaceVariant,
-                border = BorderStroke(
-                    2.dp,
-                    CyanAccent.copy(alpha = 0.5f)
-                ),
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .clickable { onProfileClick() }
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Person,
-                    contentDescription = "Perfil",
-                    tint = CyanAccent,
-                    modifier = Modifier.padding(8.dp)
-                )
-            }
         }
+
+        Text(
+            text = stringResource(id = R.string.home_app_title),
+            color = CyanAccent,
+            fontSize = 20.sp,
+            fontWeight = FontWeight.ExtraBold,
+            letterSpacing = 2.sp
+        )
+
+        Surface(
+            shape = CircleShape,
+            color = MaterialTheme.colorScheme.surfaceVariant,
+            border = BorderStroke(
+                2.dp,
+                CyanAccent.copy(alpha = 0.5f)
+            ),
+            modifier = Modifier
+                .size(40.dp)
+                .clip(CircleShape)
+                .clickable { onProfileClick() }
+        ) {
+            Icon(
+                imageVector = Icons.Default.Person,
+                contentDescription = stringResource(id = R.string.content_description_profile),
+                tint = CyanAccent,
+                modifier = Modifier.padding(8.dp)
+            )
+        }
+    }
 }
 
 @Composable
@@ -257,8 +262,8 @@ fun WorkoutCard(modifier: Modifier = Modifier, workout: Workout?, onClick: () ->
         onClick = onClick,
         modifier = modifier.fillMaxWidth().padding(vertical = 12.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (isCompleted) MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f) 
-                             else MaterialTheme.colorScheme.surface
+            containerColor = if (isCompleted) MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+            else MaterialTheme.colorScheme.surface
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = if (isCompleted) 0.dp else 2.dp),
         shape = RoundedCornerShape(20.dp)
@@ -272,25 +277,26 @@ fun WorkoutCard(modifier: Modifier = Modifier, workout: Workout?, onClick: () ->
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = workout?.name ?: "Treino",
+                    text = workout?.name ?: stringResource(id = R.string.home_default_workout_name),
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
-                    color = if (isCompleted) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f) 
-                            else MaterialTheme.colorScheme.onSurface
+                    color = if (isCompleted) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                    else MaterialTheme.colorScheme.onSurface
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = if (isCompleted) "Treino concluído" else "${workout?.exercises?.size ?: 0} exercícios",
+                    text = if (isCompleted) stringResource(id = R.string.home_workout_completed_status)
+                    else stringResource(id = R.string.home_workout_exercise_count, workout?.exercises?.size ?: 0),
                     fontSize = 14.sp,
                     color = if (isCompleted) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
-                            else MaterialTheme.colorScheme.onSurfaceVariant
+                    else MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
             if (isCompleted) {
                 Icon(
                     imageVector = Icons.Default.CheckCircle,
-                    contentDescription = "Concluído",
+                    contentDescription = stringResource(id = R.string.content_description_completed),
                     tint = Color(0xFF4CAF50),
                     modifier = Modifier.size(32.dp)
                 )
@@ -302,7 +308,7 @@ fun WorkoutCard(modifier: Modifier = Modifier, workout: Workout?, onClick: () ->
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                        contentDescription = "Iniciar Treino",
+                        contentDescription = stringResource(id = R.string.content_description_start_workout),
                         tint = MaterialTheme.colorScheme.onSecondaryContainer,
                         modifier = Modifier.padding(8.dp)
                     )
@@ -328,7 +334,7 @@ fun EmptyWorkoutCard(modifier: Modifier = Modifier) {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "Nenhum treino agendado para hoje.",
+                text = stringResource(id = R.string.home_no_workout_scheduled_today),
                 fontSize = 14.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -343,8 +349,8 @@ fun HomeBottomBar(selectedTab: Int, onTabSelected: (Int) -> Unit) {
         tonalElevation = 8.dp
     ) {
         NavigationBarItem(
-            icon = { Icon(Icons.Default.Home, contentDescription = "Início") },
-            label = { Text("Início") },
+            icon = { Icon(Icons.Default.Home, contentDescription = stringResource(id = R.string.content_description_home)) },
+            label = { Text(stringResource(id = R.string.home_bottom_bar_home)) },
             selected = selectedTab == 0,
             onClick = { onTabSelected(0) },
             colors = NavigationBarItemDefaults.colors(
@@ -354,8 +360,8 @@ fun HomeBottomBar(selectedTab: Int, onTabSelected: (Int) -> Unit) {
             )
         )
         NavigationBarItem(
-            icon = { Icon(Icons.Default.List, contentDescription = "Treinos Registrados") },
-            label = { Text("Treinos") },
+            icon = { Icon(Icons.Default.List, contentDescription = stringResource(id = R.string.content_description_registered_workouts)) },
+            label = { Text(stringResource(id = R.string.home_bottom_bar_workouts)) },
             selected = selectedTab == 1,
             onClick = { onTabSelected(1) },
             colors = NavigationBarItemDefaults.colors(
@@ -365,8 +371,8 @@ fun HomeBottomBar(selectedTab: Int, onTabSelected: (Int) -> Unit) {
             )
         )
         NavigationBarItem(
-            icon = { Icon(Icons.Default.CheckCircle, contentDescription = "Histórico") },
-            label = { Text("Histórico") },
+            icon = { Icon(Icons.Default.CheckCircle, contentDescription = stringResource(id = R.string.content_description_history)) },
+            label = { Text(stringResource(id = R.string.home_bottom_bar_history)) },
             selected = selectedTab == 2,
             onClick = { onTabSelected(2) },
             colors = NavigationBarItemDefaults.colors(

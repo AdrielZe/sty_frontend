@@ -19,10 +19,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.training_tracker.R
 import com.example.training_tracker.data.models.Exercise
 import com.example.training_tracker.data.models.mocks.availableExercises
 import com.example.training_tracker.ui.screens.home.MainGradientButton
@@ -61,7 +63,7 @@ fun CreateWorkoutScreen(
             TopAppBar(
                 title = {
                     Text(
-                        "CRIAR NOVO TREINO",
+                        stringResource(id = R.string.create_workout_title),
                         fontSize = 18.sp,
                         fontWeight = FontWeight.ExtraBold,
                         letterSpacing = 1.sp,
@@ -72,7 +74,7 @@ fun CreateWorkoutScreen(
                     IconButton(onClick = onNavigateBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Voltar",
+                            contentDescription = stringResource(id = R.string.content_description_back),
                             tint = MaterialTheme.colorScheme.onBackground
                         )
                     }
@@ -96,7 +98,7 @@ fun CreateWorkoutScreen(
 
             // Nome do Treino
             Text(
-                text = "Qual o nome do treino?",
+                text = stringResource(id = R.string.create_workout_name_label),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = if (uiState.showErrors && !uiState.isNameValid) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onBackground
@@ -106,7 +108,7 @@ fun CreateWorkoutScreen(
                 value = uiState.workoutName,
                 onValueChange = { viewModel.updateWorkoutName(it) },
                 modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text("Ex: Treino A - Superior") },
+                placeholder = { Text(stringResource(id = R.string.create_workout_name_placeholder)) },
                 shape = RoundedCornerShape(Dimens.cornerRadius),
                 isError = uiState.showErrors && !uiState.isNameValid,
                 colors = OutlinedTextFieldDefaults.colors(
@@ -120,7 +122,7 @@ fun CreateWorkoutScreen(
 
             // Seleção do Dia
             Text(
-                text = "Qual o dia da semana?",
+                text = stringResource(id = R.string.create_workout_day_label),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = if (uiState.showErrors && !uiState.isDayValid) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onBackground
@@ -136,13 +138,13 @@ fun CreateWorkoutScreen(
 
             // Adicionar Exercício
             Text(
-                text = "Adicionar Exercícios",
+                text = stringResource(id = R.string.create_workout_add_exercise_label),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = if (uiState.showErrors && !uiState.isExercisesValid) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onBackground
             )
             Spacer(modifier = Modifier.height(Dimens.paddingSmall))
-            
+
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -164,7 +166,7 @@ fun CreateWorkoutScreen(
                     Icon(Icons.Default.Add, contentDescription = null, tint = CyanAccent)
                     Spacer(modifier = Modifier.width(12.dp))
                     Text(
-                        text = "Clique para selecionar um exercício",
+                        text = stringResource(id = R.string.create_workout_click_to_select),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontSize = 14.sp
                     )
@@ -175,7 +177,7 @@ fun CreateWorkoutScreen(
 
             // Lista de Exercícios Adicionados
             Text(
-                text = "EXERCÍCIOS ADICIONADOS",
+                text = stringResource(id = R.string.create_workout_added_exercises_title),
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.Bold,
                 color = CyanAccent,
@@ -193,7 +195,7 @@ fun CreateWorkoutScreen(
 
             if (uiState.showErrors && !uiState.isExercisesValid) {
                 Text(
-                    text = "Adicione pelo menos um exercício",
+                    text = stringResource(id = R.string.create_workout_error_no_exercise),
                     color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier.padding(start = 4.dp)
@@ -204,7 +206,7 @@ fun CreateWorkoutScreen(
 
             // Botão Salvar
             MainGradientButton(
-                text = "SALVAR TREINO",
+                text = stringResource(id = R.string.create_workout_save_button),
                 onClick = { viewModel.saveWorkout() }
             )
             Spacer(modifier = Modifier.height(Dimens.paddingLarge))
@@ -230,7 +232,7 @@ fun DaySelector(
     isError: Boolean = false
 ) {
     val days = DayOfWeek.entries.toTypedArray()
-    
+
     LazyRow(
         horizontalArrangement = Arrangement.spacedBy(Dimens.paddingSmall)
     ) {
@@ -289,7 +291,7 @@ fun ExerciseItem(exercise: Exercise, onDelete: () -> Unit) {
             IconButton(onClick = onDelete) {
                 Icon(
                     imageVector = Icons.Default.Delete,
-                    contentDescription = "Remover",
+                    contentDescription = stringResource(id = R.string.content_description_remove),
                     tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f)
                 )
             }

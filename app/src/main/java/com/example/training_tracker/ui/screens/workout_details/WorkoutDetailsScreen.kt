@@ -28,12 +28,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.toSize
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.training_tracker.R
 import com.example.training_tracker.data.models.Exercise
 import com.example.training_tracker.data.models.mocks.availableExercises
 import com.example.training_tracker.ui.screens.home.MainGradientButton
@@ -52,13 +54,13 @@ fun WorkoutDetailsScreen(
     var showAddExerciseDialog by remember { mutableStateOf(false) }
 
     val scrollState = rememberScrollState()
-    
+
     var draggedExercise by remember { mutableStateOf<Exercise?>(null) }
     var dragStartOffsetInItem by remember { mutableStateOf(Offset.Zero) }
     val snackbarHostState = remember { SnackbarHostState() }
     var currentPointerPos by remember { mutableStateOf(Offset.Zero) }
     var hoveredIndex by remember { mutableStateOf<Int?>(null) }
-    
+
     val itemBounds = remember { mutableMapOf<String, Offset>() }
     val indexBounds = remember { mutableMapOf<Int, Rect>() }
     var parentRootPosition by remember { mutableStateOf(Offset.Zero) }
@@ -74,7 +76,7 @@ fun WorkoutDetailsScreen(
             TopAppBar(
                 title = {
                     Text(
-                        "DETALHES DO TREINO",
+                        stringResource(id = R.string.workout_details_title),
                         fontSize = 18.sp,
                         fontWeight = FontWeight.ExtraBold,
                         letterSpacing = 1.sp,
@@ -85,7 +87,7 @@ fun WorkoutDetailsScreen(
                     IconButton(onClick = onNavigateBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Voltar",
+                            contentDescription = stringResource(id = R.string.content_description_back),
                             tint = MaterialTheme.colorScheme.onBackground
                         )
                     }
@@ -116,16 +118,16 @@ fun WorkoutDetailsScreen(
                             .padding(horizontal = Dimens.paddingLarge)
                     ) {
                         Spacer(modifier = Modifier.height(Dimens.paddingMedium))
-                        
+
                         Text(
                             text = workout.name.uppercase(),
                             style = MaterialTheme.typography.headlineMedium,
                             fontWeight = FontWeight.ExtraBold,
                             color = MaterialTheme.colorScheme.onBackground
                         )
-                        
+
                         Text(
-                            text = "${workout.exercises.size} exercícios no total",
+                            text = stringResource(id = R.string.workout_details_total_exercises, workout.exercises.size),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -133,7 +135,7 @@ fun WorkoutDetailsScreen(
                         Spacer(modifier = Modifier.height(Dimens.paddingLarge))
 
                         Text(
-                            text = "LISTA DE EXERCÍCIOS",
+                            text = stringResource(id = R.string.workout_details_exercise_list_title),
                             style = MaterialTheme.typography.labelLarge,
                             fontWeight = FontWeight.Bold,
                             color = CyanAccent,
@@ -145,7 +147,7 @@ fun WorkoutDetailsScreen(
                         workout.exercises.forEachIndexed { index, exercise ->
                             val isBeingDragged = draggedExercise?.id == exercise.id
                             val isHovered = hoveredIndex == index
-                            
+
                             Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -169,9 +171,9 @@ fun WorkoutDetailsScreen(
                                                         change.consume()
                                                         val itemRootPos = itemBounds[exercise.id] ?: Offset.Zero
                                                         currentPointerPos = itemRootPos + change.position
-                                                        
-                                                        hoveredIndex = indexBounds.entries.find { 
-                                                            it.value.contains(currentPointerPos) 
+
+                                                        hoveredIndex = indexBounds.entries.find {
+                                                            it.value.contains(currentPointerPos)
                                                         }?.key
                                                     },
                                                     onDragEnd = {
@@ -216,14 +218,14 @@ fun WorkoutDetailsScreen(
                             Spacer(modifier = Modifier.height(Dimens.paddingLarge))
 
                             MainGradientButton(
-                                text = "INICIAR TREINO AGORA",
-                                onClick = { 
+                                text = stringResource(id = R.string.workout_details_start_workout_button),
+                                onClick = {
                                     viewModel.startWorkout()
-                                    onStartWorkout(workout.id) 
+                                    onStartWorkout(workout.id)
                                 }
                             )
                         }
-                        
+
                         Spacer(modifier = Modifier.height(Dimens.paddingLarge))
                     }
                 }
@@ -288,7 +290,7 @@ fun AddExerciseButton(onClick: () -> Unit) {
             Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(20.dp))
             Spacer(modifier = Modifier.width(8.dp))
             Text(
-                "ADICIONAR EXERCÍCIO",
+                stringResource(id = R.string.workout_details_add_exercise_button),
                 fontWeight = FontWeight.Bold,
                 letterSpacing = 1.sp
             )
@@ -332,9 +334,9 @@ fun ExerciseDetailItem(
                     )
                 }
             }
-            
+
             Spacer(modifier = Modifier.width(Dimens.paddingMedium))
-            
+
             Text(
                 text = exercise.name,
                 style = MaterialTheme.typography.bodyLarge,
@@ -348,7 +350,7 @@ fun ExerciseDetailItem(
                     IconButton(onClick = { expanded = true }) {
                         Icon(
                             imageVector = Icons.Default.MoreVert,
-                            contentDescription = "Opções",
+                            contentDescription = stringResource(id = R.string.content_description_options),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
@@ -357,7 +359,7 @@ fun ExerciseDetailItem(
                         onDismissRequest = { expanded = false }
                     ) {
                         DropdownMenuItem(
-                            text = { Text("Remover Exercício", color = MaterialTheme.colorScheme.error) },
+                            text = { Text(stringResource(id = R.string.workout_details_remove_exercise), color = MaterialTheme.colorScheme.error) },
                             leadingIcon = { Icon(Icons.Default.Delete, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
                             onClick = {
                                 onRemove()
@@ -397,13 +399,13 @@ fun AddExerciseSelectionDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Selecionar Exercício", fontWeight = FontWeight.Bold) },
+        title = { Text(stringResource(id = R.string.workout_details_select_exercise_dialog_title), fontWeight = FontWeight.Bold) },
         text = {
             Column(modifier = Modifier.fillMaxWidth().height(400.dp)) {
                 OutlinedTextField(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
-                    placeholder = { Text("Buscar exercício...") },
+                    placeholder = { Text(stringResource(id = R.string.workout_details_search_exercise_placeholder)) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
@@ -463,7 +465,7 @@ fun AddExerciseSelectionDialog(
         confirmButton = {},
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancelar", color = Color.Gray)
+                Text(stringResource(id = R.string.workout_details_cancel_button), color = Color.Gray)
             }
         }
     )

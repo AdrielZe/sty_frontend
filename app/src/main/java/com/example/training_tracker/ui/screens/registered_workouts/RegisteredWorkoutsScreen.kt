@@ -24,11 +24,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.training_tracker.R
 import com.example.training_tracker.data.models.Workout
 import com.example.training_tracker.ui.theme.CyanAccent
 import com.example.training_tracker.ui.theme.Dimens
@@ -53,7 +55,7 @@ fun RegisteredWorkoutsScreen(
     var dragStartOffsetInItem by remember { mutableStateOf(Offset.Zero) }
     var currentPointerPos by remember { mutableStateOf(Offset.Zero) }
     var hoveredDay by remember { mutableStateOf<DayOfWeek?>(null) }
-    
+
     val dayBounds = remember { mutableMapOf<DayOfWeek, androidx.compose.ui.geometry.Rect>() }
     val itemBounds = remember { mutableMapOf<String, Offset>() }
     var parentRootPosition by remember { mutableStateOf(Offset.Zero) }
@@ -73,7 +75,7 @@ fun RegisteredWorkoutsScreen(
             TopAppBar(
                 title = {
                     Text(
-                        "TREINOS REGISTRADOS",
+                        stringResource(id = R.string.registered_workouts_title),
                         fontSize = 18.sp,
                         fontWeight = FontWeight.ExtraBold,
                         letterSpacing = 1.sp,
@@ -84,7 +86,7 @@ fun RegisteredWorkoutsScreen(
                     IconButton(onClick = onNavigateBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Voltar",
+                            contentDescription = stringResource(id = R.string.content_description_back),
                             tint = MaterialTheme.colorScheme.onBackground
                         )
                     }
@@ -99,7 +101,7 @@ fun RegisteredWorkoutsScreen(
         Box(modifier = Modifier
             .fillMaxSize()
             .padding(padding)
-            .onGloballyPositioned { 
+            .onGloballyPositioned {
                 parentRootPosition = it.positionInRoot()
                 containerHeight = it.size.height.toFloat()
             }
@@ -114,7 +116,7 @@ fun RegisteredWorkoutsScreen(
                 days.forEach { day ->
                     val isHovered = hoveredDay == day
                     val workouts = uiState.workoutsByDay[day] ?: emptyList()
-                    
+
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -134,7 +136,7 @@ fun RegisteredWorkoutsScreen(
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
-                                text = day.getDisplayName(TextStyle.FULL, Locale("pt", "BR")).uppercase(),
+                                text = day.getDisplayName(TextStyle.FULL, Locale.getDefault()).uppercase(),
                                 style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.ExtraBold,
                                 color = if (isHovered) CyanAccent else CyanAccent, // Cor mais forte
@@ -148,12 +150,12 @@ fun RegisteredWorkoutsScreen(
                                 fontWeight = FontWeight.ExtraBold
                             )
                         }
-                        
+
                         Spacer(modifier = Modifier.height(Dimens.paddingSmall))
 
                         if (workouts.isEmpty()) {
                             Text(
-                                text = "Arraste um treino para cá",
+                                text = stringResource(id = R.string.registered_workouts_drag_empty_state),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
                                 modifier = Modifier.padding(Dimens.paddingSmall)
@@ -161,13 +163,13 @@ fun RegisteredWorkoutsScreen(
                         } else {
                             workouts.forEach { workout ->
                                 val isBeingDragged = draggedWorkout?.id == workout.id
-                                
+
                                 Box(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .alpha(if (isBeingDragged) 0f else 1f)
-                                        .onGloballyPositioned { 
-                                            itemBounds[workout.id] = it.positionInRoot() 
+                                        .onGloballyPositioned {
+                                            itemBounds[workout.id] = it.positionInRoot()
                                         }
                                         .pointerInput(workout) {
                                             detectDragGesturesAfterLongPress(
@@ -178,13 +180,13 @@ fun RegisteredWorkoutsScreen(
                                                 },
                                                 onDrag = { change, _ ->
                                                     change.consume()
-                                                    
+
                                                     val itemRootPos = itemBounds[workout.id] ?: Offset.Zero
                                                     currentPointerPos = itemRootPos + change.position
-                                                    
+
                                                     val relativeY = currentPointerPos.y - parentRootPosition.y
                                                     val scrollThreshold = 100.dp.toPx()
-                                                    
+
                                                     if (relativeY < scrollThreshold) {
                                                         coroutineScope.launch { scrollState.scrollBy(-20f) }
                                                     } else if (relativeY > containerHeight - scrollThreshold) {
@@ -280,27 +282,27 @@ fun WorkoutItem(
                     fontSize = 18.sp
                 )
                 Text(
-                    text = "${workout.exercises.size} exercícios",
+                    text = stringResource(id = R.string.registered_workouts_exercise_count, workout.exercises.size),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-            
+
             Box {
                 IconButton(onClick = { showMenu = true }) {
                     Icon(
                         imageVector = Icons.Default.MoreVert,
-                        contentDescription = "Mais opções",
+                        contentDescription = stringResource(id = R.string.content_description_more_options),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                
+
                 DropdownMenu(
                     expanded = showMenu,
                     onDismissRequest = { showMenu = false }
                 ) {
                     DropdownMenuItem(
-                        text = { Text("Remover Treino") },
+                        text = { Text(stringResource(id = R.string.registered_workouts_remove_workout_menu)) },
                         onClick = {
                             onDelete()
                             showMenu = false

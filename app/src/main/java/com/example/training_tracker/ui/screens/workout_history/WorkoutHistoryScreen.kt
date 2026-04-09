@@ -23,10 +23,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.training_tracker.R
 import com.example.training_tracker.data.models.Workout
 import com.example.training_tracker.data.models.WorkoutHistory
 import com.example.training_tracker.ui.theme.CyanAccent
@@ -48,7 +50,7 @@ fun WorkoutHistoryScreen(
             TopAppBar(
                 title = {
                     Text(
-                        "HISTÓRICO DE TREINOS",
+                        stringResource(id = R.string.workout_history_title),
                         fontSize = 18.sp,
                         fontWeight = FontWeight.ExtraBold,
                         letterSpacing = 1.sp,
@@ -59,7 +61,7 @@ fun WorkoutHistoryScreen(
                     IconButton(onClick = onNavigateBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Voltar",
+                            contentDescription = stringResource(id = R.string.content_description_back),
                             tint = MaterialTheme.colorScheme.onBackground
                         )
                     }
@@ -69,7 +71,7 @@ fun WorkoutHistoryScreen(
                         IconButton(onClick = { showSortMenu = true }) {
                             Icon(
                                 imageVector = Icons.Default.Sort,
-                                contentDescription = "Ordenar",
+                                contentDescription = stringResource(id = R.string.content_description_sort),
                                 tint = CyanAccent
                             )
                         }
@@ -78,20 +80,20 @@ fun WorkoutHistoryScreen(
                             onDismissRequest = { showSortMenu = false }
                         ) {
                             DropdownMenuItem(
-                                text = { Text("Data (Mais recente)") },
+                                text = { Text(stringResource(id = R.string.workout_history_sort_date_desc)) },
                                 onClick = { onSortOrderChange(SortOrder.DATE_DESC); showSortMenu = false }
                             )
                             DropdownMenuItem(
-                                text = { Text("Data (Mais antiga)") },
+                                text = { Text(stringResource(id = R.string.workout_history_sort_date_asc)) },
                                 onClick = { onSortOrderChange(SortOrder.DATE_ASC); showSortMenu = false }
                             )
                             HorizontalDivider()
                             DropdownMenuItem(
-                                text = { Text("Nome (A-Z)") },
+                                text = { Text(stringResource(id = R.string.workout_history_sort_name_asc)) },
                                 onClick = { onSortOrderChange(SortOrder.NAME_ASC); showSortMenu = false }
                             )
                             DropdownMenuItem(
-                                text = { Text("Nome (Z-A)") },
+                                text = { Text(stringResource(id = R.string.workout_history_sort_name_desc)) },
                                 onClick = { onSortOrderChange(SortOrder.NAME_DESC); showSortMenu = false }
                             )
                         }
@@ -129,7 +131,10 @@ fun WorkoutHistoryScreen(
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
-                            text = if (uiState.searchQuery.isEmpty()) "Nenhum treino concluído ainda." else "Nenhum treino encontrado.",
+                            text = if (uiState.searchQuery.isEmpty())
+                                stringResource(id = R.string.workout_history_empty_state_no_workouts)
+                            else
+                                stringResource(id = R.string.workout_history_empty_state_not_found),
                             color = Color.Gray,
                             style = MaterialTheme.typography.bodyLarge
                         )
@@ -185,7 +190,7 @@ fun HistorySearchBar(
             Box(modifier = Modifier.weight(1f)) {
                 if (query.isEmpty()) {
                     Text(
-                        text = "Buscar por nome do treino...",
+                        text = stringResource(id = R.string.workout_history_search_placeholder),
                         color = Color.Gray,
                         fontSize = 14.sp
                     )
@@ -209,7 +214,7 @@ fun HistorySearchBar(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Clear,
-                        contentDescription = "Limpar",
+                        contentDescription = stringResource(id = R.string.content_description_clear),
                         tint = Color.Gray,
                         modifier = Modifier.size(16.dp)
                     )
@@ -267,7 +272,7 @@ fun HistoryWorkoutCard(workout: WorkoutHistory) {
                 Column(modifier = Modifier.padding(top = 16.dp)) {
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                     Spacer(modifier = Modifier.height(12.dp))
-                    
+
                     workout.exercises.forEach { exercise ->
                         Column(modifier = Modifier.padding(bottom = 12.dp)) {
                             Text(
@@ -284,7 +289,12 @@ fun HistoryWorkoutCard(workout: WorkoutHistory) {
                                     horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
                                     Text(
-                                        text = "Série ${set.set}: ${set.reps} reps x ${set.weight}kg",
+                                        text = stringResource(
+                                            id = R.string.workout_history_set_details,
+                                            set.set.toString(),
+                                            set.reps.toString(),
+                                            set.weight.toString()
+                                        ),
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
