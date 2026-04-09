@@ -20,6 +20,11 @@ android {
     }
 
     buildTypes {
+        debug {
+            // Isso fará o ID virar "com.seunome.seuapp.debug"
+            applicationIdSuffix = ".debug"
+            versionNameSuffix = "-DEV"
+        }
         release {
             isMinifyEnabled = false
             proguardFiles(

@@ -13,4 +13,6 @@
     <string name="label_exercise_name">Nome do Exercício</string>
 
     <string name="empty_workout_state">Nenhum treino registrado ainda.</string>
+
+
 </resources>
