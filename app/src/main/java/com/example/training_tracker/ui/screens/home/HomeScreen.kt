@@ -3,6 +3,7 @@ package com.example.training_tracker.ui.screens.home
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -22,12 +23,15 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.AccessibilityNew
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -50,6 +54,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -156,7 +162,7 @@ fun HomeScreen(
                 EmptyWorkoutCard()
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             MainGradientButton(
                 text = stringResource(id = R.string.home_create_new_workout_button),
@@ -186,6 +192,7 @@ fun HomeScreen(
             Spacer(modifier = Modifier.height(16.dp))
             WeeklyProgressCard()
 
+            Spacer(modifier = Modifier.height(24.dp))
         }
     }
 }
@@ -448,57 +455,132 @@ fun WorkoutCard(modifier: Modifier = Modifier, workout: Workout?, onClick: () ->
 
     Card(
         onClick = onClick,
-        modifier = modifier.fillMaxWidth().padding(vertical = 12.dp),
+        modifier = modifier
+            .fillMaxWidth()
+            .height(180.dp)
+            .padding(vertical = 8.dp),
+        shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (isCompleted) MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
-            else MaterialTheme.colorScheme.surface
+            containerColor = MaterialTheme.colorScheme.surface
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = if (isCompleted) 0.dp else 2.dp),
-        shape = RoundedCornerShape(20.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(20.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = workout?.name ?: stringResource(id = R.string.home_default_workout_name),
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = if (isCompleted) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                    else MaterialTheme.colorScheme.onSurface
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = if (isCompleted) stringResource(id = R.string.home_workout_completed_status)
-                    else stringResource(id = R.string.home_workout_exercise_count, workout?.exercises?.size ?: 0),
-                    fontSize = 14.sp,
-                    color = if (isCompleted) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
-                    else MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
+        Box(modifier = Modifier.fillMaxSize()) {
+            // Background Image/Placeholder
+            Image(
+                painter = painterResource(id = R.drawable.ic_launcher_background),
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop,
+                alpha = if (isCompleted) 0.2f else 0.5f
+            )
 
-            if (isCompleted) {
-                Icon(
-                    imageVector = Icons.Default.CheckCircle,
-                    contentDescription = stringResource(id = R.string.content_description_completed),
-                    tint = Color(0xFF4CAF50),
-                    modifier = Modifier.size(32.dp)
-                )
-            } else {
-                Surface(
-                    shape = CircleShape,
-                    color = MaterialTheme.colorScheme.secondary,
-                    modifier = Modifier.size(40.dp)
+            // Gradient Overlay
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(
+                                Color.Transparent,
+                                if (isCompleted) Color.Black.copy(alpha = 0.4f) else Color.Black.copy(alpha = 0.8f)
+                            )
+                        )
+                    )
+            )
+
+            // Content
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(20.dp),
+                verticalArrangement = Arrangement.SpaceBetween
+            ) {
+                // Top Row: Badge/Status
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Surface(
+                        color = if (isCompleted) Color(0xFF4CAF50).copy(alpha = 0.9f) else CyanAccent.copy(alpha = 0.9f),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text(
+                            text = if (isCompleted) "COMPLETED" else "TODAY",
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                            color = Color.White,
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            letterSpacing = 1.sp
+                        )
+                    }
+
+                    if (isCompleted) {
+                        Icon(
+                            imageVector = Icons.Default.CheckCircle,
+                            contentDescription = null,
+                            tint = Color(0xFF4CAF50),
+                            modifier = Modifier.size(28.dp)
+                        )
+                    }
+                }
+
+                // Bottom Content
+                Column {
+                    Text(
+                        text = workout?.name ?: stringResource(id = R.string.home_default_workout_name),
+                        style = Typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                    
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.FitnessCenter,
+                            contentDescription = null,
+                            tint = Color.White.copy(alpha = 0.7f),
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = stringResource(id = R.string.home_workout_exercise_count, workout?.exercises?.size ?: 0),
+                            color = Color.White.copy(alpha = 0.7f),
+                            style = Typography.bodySmall
+                        )
+                        Spacer(modifier = Modifier.width(16.dp))
+                        Icon(
+                            imageVector = Icons.Default.Timer,
+                            contentDescription = null,
+                            tint = Color.White.copy(alpha = 0.7f),
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "45 min", // Mocking duration for UI
+                            color = Color.White.copy(alpha = 0.7f),
+                            style = Typography.bodySmall
+                        )
+                    }
+                }
+            }
+            
+            // Interaction Indicator (Floating Chevron)
+            if (!isCompleted) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.CenterEnd)
+                        .padding(end = 16.dp)
+                        .size(40.dp)
+                        .background(Color.White.copy(alpha = 0.2f), CircleShape),
+                    contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                        contentDescription = stringResource(id = R.string.content_description_start_workout),
-                        tint = MaterialTheme.colorScheme.onSecondaryContainer,
-                        modifier = Modifier.padding(8.dp)
+                        contentDescription = null,
+                        tint = Color.White
                     )
                 }
             }
@@ -509,23 +591,75 @@ fun WorkoutCard(modifier: Modifier = Modifier, workout: Workout?, onClick: () ->
 @Composable
 fun EmptyWorkoutCard(modifier: Modifier = Modifier) {
     Card(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .height(200.dp),
+        shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-        ),
-        shape = RoundedCornerShape(20.dp)
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        )
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(24.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = stringResource(id = R.string.home_no_workout_scheduled_today),
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                fontSize = 14.sp
+        Box(modifier = Modifier.fillMaxSize()) {
+            Image(
+                painter = painterResource(id = R.drawable.ic_launcher_background),
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop,
+                alpha = 0.3f
             )
+
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(
+                                Color.Transparent,
+                                Color.Black.copy(alpha = 0.7f)
+                            )
+                        )
+                    )
+            )
+
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(24.dp),
+                verticalArrangement = Arrangement.Bottom
+            ) {
+                Text(
+                    text = stringResource(id = R.string.home_no_workout_scheduled_today),
+                    color = Color.White,
+                    style = Typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(Color.White.copy(alpha = 0.2f))
+                        .padding(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.AccessibilityNew,
+                        contentDescription = null,
+                        tint = CyanAccent,
+                        modifier = Modifier.size(28.dp)
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text(
+                        text = "Dica: faça um leve agachamento ou uma caminhada de 15 minutos",
+                        color = Color.White,
+                        style = Typography.bodySmall,
+                        fontWeight = FontWeight.Medium,
+                        lineHeight = 18.sp
+                    )
+                }
+            }
         }
     }
 }

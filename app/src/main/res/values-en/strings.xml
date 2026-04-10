@@ -9,7 +9,7 @@
     <string name="label_weight">Weight</string>
     <string name="label_reps">Reps</string>
     <string name="label_exercise_name">Exercise Name</string>
-    <string name="empty_workout_state">None workouts registered yet.</string>
+    <string name="empty_workout_state">No workouts registered yet.</string>
     <string name="create_workout_title">CREATE WORKOUT</string>
     <string name="content_description_back">Back</string>
     <string name="create_workout_name_label">Type the workout\'s name:</string>
@@ -35,7 +35,7 @@
     <string name="home_workout_exercise_count">%1$d exercises</string>
     <string name="content_description_completed">Completed</string>
     <string name="content_description_start_workout">Start Workout</string>
-    <string name="home_no_workout_scheduled_today">None workouts scheduled for today.</string>
+    <string name="home_no_workout_scheduled_today">No workouts scheduled for today.</string>
     <string name="content_description_home">Home</string>
     <string name="home_bottom_bar_home">Home</string>
     <string name="content_description_registered_workouts">Registered Workouts</string>
