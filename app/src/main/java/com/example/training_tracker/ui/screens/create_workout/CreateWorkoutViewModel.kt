@@ -83,7 +83,9 @@ class CreateWorkoutViewModel(
         }
 
         // 3. Adiciona ao treino atual (rascunho)
-        val exerciseToAdd = existingExercise ?: Exercise(name = nameFormatted)
+        // Usamos .copy(id = ...) para garantir que cada instância no treino tenha um ID único,
+        // mesmo que o usuário adicione o mesmo exercício várias vezes.
+        val exerciseToAdd = (existingExercise ?: Exercise(name = nameFormatted)).copy(id = java.util.UUID.randomUUID().toString())
         _draftState.update {
             it.copy(exercises = it.exercises + exerciseToAdd)
         }

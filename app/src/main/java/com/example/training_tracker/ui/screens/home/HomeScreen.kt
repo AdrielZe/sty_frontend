@@ -64,6 +64,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.training_tracker.R
 import com.example.training_tracker.data.models.Workout
+import com.example.training_tracker.ui.theme.AppTheme
 import com.example.training_tracker.ui.theme.CyanAccent
 import com.example.training_tracker.ui.theme.Typography
 
@@ -210,10 +211,16 @@ fun WeeklyProgressCard(
     }
 
     Card(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .background(
+                brush = AppTheme.brushes.backgroundGradient,
+                shape = RoundedCornerShape(16.dp)
+            ),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            // 2. Deixa o fundo padrão transparente
+            containerColor = Color.Transparent
         ),
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
     ) {
@@ -307,11 +314,16 @@ fun WorkoutsSummaryCard(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .height(72.dp),
-        shape = RoundedCornerShape(20.dp),
+            .height(72.dp)
+            .background(
+                brush = AppTheme.brushes.backgroundGradient,
+                shape = RoundedCornerShape(20.dp)
+            ),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            // 2. Deixa o fundo padrão transparente
+            containerColor = Color.Transparent
         ),
+        shape = RoundedCornerShape(20.dp),
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
     ) {
         Row(

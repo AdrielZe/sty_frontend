@@ -1,5 +1,6 @@
 package com.example.training_tracker.ui.theme
 
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 
 
@@ -7,6 +8,25 @@ import androidx.compose.ui.graphics.Color
 val CyanAccent = Color(0xFF61B2F3)
 val CyanDark = Color(0xFF1B92B6)
 
+// Degradê de tons de azul
+val CyanGradient = Brush.linearGradient(
+    colors = listOf(
+        Color(0xFF61B2F3), // Tom original
+        Color(0xFF4A90E2), // Tom intermediário
+        Color(0xFF1B92B6)  // Tom mais escuro (CyanDark)
+    )
+)
+
+val LightBrushes = CustomBrushes(
+    primaryGradient = Brush.linearGradient(listOf(CyanDark, CyanAccent)),
+    backgroundGradient = Brush.verticalGradient(listOf(Color(0xFFF2F2F2), // Cinza muito claro (substitui o Branco)
+        Color(0xFFE0E0E0)))
+)
+
+val DarkBrushes = CustomBrushes(
+    primaryGradient = Brush.linearGradient(listOf(CyanAccent, Color.Blue)),
+    backgroundGradient = Brush.verticalGradient(listOf(Color(0xFF2D2D35),Color(0xFF1E1E24)))
+)
 val ExerciseCardBackgroundLight = Color(0XFFFFFFFF)
 val ExerciseCardBackgroundDark = Color(0XFF000000)
 
