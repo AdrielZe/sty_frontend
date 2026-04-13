@@ -6,6 +6,7 @@ import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -110,6 +111,15 @@ fun WorkoutScreen(
 
     var expandedExercises by remember { mutableStateOf(setOf<String>()) }
 
+    LaunchedEffect(workoutUiState.workout?.id) {
+        val loadedExercises = workoutUiState.workout?.exercises ?: emptyList()
+        if (loadedExercises.isNotEmpty() && workoutUiState.workout?.isCompleted == false) {
+            val firstIncomplete = loadedExercises.firstOrNull { !it.isCompleted }
+            if (firstIncomplete != null) {
+                expandedExercises = setOf(firstIncomplete.id)
+            }
+        }
+    }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -154,20 +164,12 @@ fun WorkoutScreen(
                                 letterSpacing = 1.sp
                             )
 
-                            Text(
-                                text = " - 54.3% of 100%",
-                                color = MaterialTheme.colorScheme.onSurface,
-                                fontSize = 18.sp,
-                                fontWeight = FontWeight.Bold,
-                                letterSpacing = 1.sp
-                            )
                         }
 
                         Spacer(modifier = Modifier.height(4.dp))
                         WorkoutProgressBar(
                             modifier = Modifier,
-                            progress = 0.4f,
-                            workoutUiState.workout
+                            workout = workoutUiState.workout
                         )
 
 
@@ -176,10 +178,15 @@ fun WorkoutScreen(
                 }
 
                 val exercises = workoutUiState.workout?.exercises ?: emptyList()
+                val activeIndex = exercises.indexOfFirst { !it.isCompleted }
+
+
                 itemsIndexed(
                     items = exercises,
                     key = { index, exercise -> "${exercise.id}_$index" }
-                ) { _, exercise ->
+                ) { index, exercise ->
+                    val isLocked = activeIndex != -1 && index > activeIndex
+
                     ExerciseCard(
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                         exercise = exercise,
@@ -191,6 +198,7 @@ fun WorkoutScreen(
                                 newValue
                             )
                         },
+                        isLocked = isLocked,
                         onWeightChange = { setNumber, newValue ->
                             onWeightChange(
                                 exercise.id,
@@ -201,7 +209,14 @@ fun WorkoutScreen(
                         onAddSetClick = { id -> onAddSetClick(id) },
                         onRemoveSet = onRemoveSet,
                         onCompleteSet = onCompleteSet,
-                        onCompleteExercise = { onCompleteExercise(exercise.id) },
+                        onCompleteExercise = {
+                            onCompleteExercise(exercise.id)
+                            val nextExercise = exercises.drop(index + 1).firstOrNull { !it.isCompleted }
+                            expandedExercises = if (nextExercise != null) {
+                                setOf(nextExercise.id)
+                            } else {
+                                emptySet()
+                            }},
                         onExpandedChange = { isNowExpanded ->
                             expandedExercises = if (isNowExpanded) {
                                 expandedExercises + exercise.id
@@ -276,6 +291,7 @@ fun ExerciseCard(
     exercise: Exercise,
     isExpanded: Boolean = false,
     onExpandedChange: (Boolean) -> Unit,
+    isLocked: Boolean = false,
     onCompleteSet: (String, Int) -> Unit,
     onRepsChange: (Int, String) -> Unit,
     onWeightChange: (Int, String) -> Unit,
@@ -320,7 +336,8 @@ fun ExerciseCard(
                         if (exercise.isValidToComplete()) {
                             showCompleteDialog = false
                             onExpandedChange(!isExpanded)
-                            onCompleteExercise(exercise.id) // Dispara a função aqui!
+                            onCompleteExercise(exercise.id)
+
                         } else {
                             showCompleteDialog = false
                             errorText =
@@ -367,6 +384,7 @@ fun ExerciseCard(
         shape = RoundedCornerShape(20.dp),
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
     ) {
+        if (!isLocked) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -528,8 +546,42 @@ fun ExerciseCard(
                     }
                 }
             }
+        } else {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.Start
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(color = Color.Transparent),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(
+                        modifier = Modifier.weight(1f),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = exercise.name,
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
+                            // 2. Se finalizado, usa verde (Hex #4CAF50), senão usa a cor padrão
+                            color = Color.Gray
+                        )
+                    }
+                    Icon(
+                        imageVector = Icons.Default.Lock,
+                        contentDescription = "Lock",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        }
     }
-    }
+}
 
 @Composable
 fun AddSetButton(modifier: Modifier, onAddSetClick: () -> Unit) {
@@ -590,11 +642,18 @@ fun FinishWorkoutButton(
     val hapticFeedback = LocalHapticFeedback.current
 
     val canCompleteWorkout = remember(workout) {
-        workout?.exercises?.all { exercise ->
+        val exercises = workout?.exercises ?: emptyList()
+
+        val hasMinimumExercises = exercises.count { it.isCompleted } >= 3
+
+        val allSetsFilled = exercises.all { exercise ->
             exercise.exerciseSets.all { set ->
                 set.weight.isNotBlank() && set.weight != "0" && set.reps.isNotBlank() && set.reps != "0"
             }
-        } == true
+        }
+
+        // O botão só habilita se ambas as condições forem verdadeiras
+        hasMinimumExercises && allSetsFilled == true
     }
 
     LaunchedEffect(isPressed, workout?.isCompleted) {
@@ -666,6 +725,7 @@ fun FinishWorkoutButton(
         Text(
             text = when {
                 workout?.isCompleted == true -> stringResource(id = R.string.workout_screen_finish_button_completed)
+                (workout?.exercises?.count { it.isCompleted } ?: 0) < 3 -> "Realize pelo menos 3 exercícios"
                 !canCompleteWorkout -> stringResource(id = R.string.workout_screen_finish_button_fill_sets)
                 else -> stringResource(id = R.string.workout_screen_finish_button_hold)
             },
@@ -988,10 +1048,18 @@ fun SetLine(
 }
 
 @Composable
-fun WorkoutProgressBar(modifier: Modifier = Modifier, progress: Float, workout: Workout?) {
+fun WorkoutProgressBar(modifier: Modifier = Modifier, workout: Workout?) {
+    val exercisesFinished = workout?.exercises?.count { it.isCompleted } ?: 0
+    val totalCount = workout?.exercises?.size ?: 1 // Evita divisão por zero
+
+    // 1. O progresso deve ser a divisão (Float entre 0.0 e 1.0)
+    val currentProgress = exercisesFinished.toFloat() / totalCount.toFloat()
+    val percentage = currentProgress * 100
+
     val animatedProgress by animateFloatAsState(
-        targetValue = progress,
-        animationSpec = ProgressIndicatorDefaults.ProgressAnimationSpec, label = ""
+        targetValue = currentProgress, // Agora a animação vai de 0 a 1
+        animationSpec = ProgressIndicatorDefaults.ProgressAnimationSpec,
+        label = "WorkoutProgress"
     )
 
     Column(modifier = modifier.fillMaxWidth()) {
@@ -1001,12 +1069,14 @@ fun WorkoutProgressBar(modifier: Modifier = Modifier, progress: Float, workout: 
             verticalAlignment = Alignment.Bottom
         ) {
             Text(
-                text = "1 of 8 exercises done",
+                text = "$exercisesFinished of $totalCount exercises done",
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+
+            // 2. Formatação para 1 casa decimal usando String.format
             Text(
-                text = "${(progress * 100).toInt()}%",
+                text = "%.1f%%".format(percentage),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = CyanAccent
@@ -1022,7 +1092,7 @@ fun WorkoutProgressBar(modifier: Modifier = Modifier, progress: Float, workout: 
         ) {
             Box(
                 modifier = Modifier
-                    .fillMaxWidth(animatedProgress)
+                    .fillMaxWidth(animatedProgress) // Usa o valor animado (0.0 a 1.0)
                     .fillMaxSize()
                     .background(CyanGradient)
             )

@@ -17,6 +17,10 @@ val CyanGradient = Brush.linearGradient(
     )
 )
 
+val GreenGradient = Brush.linearGradient(
+    colors = listOf(Color(0xFF4CAF50), Color(0xFF2E7D32))
+)
+
 val LightBrushes = CustomBrushes(
     primaryGradient = Brush.linearGradient(listOf(CyanDark, CyanAccent)),
     backgroundGradient = Brush.verticalGradient(listOf(Color(0xFFF2F2F2), // Cinza muito claro (substitui o Branco)

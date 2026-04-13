@@ -18,6 +18,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -29,6 +31,8 @@ import com.example.training_tracker.data.models.Exercise
 import com.example.training_tracker.data.models.mocks.availableExercises
 import com.example.training_tracker.ui.screens.home.MainGradientButton
 import com.example.training_tracker.ui.screens.workout_details.AddExerciseSelectionDialog
+import com.example.training_tracker.ui.screens.workout_screen.ErrorDialog
+import com.example.training_tracker.ui.theme.AppTheme
 import com.example.training_tracker.ui.theme.CyanAccent
 import com.example.training_tracker.ui.theme.Dimens
 import java.time.DayOfWeek
@@ -42,8 +46,12 @@ fun CreateWorkoutScreen(
     viewModel: CreateWorkoutViewModel = viewModel(factory = CreateWorkoutViewModel.Factory)
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val snackbarHostState = remember { SnackbarHostState() }
+    var showErrorMessage by remember { mutableStateOf(false) }
+    var snackbarHostState = remember { SnackbarHostState() }
     var showAddExerciseDialog by remember { mutableStateOf(false) }
+    val isButtonEnabled by remember {
+        derivedStateOf { uiState.exercises.size >= 3 }
+    }
     val scrollState = rememberScrollState()
 
     LaunchedEffect(uiState.isWorkoutSaved) {
@@ -58,6 +66,13 @@ fun CreateWorkoutScreen(
         }
     }
 
+    if (showErrorMessage) {
+        ErrorDialog(
+            text = "Adicione pelo menos 3 exercícios para poder salver seu treino",
+            onDismissRequest = { showErrorMessage = false }
+        )
+
+    }
     Scaffold(
         topBar = {
             TopAppBar(
@@ -155,7 +170,9 @@ fun CreateWorkoutScreen(
                     )
                     .border(
                         width = 1.dp,
-                        color = if (uiState.showErrors && !uiState.isExercisesValid) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
+                        color = if (uiState.showErrors && !uiState.isExercisesValid) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.outline.copy(
+                            alpha = 0.5f
+                        ),
                         shape = RoundedCornerShape(Dimens.cornerRadius)
                     )
                     .clickable { showAddExerciseDialog = true }
@@ -205,9 +222,14 @@ fun CreateWorkoutScreen(
             Spacer(modifier = Modifier.height(Dimens.paddingLarge))
 
             // Botão Salvar
-            MainGradientButton(
+            SaveWorkoutButton(
                 text = stringResource(id = R.string.create_workout_save_button),
-                onClick = { viewModel.saveWorkout() }
+                isEnabled = isButtonEnabled,
+                onClick = {
+                    if (isButtonEnabled) {
+                        viewModel.saveWorkout()
+                    }
+                }
             )
             Spacer(modifier = Modifier.height(Dimens.paddingLarge))
         }
@@ -295,6 +317,55 @@ fun ExerciseItem(exercise: Exercise, onDelete: () -> Unit) {
                     tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f)
                 )
             }
+        }
+    }
+}
+
+@Composable
+fun SaveWorkoutButton(
+    text: String,
+    isEnabled: Boolean,
+    onClick: () -> Unit
+) {
+    val gradientColors = listOf(
+        CyanAccent,
+        MaterialTheme.colorScheme.primary
+    )
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(64.dp)
+            .shadow(
+                elevation = 16.dp,
+                shape = RoundedCornerShape(32.dp),
+                spotColor = CyanAccent.copy(alpha = 0.5f)
+            )
+            .clip(RoundedCornerShape(32.dp))
+            .background(
+                brush = if (isEnabled) AppTheme.brushes.primaryGradient else Brush.horizontalGradient(listOf(Color.Gray, Color.DarkGray))
+            )
+            .clickable { onClick() },
+        contentAlignment = Alignment.Center
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Icon(
+                imageVector = Icons.Default.Add,
+                contentDescription = null,
+                tint = Color.White,
+                modifier = Modifier.size(24.dp)
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+            Text(
+                text = if (isEnabled) text else "Adicione pelo menos 3 exercícios",
+                color = Color.White,
+                fontWeight = FontWeight.Bold,
+                fontSize = 16.sp,
+                letterSpacing = 1.sp
+            )
         }
     }
 }
