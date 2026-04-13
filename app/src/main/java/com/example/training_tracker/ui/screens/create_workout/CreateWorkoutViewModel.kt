@@ -82,9 +82,6 @@ class CreateWorkoutViewModel(
             }
         }
 
-        // 3. Adiciona ao treino atual (rascunho)
-        // Usamos .copy(id = ...) para garantir que cada instância no treino tenha um ID único,
-        // mesmo que o usuário adicione o mesmo exercício várias vezes.
         val exerciseToAdd = (existingExercise ?: Exercise(name = nameFormatted)).copy(id = java.util.UUID.randomUUID().toString())
         _draftState.update {
             it.copy(exercises = it.exercises + exerciseToAdd)
@@ -92,12 +89,10 @@ class CreateWorkoutViewModel(
     }
 
     fun removeExercise(exercise: Exercise) {
-        // 1. Tira da tela imediatamente para não atrapalhar a criação do treino atual
         _draftState.update {
             it.copy(exercises = it.exercises - exercise)
         }
 
-        // 2. Vai no banco de dados e verifica se pode apagar
         viewModelScope.launch {
             try {
                 val exerciseInDb = uiState.value.availableExercises.find {
@@ -105,7 +100,6 @@ class CreateWorkoutViewModel(
                 }
 
                 exerciseInDb?.let {
-                    // A TRAVA AQUI: Só deleta se NÃO for um exercício padrão
                     if (!it.isDefault) {
                         exerciseRepository.deleteExercise(it)
                     }

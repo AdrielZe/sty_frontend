@@ -34,6 +34,14 @@ class WorkoutViewModel(
     private val workoutId: String = checkNotNull(savedStateHandle["workoutId"])
     private val _finishedWorkoutSession = MutableStateFlow<Workout?>(null)
 
+    fun Exercise.isValidToComplete(): Boolean {
+        return exerciseSets.all { set ->
+            val weight = set.weight.toDoubleOrNull() ?: 0.0
+            val reps = set.reps.toIntOrNull() ?: 0
+
+            weight > 0 && reps > 0
+        }
+    }
 
     val uiState = combine(
         workoutRepository.getWorkoutById(workoutId),

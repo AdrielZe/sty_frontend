@@ -34,6 +34,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
@@ -81,6 +82,7 @@ import androidx.compose.ui.unit.sp
 import com.example.training_tracker.R
 import com.example.training_tracker.data.models.Exercise
 import com.example.training_tracker.data.models.Workout
+import com.example.training_tracker.data.models.extensions.isValidToComplete
 import com.example.training_tracker.ui.theme.AppTheme
 import com.example.training_tracker.ui.theme.CyanAccent
 import com.example.training_tracker.ui.theme.CyanGradient
@@ -105,6 +107,8 @@ fun WorkoutScreen(
     onCompleteWorkout: () -> Unit,
 ) {
     var showConfetti by remember { mutableStateOf(false) }
+
+    var expandedExercises by remember { mutableStateOf(setOf<String>()) }
 
 
     Scaffold(
@@ -174,12 +178,12 @@ fun WorkoutScreen(
                 val exercises = workoutUiState.workout?.exercises ?: emptyList()
                 itemsIndexed(
                     items = exercises,
-                    // Usamos uma chave composta para garantir unicidade mesmo em casos de dados duplicados
                     key = { index, exercise -> "${exercise.id}_$index" }
                 ) { _, exercise ->
                     ExerciseCard(
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                         exercise = exercise,
+                        isExpanded = expandedExercises.contains(exercise.id),
                         onRepsChange = { setNumber, newValue ->
                             onRepsChange(
                                 exercise.id,
@@ -197,7 +201,15 @@ fun WorkoutScreen(
                         onAddSetClick = { id -> onAddSetClick(id) },
                         onRemoveSet = onRemoveSet,
                         onCompleteSet = onCompleteSet,
-                        onCompleteExercise = { onCompleteExercise(exercise.id) }
+                        onCompleteExercise = { onCompleteExercise(exercise.id) },
+                        onExpandedChange = { isNowExpanded ->
+                            expandedExercises = if (isNowExpanded) {
+                                expandedExercises + exercise.id
+                            } else {
+                                expandedExercises - exercise.id
+                            }
+
+                        }
                     )
                 }
 
@@ -206,6 +218,10 @@ fun WorkoutScreen(
                     FinishWorkoutButton(
                         onComplete = {
                             showConfetti = true
+                            expandedExercises = emptySet()
+                            exercises.forEach { exercise ->
+                                onCompleteExercise(exercise.id)
+                            }
                             onCompleteWorkout()
                         },
                         workout = workoutUiState.workout
@@ -258,6 +274,8 @@ fun WorkoutTopBar(onBackClick: () -> Unit) {
 fun ExerciseCard(
     modifier: Modifier = Modifier,
     exercise: Exercise,
+    isExpanded: Boolean = false,
+    onExpandedChange: (Boolean) -> Unit,
     onCompleteSet: (String, Int) -> Unit,
     onRepsChange: (Int, String) -> Unit,
     onWeightChange: (Int, String) -> Unit,
@@ -267,11 +285,19 @@ fun ExerciseCard(
 ) {
     var isDeleteMode by remember { mutableStateOf(false) }
     var isMenuExpanded by rememberSaveable { mutableStateOf(false) }
-    var isExpanded by rememberSaveable(key = exercise.id) { mutableStateOf(false) }
     var showCompleteDialog by remember { mutableStateOf(false) }
+    var showErrorDialog by remember { mutableStateOf(false) }
+    var errorText by remember { mutableStateOf("") }
 
     if (exercise.exerciseSets.isEmpty()) {
         isDeleteMode = false
+    }
+
+    if (showErrorDialog) {
+        ErrorDialog(
+            text = errorText,
+            onDismissRequest = { showErrorDialog = false }
+        )
     }
     if (showCompleteDialog) {
         AlertDialog(
@@ -291,9 +317,16 @@ fun ExerciseCard(
             confirmButton = {
                 TextButton(
                     onClick = {
-                        showCompleteDialog = false
-                        isExpanded = false
-                        onCompleteExercise(exercise.id) // Dispara a função aqui!
+                        if (exercise.isValidToComplete()) {
+                            showCompleteDialog = false
+                            onExpandedChange(!isExpanded)
+                            onCompleteExercise(exercise.id) // Dispara a função aqui!
+                        } else {
+                            showCompleteDialog = false
+                            errorText =
+                                "Erro! Preencha todos os campos de texto e de repetições antes de continuar"
+                            showErrorDialog = true
+                        }
                     }
                 ) {
                     Text(
@@ -334,153 +367,169 @@ fun ExerciseCard(
         shape = RoundedCornerShape(20.dp),
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalAlignment = Alignment.Start
-        ) {
-            Row(
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable { isExpanded = !isExpanded }
-                    .background(
-                        color = Color.Transparent
-                    ),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.Start
             ) {
-                Text(
-                    text = exercise.name,
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = if (exercise.isCompleted) Color.Gray else MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.weight(1f)
-                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onExpandedChange(!isExpanded) }
+                        .background(color = Color.Transparent),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(
+                        modifier = Modifier.weight(1f),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = exercise.name,
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
+                            // 2. Se finalizado, usa verde (Hex #4CAF50), senão usa a cor padrão
+                            color = if (exercise.isCompleted) Color(0xFF4CAF50) else MaterialTheme.colorScheme.onSurface
+                        )
 
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box {
-                        if (!isDeleteMode && !exercise.isCompleted) {
-                            IconButton(onClick = { isMenuExpanded = true }) {
-                                Icon(
-                                    Icons.Default.MoreVert,
-                                    contentDescription = stringResource(id = R.string.content_description_options),
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                        } else if (isDeleteMode) {
-                            IconButton(onClick = { isDeleteMode = false }) {
-                                Icon(
-                                    Icons.Default.Check,
-                                    contentDescription = stringResource(id = R.string.content_description_confirm),
-                                    tint = MaterialTheme.colorScheme.error
-                                )
-                            }
+                        if (exercise.isCompleted) {
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Icon(
+                                imageVector = Icons.Default.CheckCircle,
+                                contentDescription = "Exercício concluído",
+                                tint = Color(0xFF4CAF50),
+                                modifier = Modifier.size(22.dp)
+                            )
                         }
-
-                        DropdownMenu(
-                            expanded = isMenuExpanded,
-                            onDismissRequest = { isMenuExpanded = false }) {
-                            DropdownMenuItem(
-                                text = {
-                                    Text(
-                                        stringResource(id = R.string.workout_screen_remove_sets_menu),
-                                        color = MaterialTheme.colorScheme.error
-                                    )
-                                },
-                                onClick = { isDeleteMode = !isDeleteMode; isMenuExpanded = false },
-                                leadingIcon = {
+                    }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box {
+                            if (!isDeleteMode && !exercise.isCompleted) {
+                                IconButton(onClick = { isMenuExpanded = true }) {
                                     Icon(
-                                        Icons.Default.Delete,
-                                        contentDescription = null,
+                                        Icons.Default.MoreVert,
+                                        contentDescription = stringResource(id = R.string.content_description_options),
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            } else if (isDeleteMode) {
+                                IconButton(onClick = { isDeleteMode = false }) {
+                                    Icon(
+                                        Icons.Default.Check,
+                                        contentDescription = stringResource(id = R.string.content_description_confirm),
                                         tint = MaterialTheme.colorScheme.error
                                     )
                                 }
+                            }
+
+                            DropdownMenu(
+                                expanded = isMenuExpanded,
+                                onDismissRequest = { isMenuExpanded = false }) {
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(
+                                            stringResource(id = R.string.workout_screen_remove_sets_menu),
+                                            color = MaterialTheme.colorScheme.error
+                                        )
+                                    },
+                                    onClick = {
+                                        isDeleteMode = !isDeleteMode; isMenuExpanded = false
+                                    },
+                                    leadingIcon = {
+                                        Icon(
+                                            Icons.Default.Delete,
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.error
+                                        )
+                                    }
+                                )
+                            }
+                        }
+
+                        IconButton(onClick = { onExpandedChange(!isExpanded) }) {
+                            Icon(
+                                imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                                contentDescription = if (isExpanded) stringResource(id = R.string.content_description_collapse) else stringResource(
+                                    id = R.string.content_description_expand
+                                ),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
-
-                    IconButton(onClick = { isExpanded = !isExpanded }) {
-                        Icon(
-                            imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                            contentDescription = if (isExpanded) stringResource(id = R.string.content_description_collapse) else stringResource(
-                                id = R.string.content_description_expand
-                            ),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
                 }
-            }
 
-            AnimatedVisibility(visible = isExpanded) {
-                Column(
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Row(modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 8.dp)) {
-                        Text(
-                            modifier = Modifier.weight(0.15f),
-                            text = stringResource(id = R.string.workout_screen_set_column),
-                            textAlign = TextAlign.Center,
-                            style = Typography.labelMedium,
-                            color = Color.Gray
-                        )
-                        Text(
-                            modifier = Modifier.weight(0.3f),
-                            text = stringResource(id = R.string.workout_screen_weight_column),
-                            textAlign = TextAlign.Center,
-                            style = Typography.labelMedium,
-                            color = Color.Gray
-                        )
-                        Text(
-                            modifier = Modifier.weight(0.3f),
-                            text = stringResource(id = R.string.workout_screen_reps_column),
-                            textAlign = TextAlign.Center,
-                            style = Typography.labelMedium,
-                            color = Color.Gray
-                        )
-                        Spacer(modifier = Modifier.weight(0.15f))
-                    }
-
-                    exercise.exerciseSets.forEach { set ->
-                        SetLine(
-                            modifier = Modifier.fillMaxWidth(),
-                            exercise = exercise,
-                            inputValueReps = set.reps,
-                            inputValueWeight = set.weight,
-                            isDeleteMode = isDeleteMode,
-                            isCompleted = set.isCompleted,
-                            onRepsChange = { _, newText -> onRepsChange(set.set, newText) },
-                            onWeightChange = { _, newText -> onWeightChange(set.set, newText) },
-                            onDeleteClick = { onRemoveSet(exercise.id, set.set) },
-                            onCompleteClick = { onCompleteSet(exercise.id, set.set) },
-                            setNumber = set.set,
-                        )
-                    }
-
-                    if (!isDeleteMode && !exercise.isCompleted) {
+                AnimatedVisibility(visible = isExpanded) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
                         Spacer(modifier = Modifier.height(16.dp))
-                        Row {
-                            AddSetButton(
-                                modifier = Modifier.weight(0.5f),
-                                onAddSetClick = { onAddSetClick(exercise.id) }
+
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 8.dp)
+                        ) {
+                            Text(
+                                modifier = Modifier.weight(0.15f),
+                                text = stringResource(id = R.string.workout_screen_set_column),
+                                textAlign = TextAlign.Center,
+                                style = Typography.labelMedium,
+                                color = Color.Gray
                             )
-                            FinishExerciseButton(
-                                modifier = Modifier.weight(0.5f),
-                                onFinishExercise = {
-                                    showCompleteDialog = true
-                                }
+                            Text(
+                                modifier = Modifier.weight(0.3f),
+                                text = stringResource(id = R.string.workout_screen_weight_column),
+                                textAlign = TextAlign.Center,
+                                style = Typography.labelMedium,
+                                color = Color.Gray
                             )
+                            Text(
+                                modifier = Modifier.weight(0.3f),
+                                text = stringResource(id = R.string.workout_screen_reps_column),
+                                textAlign = TextAlign.Center,
+                                style = Typography.labelMedium,
+                                color = Color.Gray
+                            )
+                            Spacer(modifier = Modifier.weight(0.15f))
+                        }
+
+                        exercise.exerciseSets.forEach { set ->
+                            SetLine(
+                                modifier = Modifier.fillMaxWidth(),
+                                exercise = exercise,
+                                inputValueReps = set.reps,
+                                inputValueWeight = set.weight,
+                                isDeleteMode = isDeleteMode,
+                                isCompleted = set.isCompleted,
+                                onRepsChange = { _, newText -> onRepsChange(set.set, newText) },
+                                onWeightChange = { _, newText -> onWeightChange(set.set, newText) },
+                                onDeleteClick = { onRemoveSet(exercise.id, set.set) },
+                                onCompleteClick = { onCompleteSet(exercise.id, set.set) },
+                                setNumber = set.set,
+                            )
+                        }
+
+                        if (!isDeleteMode && !exercise.isCompleted) {
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Row {
+                                AddSetButton(
+                                    modifier = Modifier.weight(0.5f),
+                                    onAddSetClick = { onAddSetClick(exercise.id) }
+                                )
+                                FinishExerciseButton(
+                                    modifier = Modifier.weight(0.5f),
+                                    onFinishExercise = {
+                                        showCompleteDialog = true
+                                    }
+                                )
+                            }
                         }
                     }
                 }
             }
-        }
     }
-}
+    }
 
 @Composable
 fun AddSetButton(modifier: Modifier, onAddSetClick: () -> Unit) {
