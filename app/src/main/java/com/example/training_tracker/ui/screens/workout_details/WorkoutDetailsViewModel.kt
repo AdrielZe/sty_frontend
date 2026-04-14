@@ -50,6 +50,17 @@ class WorkoutDetailsViewModel(
         initialValue = WorkoutDetailsUiState(isLoading = true)
     )
 
+    fun updateWorkoutName(name: String) {
+        val currentWorkout = uiState.value.workout ?: return
+        val updatedWorkout = currentWorkout.copy(name = name.uppercase())
+        viewModelScope.launch {
+            try {
+                workoutRepository.updateWorkout(updatedWorkout)
+            } catch (e: Exception) {
+                _uiEvent.send("Erro ao atualizar nome do treino: ${e.message}")
+            }
+        }
+    }
     fun startWorkout() {
         val currentWorkout = uiState.value.workout ?: return
         val updatedWorkout = currentWorkout.copy(isOnGoing = true)

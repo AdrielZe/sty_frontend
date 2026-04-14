@@ -6,7 +6,6 @@ import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.material.icons.filled.Lock
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -25,7 +24,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -39,7 +37,9 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -56,9 +56,11 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -105,18 +107,35 @@ fun WorkoutScreen(
     onBackClick: () -> Unit,
     onRemoveSet: (String, Int) -> Unit,
     onCompleteExercise: (String) -> Unit,
+    onReopenExercise: (String) -> Unit,
     onCompleteWorkout: () -> Unit,
 ) {
+    // 1. Estabilidade de Callbacks: Usamos rememberUpdatedState para que os lambdas criados
+    // dentro do itemsIndexed não causem recomposições em cascata quando o ViewModel mudar.
+    val currentOnWeightChange by rememberUpdatedState(onWeightChange)
+    val currentOnRepsChange by rememberUpdatedState(onRepsChange)
+    val currentOnCompleteSet by rememberUpdatedState(onCompleteSet)
+    val currentOnAddSetClick by rememberUpdatedState(onAddSetClick)
+    val currentOnRemoveSet by rememberUpdatedState(onRemoveSet)
+    val currentOnCompleteExercise by rememberUpdatedState(onCompleteExercise)
+    val currentOnReopenExercise by rememberUpdatedState(onReopenExercise)
+    val currentOnCompleteWorkout by rememberUpdatedState(onCompleteWorkout)
+
     var showConfetti by remember { mutableStateOf(false) }
+    val workout = workoutUiState.workout
 
-    var expandedExercises by remember { mutableStateOf(setOf<String>()) }
+    var hasInitialized by rememberSaveable(workout?.id) { mutableStateOf(false) }
+    var expandedExercises by rememberSaveable { mutableStateOf(setOf<String>()) }
 
-    LaunchedEffect(workoutUiState.workout?.id) {
-        val loadedExercises = workoutUiState.workout?.exercises ?: emptyList()
-        if (loadedExercises.isNotEmpty() && workoutUiState.workout?.isCompleted == false) {
-            val firstIncomplete = loadedExercises.firstOrNull { !it.isCompleted }
-            if (firstIncomplete != null) {
-                expandedExercises = setOf(firstIncomplete.id)
+    LaunchedEffect(workout?.id) {
+        if (!hasInitialized && workout != null && !workout.isCompleted) {
+            val loadedExercises = workout.exercises
+            if (loadedExercises.isNotEmpty()) {
+                val firstIncompleteId = loadedExercises.firstOrNull { !it.isCompleted }?.id
+                if (firstIncompleteId != null) {
+                    expandedExercises = setOf(firstIncompleteId)
+                }
+                hasInitialized = true
             }
         }
     }
@@ -145,7 +164,7 @@ fun WorkoutScreen(
                         horizontalAlignment = Alignment.Start
                     ) {
                         Text(
-                            text = workoutUiState.workout?.name
+                            text = workout?.name
                                 ?: stringResource(id = R.string.workout_screen_default_workout_name),
                             fontSize = 36.sp,
                             fontWeight = FontWeight.ExtraBold,
@@ -163,68 +182,89 @@ fun WorkoutScreen(
                                 fontWeight = FontWeight.Bold,
                                 letterSpacing = 1.sp
                             )
-
                         }
 
                         Spacer(modifier = Modifier.height(4.dp))
                         WorkoutProgressBar(
                             modifier = Modifier,
-                            workout = workoutUiState.workout
+                            workout = workout
                         )
-
-
                     }
                     Spacer(modifier = Modifier.height(8.dp))
                 }
 
-                val exercises = workoutUiState.workout?.exercises ?: emptyList()
-                val activeIndex = exercises.indexOfFirst { !it.isCompleted }
+                val exercises = workout?.exercises ?: emptyList()
 
-
+                // 3. Otimização do itemsIndexed (Performance de Scroll):
+                // Usamos apenas o exercise.id como chave para estabilidade total.
                 itemsIndexed(
                     items = exercises,
-                    key = { index, exercise -> "${exercise.id}_$index" }
+                    key = { _, exercise -> exercise.id }
                 ) { index, exercise ->
-                    val isLocked = activeIndex != -1 && index > activeIndex
 
-                    ExerciseCard(
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                        exercise = exercise,
-                        isExpanded = expandedExercises.contains(exercise.id),
-                        onRepsChange = { setNumber, newValue ->
-                            onRepsChange(
-                                exercise.id,
-                                setNumber,
-                                newValue
-                            )
-                        },
-                        isLocked = isLocked,
-                        onWeightChange = { setNumber, newValue ->
-                            onWeightChange(
-                                exercise.id,
-                                setNumber,
-                                newValue
-                            )
-                        },
-                        onAddSetClick = { id -> onAddSetClick(id) },
-                        onRemoveSet = onRemoveSet,
-                        onCompleteSet = onCompleteSet,
-                        onCompleteExercise = {
-                            onCompleteExercise(exercise.id)
+                    val previousExercise = if (index > 0) exercises[index - 1] else null
+                    val isLocked = remember(exercise, previousExercise) {
+                        if (index == 0) {
+                            false
+                        } else {
+                            val hasProgress = exercise.isCompleted || exercise.exerciseSets.any {
+                                it.isCompleted || (it.weight.isNotBlank() && it.weight != "0") || (it.reps.isNotBlank() && it.reps != "0")
+                            }
+                            !(previousExercise?.isCompleted ?: true) && !hasProgress
+                        }
+                    }
+
+                    val onRepsChangeLambda = remember(exercise.id) {
+                        { setNumber: Int, newValue: String ->
+                            currentOnRepsChange(exercise.id, setNumber, newValue)
+                        }
+                    }
+                    val onWeightChangeLambda = remember(exercise.id) {
+                        { setNumber: Int, newValue: String ->
+                            currentOnWeightChange(exercise.id, setNumber, newValue)
+                        }
+                    }
+                    val onAddSetClickLambda = remember(exercise.id) {
+                        { id: String -> currentOnAddSetClick(id) }
+                    }
+                    val onCompleteExerciseLambda = remember(exercise.id, index) {
+                        {
+                            currentOnCompleteExercise(exercise.id)
                             val nextExercise = exercises.drop(index + 1).firstOrNull { !it.isCompleted }
                             expandedExercises = if (nextExercise != null) {
                                 setOf(nextExercise.id)
                             } else {
                                 emptySet()
-                            }},
-                        onExpandedChange = { isNowExpanded ->
+                            }
+                        }
+                    }
+                    val onReopenExerciseLambda = remember(exercise.id) {
+                        { currentOnReopenExercise(exercise.id) }
+                    }
+                    val onExpandedChangeLambda = remember(exercise.id) {
+                        { isNowExpanded: Boolean ->
                             expandedExercises = if (isNowExpanded) {
                                 expandedExercises + exercise.id
                             } else {
                                 expandedExercises - exercise.id
                             }
-
                         }
+                    }
+
+
+                    ExerciseCard(
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                        exercise = exercise,
+                        isExpanded = expandedExercises.contains(exercise.id),
+                        onRepsChange = onRepsChangeLambda,
+                        isLocked = isLocked,
+                        onWeightChange = onWeightChangeLambda,
+                        onAddSetClick = onAddSetClickLambda,
+                        onRemoveSet = currentOnRemoveSet,
+                        onCompleteSet = currentOnCompleteSet,
+                        onCompleteExercise = onCompleteExerciseLambda,
+                        onReopenExercise = onReopenExerciseLambda,
+                        onExpandedChange = onExpandedChangeLambda
                     )
                 }
 
@@ -234,12 +274,12 @@ fun WorkoutScreen(
                         onComplete = {
                             showConfetti = true
                             expandedExercises = emptySet()
-                            exercises.forEach { exercise ->
-                                onCompleteExercise(exercise.id)
+                            exercises.forEach { ex ->
+                                currentOnCompleteExercise(ex.id)
                             }
-                            onCompleteWorkout()
+                            currentOnCompleteWorkout()
                         },
-                        workout = workoutUiState.workout
+                        workout = workout
                     )
                     Spacer(modifier = Modifier.height(40.dp))
                 }
@@ -297,16 +337,20 @@ fun ExerciseCard(
     onWeightChange: (Int, String) -> Unit,
     onAddSetClick: (String) -> Unit,
     onRemoveSet: (String, Int) -> Unit,
-    onCompleteExercise: (String) -> Unit,
+    onCompleteExercise: () -> Unit,
+    onReopenExercise: () -> Unit,
 ) {
-    var isDeleteMode by remember { mutableStateOf(false) }
+    var isDeleteMode by rememberSaveable(exercise.id) { mutableStateOf(false) }
     var isMenuExpanded by rememberSaveable { mutableStateOf(false) }
-    var showCompleteDialog by remember { mutableStateOf(false) }
-    var showErrorDialog by remember { mutableStateOf(false) }
-    var errorText by remember { mutableStateOf("") }
+    var showCompleteDialog by rememberSaveable { mutableStateOf(false) }
+    var showErrorDialog by rememberSaveable { mutableStateOf(false) }
+    var errorText by rememberSaveable { mutableStateOf("") }
 
-    if (exercise.exerciseSets.isEmpty()) {
-        isDeleteMode = false
+    // Side effect para resetar modo deleção se não houver mais séries
+    LaunchedEffect(exercise.exerciseSets.isEmpty()) {
+        if (exercise.exerciseSets.isEmpty()) {
+            isDeleteMode = false
+        }
     }
 
     if (showErrorDialog) {
@@ -315,6 +359,7 @@ fun ExerciseCard(
             onDismissRequest = { showErrorDialog = false }
         )
     }
+
     if (showCompleteDialog) {
         AlertDialog(
             onDismissRequest = { showCompleteDialog = false },
@@ -336,8 +381,7 @@ fun ExerciseCard(
                         if (exercise.isValidToComplete()) {
                             showCompleteDialog = false
                             onExpandedChange(!isExpanded)
-                            onCompleteExercise(exercise.id)
-
+                            onCompleteExercise()
                         } else {
                             showCompleteDialog = false
                             errorText =
@@ -348,7 +392,6 @@ fun ExerciseCard(
                 ) {
                     Text(
                         text = "Confirmar",
-                        // Usando as cores do seu tema para manter o padrão
                         color = MaterialTheme.colorScheme.secondary,
                         fontWeight = FontWeight.Bold
                     )
@@ -356,7 +399,7 @@ fun ExerciseCard(
             },
             dismissButton = {
                 TextButton(
-                    onClick = { showCompleteDialog = false } // Apenas fecha
+                    onClick = { showCompleteDialog = false }
                 ) {
                     Text(
                         text = "Cancelar",
@@ -367,6 +410,8 @@ fun ExerciseCard(
         )
     }
 
+    // 6. Otimização de Modificadores:
+    // Clip antes do background e sombra apenas no container externo.
     Card(
         modifier = modifier
             .fillMaxWidth()
@@ -374,9 +419,9 @@ fun ExerciseCard(
                 elevation = if (isExpanded) 8.dp else 2.dp,
                 shape = RoundedCornerShape(20.dp)
             )
+            .clip(RoundedCornerShape(20.dp))
             .background(
-                brush = AppTheme.brushes.backgroundGradient,
-                shape = RoundedCornerShape(20.dp)
+                brush = AppTheme.brushes.backgroundGradient
             ),
         colors = CardDefaults.cardColors(
             containerColor = Color.Transparent
@@ -404,11 +449,11 @@ fun ExerciseCard(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
+                            modifier = Modifier.weight(1f, fill = false),
                             text = exercise.name,
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold,
-                            // 2. Se finalizado, usa verde (Hex #4CAF50), senão usa a cor padrão
-                            color = if (exercise.isCompleted) Color(0xFF4CAF50) else MaterialTheme.colorScheme.onSurface
+                            color = if (exercise.isCompleted) Color(0xFF4CAF50) else MaterialTheme.colorScheme.onSurface,
                         )
 
                         if (exercise.isCompleted) {
@@ -423,7 +468,7 @@ fun ExerciseCard(
                     }
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Box {
-                            if (!isDeleteMode && !exercise.isCompleted) {
+                            if (!isDeleteMode) {
                                 IconButton(onClick = { isMenuExpanded = true }) {
                                     Icon(
                                         Icons.Default.MoreVert,
@@ -431,7 +476,7 @@ fun ExerciseCard(
                                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
-                            } else if (isDeleteMode) {
+                            } else {
                                 IconButton(onClick = { isDeleteMode = false }) {
                                     Icon(
                                         Icons.Default.Check,
@@ -444,24 +489,46 @@ fun ExerciseCard(
                             DropdownMenu(
                                 expanded = isMenuExpanded,
                                 onDismissRequest = { isMenuExpanded = false }) {
-                                DropdownMenuItem(
-                                    text = {
-                                        Text(
-                                            stringResource(id = R.string.workout_screen_remove_sets_menu),
-                                            color = MaterialTheme.colorScheme.error
-                                        )
-                                    },
-                                    onClick = {
-                                        isDeleteMode = !isDeleteMode; isMenuExpanded = false
-                                    },
-                                    leadingIcon = {
-                                        Icon(
-                                            Icons.Default.Delete,
-                                            contentDescription = null,
-                                            tint = MaterialTheme.colorScheme.error
-                                        )
-                                    }
-                                )
+                                if (!exercise.isCompleted) {
+                                    DropdownMenuItem(
+                                        text = {
+                                            Text(
+                                                stringResource(id = R.string.workout_screen_remove_sets_menu),
+                                                color = MaterialTheme.colorScheme.error
+                                            )
+                                        },
+                                        onClick = {
+                                            isDeleteMode = !isDeleteMode; isMenuExpanded = false
+                                        },
+                                        leadingIcon = {
+                                            Icon(
+                                                Icons.Default.Delete,
+                                                contentDescription = null,
+                                                tint = MaterialTheme.colorScheme.error
+                                            )
+                                        }
+                                    )
+                                } else {
+                                    DropdownMenuItem(
+                                        text = {
+                                            Text(
+                                                stringResource(id = R.string.workout_screen_reopen_exercise_menu),
+                                                color = MaterialTheme.colorScheme.primary
+                                            )
+                                        },
+                                        onClick = {
+                                            onReopenExercise()
+                                            isMenuExpanded = false
+                                        },
+                                        leadingIcon = {
+                                            Icon(
+                                                Icons.Default.Refresh,
+                                                contentDescription = null,
+                                                tint = MaterialTheme.colorScheme.primary
+                                            )
+                                        }
+                                    )
+                                }
                             }
                         }
 
@@ -568,7 +635,6 @@ fun ExerciseCard(
                             text = exercise.name,
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold,
-                            // 2. Se finalizado, usa verde (Hex #4CAF50), senão usa a cor padrão
                             color = Color.Gray
                         )
                     }
@@ -609,21 +675,17 @@ fun FinishExerciseButton(modifier: Modifier = Modifier, onFinishExercise: () -> 
         onClick = onFinishExercise,
         modifier = modifier
             .height(48.dp)
-            // 1. Aplicamos o background e o shape ao container do botão completo
             .background(
                 brush = AppTheme.brushes.primaryGradient,
                 shape = RoundedCornerShape(20.dp)
             ),
-        // 2. Removemos a cor padrão do botão para que o gradiente apareça
         colors = ButtonDefaults.buttonColors(
             containerColor = Color.Transparent
         ),
-        // 3. Garantimos que o conteúdo interno não tenha padding extra indesejado
-        contentPadding = PaddingValues(horizontal = 16.dp), // Ajuste conforme necessário
-        shape = RoundedCornerShape(20.dp) // Essencial para o clique respeitar a forma
+        contentPadding = PaddingValues(horizontal = 16.dp),
+        shape = RoundedCornerShape(20.dp)
     ) {
         Text(
-            // 4. O texto agora só se preocupa com o seu próprio estilo e gradiente
             text = "Finalizar exercício",
             color = MaterialTheme.colorScheme.onSurface,
             fontWeight = FontWeight.Bold
@@ -641,19 +703,20 @@ fun FinishWorkoutButton(
     val progress = remember { Animatable(0f) }
     val hapticFeedback = LocalHapticFeedback.current
 
-    val canCompleteWorkout = remember(workout) {
-        val exercises = workout?.exercises ?: emptyList()
-
-        val hasMinimumExercises = exercises.count { it.isCompleted } >= 3
-
-        val allSetsFilled = exercises.all { exercise ->
-            exercise.exerciseSets.all { set ->
-                set.weight.isNotBlank() && set.weight != "0" && set.reps.isNotBlank() && set.reps != "0"
+    // 7. derivedStateOf para otimizar recomposição do botão:
+    // Evita reavaliar a lógica complexa a cada pequena mudança de UI se as condições não mudarem.
+    val currentWorkout by rememberUpdatedState(workout)
+    val canCompleteWorkout by remember {
+        derivedStateOf {
+            val exercises = currentWorkout?.exercises ?: emptyList()
+            val hasMinimumExercises = exercises.count { it.isCompleted } >= 3
+            val allSetsFilled = exercises.all { ex ->
+                ex.exerciseSets.all { set ->
+                    set.weight.isNotBlank() && set.weight != "0" && set.reps.isNotBlank() && set.reps != "0"
+                }
             }
+            hasMinimumExercises && allSetsFilled
         }
-
-        // O botão só habilita se ambas as condições forem verdadeiras
-        hasMinimumExercises && allSetsFilled == true
     }
 
     LaunchedEffect(isPressed, workout?.isCompleted) {
@@ -744,18 +807,15 @@ fun InputTextBox(
     inputValue: String,
     onValueChange: (String) -> Unit
 ) {
-    // 1. Criamos um estado local que guarda o texto E a posição do cursor
     var textFieldValue by remember {
         mutableStateOf(TextFieldValue(text = inputValue, selection = TextRange(inputValue.length)))
     }
 
-    // 2. Mantemos o estado local sincronizado caso o valor mude externamente
-    // (ex: limpa o campo ou carrega dados do banco)
     LaunchedEffect(inputValue) {
         if (inputValue != textFieldValue.text) {
             textFieldValue = textFieldValue.copy(
                 text = inputValue,
-                selection = TextRange(inputValue.length) // Força o cursor pro final
+                selection = TextRange(inputValue.length)
             )
         }
     }
@@ -776,14 +836,10 @@ fun InputTextBox(
         contentAlignment = Alignment.Center
     ) {
         BasicTextField(
-            // 3. Usamos o TextFieldValue em vez da String
             value = textFieldValue,
             onValueChange = { newValue ->
-                // Filtramos a string interna de TextFieldValue
                 if (newValue.text.all { it.isDigit() || it == '.' || it == ',' }) {
-                    // Atualiza o estado local imediatamente (preservando o cursor onde o usuário digitou)
                     textFieldValue = newValue
-                    // Notifica o ViewModel/pai passando apena a String, como você já fazia
                     onValueChange(newValue.text)
                 }
             },
@@ -1050,14 +1106,13 @@ fun SetLine(
 @Composable
 fun WorkoutProgressBar(modifier: Modifier = Modifier, workout: Workout?) {
     val exercisesFinished = workout?.exercises?.count { it.isCompleted } ?: 0
-    val totalCount = workout?.exercises?.size ?: 1 // Evita divisão por zero
+    val totalCount = workout?.exercises?.size ?: 1
 
-    // 1. O progresso deve ser a divisão (Float entre 0.0 e 1.0)
     val currentProgress = exercisesFinished.toFloat() / totalCount.toFloat()
     val percentage = currentProgress * 100
 
     val animatedProgress by animateFloatAsState(
-        targetValue = currentProgress, // Agora a animação vai de 0 a 1
+        targetValue = currentProgress,
         animationSpec = ProgressIndicatorDefaults.ProgressAnimationSpec,
         label = "WorkoutProgress"
     )
@@ -1074,7 +1129,6 @@ fun WorkoutProgressBar(modifier: Modifier = Modifier, workout: Workout?) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
-            // 2. Formatação para 1 casa decimal usando String.format
             Text(
                 text = "%.1f%%".format(percentage),
                 style = MaterialTheme.typography.titleMedium,
@@ -1092,7 +1146,7 @@ fun WorkoutProgressBar(modifier: Modifier = Modifier, workout: Workout?) {
         ) {
             Box(
                 modifier = Modifier
-                    .fillMaxWidth(animatedProgress) // Usa o valor animado (0.0 a 1.0)
+                    .fillMaxWidth(animatedProgress)
                     .fillMaxSize()
                     .background(CyanGradient)
             )

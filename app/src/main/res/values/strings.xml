@@ -91,6 +91,7 @@
     <string name="workout_screen_default_workout_name">Treino</string>
     <string name="content_description_confirm">Confirmar</string>
     <string name="workout_screen_remove_sets_menu">Remover séries</string>
+    <string name="workout_screen_reopen_exercise_menu">Reabrir exercício</string>
     <string name="content_description_collapse">Recolher</string>
     <string name="content_description_expand">Expandir</string>
     <string name="workout_screen_set_column">Série</string>

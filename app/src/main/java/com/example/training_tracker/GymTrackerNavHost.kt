@@ -107,12 +107,16 @@ fun GymTrackerNavHost() {
                 navArgument("canStart") { type = NavType.StringType }
             )
         ) {
+            val workoutDetailsViewModel: WorkoutDetailsViewModel = viewModel(factory = WorkoutDetailsViewModel.Factory)
             WorkoutDetailsScreen(
                 onNavigateBack = { navController.popBackStack() },
                 onStartWorkout = { workoutId ->
                     navController.navigate("${Routes.Workout.name}/$workoutId") {
                         popUpTo(Routes.Home.name)
                     }
+                },
+                onEditWorkoutName = {
+                   name -> workoutDetailsViewModel.updateWorkoutName(name = name)
                 }
             )
         }
@@ -142,7 +146,7 @@ fun GymTrackerNavHost() {
             val workoutUiState by workoutViewModel.uiState.collectAsState()
 
             WorkoutScreen(
-                workoutUiState,
+                workoutUiState = workoutUiState,
                 onRepsChange = { id, setNumber, newReps ->
                     workoutViewModel.updateExercise(
                         exerciseId = id,
@@ -174,6 +178,9 @@ fun GymTrackerNavHost() {
                     workoutViewModel.completeExercise(
                         exerciseId
                     )
+                },
+                onReopenExercise = { exerciseId ->
+                    workoutViewModel.reopenExercise(exerciseId)
                 },
                 onBackClick = { navController.popBackStack() },
                 onCompleteWorkout = { workoutViewModel.completeWorkout()}

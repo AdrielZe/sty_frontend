@@ -74,6 +74,7 @@
     <string name="workout_screen_default_workout_name">Workout</string>
     <string name="content_description_confirm">Confirm</string>
     <string name="workout_screen_remove_sets_menu">Remove sets</string>
+    <string name="workout_screen_reopen_exercise_menu">Reopen exercise</string>
     <string name="content_description_collapse">Collapse</string>
     <string name="content_description_expand">Expand</string>
     <string name="workout_screen_set_column">Set</string>

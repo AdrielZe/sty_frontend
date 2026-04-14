@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -32,7 +33,9 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.training_tracker.R
 import com.example.training_tracker.data.models.Workout
+import com.example.training_tracker.ui.theme.AppTheme
 import com.example.training_tracker.ui.theme.CyanAccent
+import com.example.training_tracker.ui.theme.CyanGradient
 import com.example.training_tracker.ui.theme.Dimens
 import kotlinx.coroutines.launch
 import java.time.DayOfWeek
@@ -76,10 +79,12 @@ fun RegisteredWorkoutsScreen(
                 title = {
                     Text(
                         stringResource(id = R.string.registered_workouts_title),
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        letterSpacing = 1.sp,
-                        color = CyanAccent
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            brush = CyanGradient,
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            letterSpacing = 1.sp
+                        )
                     )
                 },
                 navigationIcon = {
@@ -137,10 +142,12 @@ fun RegisteredWorkoutsScreen(
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
                                 text = day.getDisplayName(TextStyle.FULL, Locale.getDefault()).uppercase(),
-                                style = MaterialTheme.typography.titleSmall,
-                                fontWeight = FontWeight.ExtraBold,
-                                color = if (isHovered) CyanAccent else CyanAccent, // Cor mais forte
-                                letterSpacing = 1.sp
+                                style = MaterialTheme.typography.titleSmall.copy(
+                                    fontWeight = FontWeight.ExtraBold,
+                                    brush = CyanGradient,
+                                    letterSpacing = 1.sp
+
+                                ),
                             )
                             Spacer(modifier = Modifier.width(Dimens.paddingSmall))
                             Text(
@@ -258,17 +265,19 @@ fun WorkoutItem(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .heightIn(min = 80.dp)
-            .clickable { onClick() },
+            .padding(vertical = 4.dp),
+        onClick = onClick,
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = Color.Transparent // Mantemos transparente aqui
         ),
-        shape = RoundedCornerShape(Dimens.cornerRadius),
+        shape = RoundedCornerShape(20.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
+        // APLICAMOS O GRADIENTE AQUI
         Row(
             modifier = Modifier
                 .fillMaxWidth()
+                .background(brush = AppTheme.brushes.backgroundGradient) // O gradiente preenche a Row
                 .padding(Dimens.paddingMedium),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween

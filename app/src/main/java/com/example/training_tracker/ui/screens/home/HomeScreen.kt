@@ -112,17 +112,17 @@ fun HomeScreen(
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.Start,
         ) {
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
-            Text(
-                text = stringResource(id = R.string.home_your_workouts_label),
-                style = TextStyle(
-                    brush = CyanGradient
-                ),
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Bold,
-                letterSpacing = 1.5.sp
-            )
+//            Text(
+//                text = stringResource(id = R.string.home_your_workouts_label),
+//                style = TextStyle(
+//                    brush = CyanGradient
+//                ),
+//                fontSize = 12.sp,
+//                fontWeight = FontWeight.Bold,
+//                letterSpacing = 1.5.sp
+//            )
 
             Spacer(modifier = Modifier.height(4.dp))
 

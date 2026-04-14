@@ -147,6 +147,26 @@ class WorkoutViewModel(
         }
     }
 
+    fun reopenExercise(exerciseId: String) {
+        val currentWorkout = uiState.value.workout ?: return
+
+        val updatedExerciseList = currentWorkout.exercises.map { exercise ->
+            if (exercise.id == exerciseId) {
+                val updatedSets = exercise.exerciseSets.map { set ->
+                    set.copy(isCompleted = false)
+                }
+                exercise.copy(isCompleted = false, exerciseSets = updatedSets)
+            } else {
+                exercise
+            }
+        }
+
+        val updatedWorkout = currentWorkout.copy(exercises = updatedExerciseList)
+        viewModelScope.launch {
+            workoutRepository.updateWorkout(updatedWorkout)
+        }
+    }
+
     fun completeWorkout() {
         val currentWorkout = uiState.value.workout ?: return
 

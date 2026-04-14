@@ -5,6 +5,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -14,10 +15,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -37,6 +40,7 @@ import androidx.compose.ui.unit.toSize
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.training_tracker.R
 import com.example.training_tracker.data.models.Exercise
+import com.example.training_tracker.data.models.Workout
 import com.example.training_tracker.data.models.mocks.availableExercises
 import com.example.training_tracker.ui.screens.home.MainGradientButton
 import com.example.training_tracker.ui.theme.CyanAccent
@@ -48,10 +52,12 @@ import kotlin.math.roundToInt
 fun WorkoutDetailsScreen(
     onNavigateBack: () -> Unit,
     onStartWorkout: (String) -> Unit,
+    onEditWorkoutName: (String) -> Unit,
     viewModel: WorkoutDetailsViewModel = viewModel(factory = WorkoutDetailsViewModel.Factory)
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var showAddExerciseDialog by remember { mutableStateOf(false) }
+    var showEditWorkoutNameDialog by remember { mutableStateOf(false) }
 
     val scrollState = rememberScrollState()
 
@@ -99,10 +105,11 @@ fun WorkoutDetailsScreen(
         },
         containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
-        Box(modifier = Modifier
-            .fillMaxSize()
-            .padding(padding)
-            .onGloballyPositioned { parentRootPosition = it.positionInRoot() }
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .onGloballyPositioned { parentRootPosition = it.positionInRoot() }
         ) {
             if (uiState.isLoading) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -119,18 +126,46 @@ fun WorkoutDetailsScreen(
                     ) {
                         Spacer(modifier = Modifier.height(Dimens.paddingMedium))
 
-                        Text(
-                            text = workout.name.uppercase(),
-                            style = MaterialTheme.typography.headlineMedium,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = MaterialTheme.colorScheme.onBackground
-                        )
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
 
-                        Text(
-                            text = stringResource(id = R.string.workout_details_total_exercises, workout.exercises.size),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                            Column {
+                                Text(
+                                    text = workout.name.uppercase(),
+                                    style = MaterialTheme.typography.headlineMedium,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = MaterialTheme.colorScheme.onBackground
+                                )
+
+                                Text(
+                                    text = stringResource(
+                                        id = R.string.workout_details_total_exercises,
+                                        workout.exercises.size
+                                    ),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+
+                            if (uiState.isEditMode) {
+                                IconButton(
+                                    onClick = {
+                                        showEditWorkoutNameDialog = true;
+                                    }
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Edit,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(24.dp),
+                                        tint = MaterialTheme.colorScheme.onBackground
+                                    )
+                                }
+                            }
+                        }
 
                         Spacer(modifier = Modifier.height(Dimens.paddingLarge))
 
@@ -165,21 +200,28 @@ fun WorkoutDetailsScreen(
                                                     onDragStart = { offset ->
                                                         draggedExercise = exercise
                                                         dragStartOffsetInItem = offset
-                                                        currentPointerPos = (itemBounds[exercise.id] ?: Offset.Zero) + offset
+                                                        currentPointerPos = (itemBounds[exercise.id]
+                                                            ?: Offset.Zero) + offset
                                                     },
                                                     onDrag = { change, _ ->
                                                         change.consume()
-                                                        val itemRootPos = itemBounds[exercise.id] ?: Offset.Zero
-                                                        currentPointerPos = itemRootPos + change.position
+                                                        val itemRootPos =
+                                                            itemBounds[exercise.id] ?: Offset.Zero
+                                                        currentPointerPos =
+                                                            itemRootPos + change.position
 
                                                         hoveredIndex = indexBounds.entries.find {
                                                             it.value.contains(currentPointerPos)
                                                         }?.key
                                                     },
                                                     onDragEnd = {
-                                                        val fromIndex = workout.exercises.indexOfFirst { it.id == draggedExercise?.id }
+                                                        val fromIndex =
+                                                            workout.exercises.indexOfFirst { it.id == draggedExercise?.id }
                                                         if (fromIndex != -1 && hoveredIndex != null && hoveredIndex != fromIndex) {
-                                                            viewModel.moveExercise(fromIndex, hoveredIndex!!)
+                                                            viewModel.moveExercise(
+                                                                fromIndex,
+                                                                hoveredIndex!!
+                                                            )
                                                         }
                                                         draggedExercise = null
                                                         hoveredIndex = null
@@ -197,7 +239,13 @@ fun WorkoutDetailsScreen(
                                         if (isHovered && !isBeingDragged) CyanAccent.copy(alpha = 0.1f) else Color.Transparent,
                                         RoundedCornerShape(Dimens.cornerRadius)
                                     )
-                                    .then(if (isHovered && !isBeingDragged) Modifier.border(2.dp, CyanAccent, RoundedCornerShape(Dimens.cornerRadius)) else Modifier)
+                                    .then(
+                                        if (isHovered && !isBeingDragged) Modifier.border(
+                                            2.dp,
+                                            CyanAccent,
+                                            RoundedCornerShape(Dimens.cornerRadius)
+                                        ) else Modifier
+                                    )
                             ) {
                                 ExerciseDetailItem(
                                     number = index + 1,
@@ -245,7 +293,8 @@ fun WorkoutDetailsScreen(
                         .shadow(12.dp, RoundedCornerShape(Dimens.cornerRadius))
                 ) {
                     ExerciseDetailItem(
-                        number = (uiState.workout?.exercises?.indexOfFirst { it.id == exercise.id } ?: 0) + 1,
+                        number = (uiState.workout?.exercises?.indexOfFirst { it.id == exercise.id }
+                            ?: 0) + 1,
                         exercise = exercise,
                         isEditMode = true,
                         onRemove = {}
@@ -262,6 +311,14 @@ fun WorkoutDetailsScreen(
                     showAddExerciseDialog = false
                 },
                 availableExercises = uiState.availableExercises
+            )
+        }
+
+        if (showEditWorkoutNameDialog) {
+            EditWorkoutNameDialog(
+                onDismiss = { showEditWorkoutNameDialog = false },
+                onConfirm = { viewModel.updateWorkoutName(it) },
+                workout = uiState.workout
             )
         }
     }
@@ -359,8 +416,19 @@ fun ExerciseDetailItem(
                         onDismissRequest = { expanded = false }
                     ) {
                         DropdownMenuItem(
-                            text = { Text(stringResource(id = R.string.workout_details_remove_exercise), color = MaterialTheme.colorScheme.error) },
-                            leadingIcon = { Icon(Icons.Default.Delete, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
+                            text = {
+                                Text(
+                                    stringResource(id = R.string.workout_details_remove_exercise),
+                                    color = MaterialTheme.colorScheme.error
+                                )
+                            },
+                            leadingIcon = {
+                                Icon(
+                                    Icons.Default.Delete,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.error
+                                )
+                            },
                             onClick = {
                                 onRemove()
                                 expanded = false
@@ -399,9 +467,16 @@ fun AddExerciseSelectionDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(id = R.string.workout_details_select_exercise_dialog_title), fontWeight = FontWeight.Bold) },
+        title = {
+            Text(
+                stringResource(id = R.string.workout_details_select_exercise_dialog_title),
+                fontWeight = FontWeight.Bold
+            )
+        },
         text = {
-            Column(modifier = Modifier.fillMaxWidth().height(400.dp)) {
+            Column(modifier = Modifier
+                .fillMaxWidth()
+                .height(400.dp)) {
                 OutlinedTextField(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
@@ -417,7 +492,9 @@ fun AddExerciseSelectionDialog(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 LazyColumn(
-                    modifier = Modifier.fillMaxWidth().weight(1f),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
 
@@ -439,7 +516,11 @@ fun AddExerciseSelectionDialog(
                                     fontWeight = FontWeight.Bold
                                 )
                             }
-                            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                            HorizontalDivider(
+                                color = MaterialTheme.colorScheme.outlineVariant.copy(
+                                    alpha = 0.5f
+                                )
+                            )
                         }
                     }
 
@@ -457,7 +538,11 @@ fun AddExerciseSelectionDialog(
                                 style = MaterialTheme.typography.bodyLarge
                             )
                         }
-                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                        HorizontalDivider(
+                            color = MaterialTheme.colorScheme.outlineVariant.copy(
+                                alpha = 0.5f
+                            )
+                        )
                     }
                 }
             }
@@ -465,7 +550,60 @@ fun AddExerciseSelectionDialog(
         confirmButton = {},
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(stringResource(id = R.string.workout_details_cancel_button), color = Color.Gray)
+                Text(
+                    stringResource(id = R.string.workout_details_cancel_button),
+                    color = Color.Gray
+                )
+            }
+        }
+    )
+}
+
+@Composable
+fun EditWorkoutNameDialog(
+    onDismiss: () -> Unit,
+    onConfirm: (String) -> Unit,
+    workout: Workout?,
+) {
+    var nameText by rememberSaveable {mutableStateOf(workout?.name)  }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = "Editar o nome do treino",
+                fontWeight = FontWeight.Bold
+            )
+        },
+        text = {
+            OutlinedTextField(
+                value = nameText ?: "",
+                onValueChange = { nameText = it },
+                placeholder = { Text(text = workout?.name ?: "Treino") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = CyanAccent,
+                    focusedLabelColor = CyanAccent
+                )
+            )
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    if (nameText?.isNotBlank() == true) {
+                        onConfirm(nameText ?: "")
+                        onDismiss()
+                    }
+                }
+            ) {
+                Text("Confirmar", color = CyanAccent, fontWeight = FontWeight.Bold)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancelar", color = Color.Gray)
             }
         }
     )
