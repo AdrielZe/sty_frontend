@@ -133,7 +133,7 @@ fun GymTrackerNavHost() {
                 onSearchQueryChange = { historyViewModel.onSearchQueryChange(it) },
                 onSortOrderChange = { historyViewModel.onSortOrderChange(it) },
                 onNavigateBack = { navController.popBackStack() },
-                onClickHistory = {workoutId -> navController.navigate("${Routes.WorkoutReport.name}/$workoutId")}
+                onClickHistory = {id-> navController.navigate("${Routes.WorkoutReport.name}/$id")}
             )
         }
 

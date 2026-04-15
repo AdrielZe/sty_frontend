@@ -1,7 +1,9 @@
 package com.example.training_tracker.ui.screens.workout_history
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
+import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
@@ -17,7 +19,8 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 
 class WorkoutHistoryViewModel(
-    private val workoutHistoryRepository: WorkoutHistoryRepository
+    private val workoutHistoryRepository: WorkoutHistoryRepository,
+    savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
     private val _searchQuery = MutableStateFlow("")
@@ -63,7 +66,10 @@ class WorkoutHistoryViewModel(
             initializer {
                 val application = (this[APPLICATION_KEY] as GymTrackerApplication)
                 val workoutHistoryRepository = application.container.workoutHistoryRepository
-                WorkoutHistoryViewModel(workoutHistoryRepository = workoutHistoryRepository)
+                WorkoutHistoryViewModel(
+                    workoutHistoryRepository = workoutHistoryRepository,
+                    savedStateHandle = createSavedStateHandle()
+                )
             }
         }
     }

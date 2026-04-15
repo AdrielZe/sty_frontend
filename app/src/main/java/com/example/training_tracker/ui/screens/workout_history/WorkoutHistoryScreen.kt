@@ -247,7 +247,7 @@ fun HistoryWorkoutCard(
             containerColor = MaterialTheme.colorScheme.surface
         ),
         onClick = {
-            onClickHistory(workout.workoutId)
+            onClickHistory(workout.id)
         },
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
