@@ -1,0 +1,313 @@
+package com.example.training_tracker.ui.screens.workout_report
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.FitnessCenter
+import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Leaderboard
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Repeat
+import androidx.compose.material.icons.filled.Timer
+import androidx.compose.material.icons.filled.EmojiEvents
+import androidx.compose.material3.*
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.example.training_tracker.ui.theme.CyanAccent
+import com.example.training_tracker.ui.theme.CyanGradient
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun WorkoutReportScreen(
+    onNavigateBack: () -> Unit,
+    onNavigateToHistory: (String) -> Unit
+) {
+
+    Scaffold(
+        topBar = {
+            CenterAlignedTopAppBar(
+                title = {
+                    Text(
+                        "RESUMO DO TREINO",
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = CyanAccent,
+                            letterSpacing = 1.sp
+                        )
+                    )
+                },
+                navigationIcon = {
+                    IconButton(onClick = { /* Navegação */ }) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Voltar", tint = CyanAccent)
+                    }
+                },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = Color.Transparent
+                )
+            )
+        },
+        bottomBar = {
+            NavigationBar(
+                tonalElevation = 8.dp
+            ) {
+                NavigationBarItem(
+                    selected = true,
+                    onClick = { },
+                    icon = { Icon(Icons.Default.FitnessCenter, contentDescription = null) },
+                    label = { Text("Treino") },
+                    colors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = CyanAccent,
+                        selectedTextColor = CyanAccent,
+                        unselectedIconColor = Color.Gray,
+                        indicatorColor = CyanAccent.copy(alpha = 0.1f)
+                    )
+                )
+                NavigationBarItem(
+                    selected = false,
+                    onClick = { },
+                    icon = { Icon(Icons.Default.Leaderboard, contentDescription = null) },
+                    label = { Text("Estatísticas") }
+                )
+                NavigationBarItem(
+                    selected = false,
+                    onClick = { },
+                    icon = { Icon(Icons.Default.EmojiEvents, contentDescription = null) },
+                    label = { Text("Desafios") }
+                )
+                NavigationBarItem(
+                    selected = false,
+                    onClick = { },
+                    icon = { Icon(Icons.Default.Person, contentDescription = null) },
+                    label = { Text("Perfil") }
+                )
+            }
+        }
+    ) { paddingValues ->
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .padding(horizontal = 20.dp),
+            verticalArrangement = Arrangement.spacedBy(20.dp),
+            contentPadding = PaddingValues(bottom = 24.dp)
+        ) {
+            // 1. Hero Section
+            item {
+                HeroSection()
+            }
+
+            // 2. Gamification Card
+            item {
+                GamificationCard(
+                    totalWeight = "4.250kg",
+                    comparison = "Elefante Africano filhote"
+                )
+            }
+
+            // 3. Métricas Gerais
+            item {
+                MetricsGrid()
+            }
+
+            // 4. Recordes
+            item {
+                RecordsSection()
+            }
+
+            // Botão de Compartilhar
+            item {
+                Button(
+                    onClick = { /* Compartilhar */ },
+                    modifier = Modifier.fillMaxWidth().height(56.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                    contentPadding = PaddingValues()
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(CyanGradient, RoundedCornerShape(16.dp)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            "COMPARTILHAR EVOLUÇÃO",
+                            style = MaterialTheme.typography.labelLarge.copy(
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+}
+
+@Composable
+fun HeroSection() {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(CyanGradient)
+                .padding(24.dp)
+        ) {
+            Column {
+                Badge(
+                    containerColor = Color.Black.copy(alpha = 0.3f),
+                    contentColor = Color.White,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(4.dp)) {
+                        Icon(Icons.Default.Timer, contentDescription = null, modifier = Modifier.size(14.dp))
+                        Spacer(Modifier.width(4.dp))
+                        Text("DIFICULDADE: INTENSO", fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                    }
+                }
+                Text(
+                    "TREINO\nÉPICO! ⚡",
+                    style = MaterialTheme.typography.headlineLarge.copy(
+                        fontWeight = FontWeight.ExtraBold,
+                        color = Color.White,
+                        lineHeight = 36.sp
+                    )
+                )
+                Text(
+                    "Finalizado em 15 Abr às 18:45",
+                    style = MaterialTheme.typography.bodyMedium.copy(color = Color.White.copy(alpha = 0.8f))
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun GamificationCard(totalWeight: String, comparison: String) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+      //  colors = CardDefaults.cardColors(containerColor = SurfaceDark)
+    ) {
+        Row(
+            modifier = Modifier.padding(20.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(56.dp)
+                    .background(Color.White.copy(alpha = 0.05f), RoundedCornerShape(14.dp)),
+                contentAlignment = Alignment.Center
+            ) {
+                Text("🐘", fontSize = 28.sp)
+            }
+            Spacer(Modifier.width(16.dp))
+            Column {
+                Text(
+                    "Volume Massivo!",
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = Color.White)
+                )
+                Text(
+                    buildString {
+                        append("Você levantou ")
+                        append(totalWeight)
+                        append(" no total! Isso equivale ao peso de um ")
+                        append(comparison)
+                        append("!")
+                    },
+                    style = MaterialTheme.typography.bodySmall.copy(color = Color.LightGray, lineHeight = 18.sp)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun MetricsGrid() {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        MetricItem(Modifier.weight(1f), "24", "SÉRIES", Icons.Default.FitnessCenter)
+        MetricItem(Modifier.weight(1f), "280", "REPS", Icons.Default.Repeat)
+        MetricItem(Modifier.weight(1f), "52", "MINUTOS TUT", Icons.Default.Timer)
+    }
+}
+
+@Composable
+fun MetricItem(modifier: Modifier, value: String, label: String, icon: ImageVector) {
+    Card(
+        modifier = modifier,
+        shape = RoundedCornerShape(16.dp),
+       // colors = CardDefaults.cardColors(containerColor = SurfaceDark)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Icon(icon, contentDescription = null, tint = CyanAccent, modifier = Modifier.size(20.dp))
+            Spacer(Modifier.height(8.dp))
+            Text(value, fontSize = 24.sp, fontWeight = FontWeight.Bold, color = Color.White)
+            Text(label, fontSize = 10.sp, color = Color.Gray, fontWeight = FontWeight.Bold)
+        }
+    }
+}
+
+@Composable
+fun RecordsSection() {
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Text(
+            "NOVOS RECORDES",
+            style = MaterialTheme.typography.labelSmall.copy(
+                color = Color.Gray,
+                letterSpacing = 1.sp,
+                fontWeight = FontWeight.Bold
+            )
+        )
+        RecordCard("CARGA MÁXIMA", "140kg (Agachamento)", "🏆")
+        RecordCard("VOLUME TOTAL", "Volume Recorde: 12.400kg", "📈")
+        RecordCard("ESTIMATIVA DE FORÇA", "1RM Estimado: 155kg", "⚡")
+    }
+}
+
+@Composable
+fun RecordCard(label: String, value: String, emoji: String) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+       // colors = CardDefaults.cardColors(containerColor = SurfaceDark)
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .background(CyanAccent.copy(alpha = 0.1f), RoundedCornerShape(10.dp)),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(emoji, fontSize = 20.sp)
+            }
+            Spacer(Modifier.width(16.dp))
+            Column {
+                Text(label, fontSize = 10.sp, color = Color.Gray, fontWeight = FontWeight.Bold)
+                Text(value, fontSize = 16.sp, color = Color.White, fontWeight = FontWeight.Bold)
+            }
+        }
+    }
+}

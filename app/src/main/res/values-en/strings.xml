@@ -99,4 +99,139 @@
     <string name="content_description_delete">Delete</string>
     <string name="content_description_check">Check</string>
     <string name="workout_screen_default_error_message">An error occurred</string>
+
+    <!--  Workout Report SCREEN-->
+    <string name="workout_report_default_title">Workout Finished! ✅</string>
+
+    <string-array name="workout_difficulty_easy_phrases">
+        <item>Warm-up complete! 🔥</item>
+        <item>Light but steady! 🚶</item>
+        <item>One step at a time! 🐾</item>
+        <item>Body in motion! 🌊</item>
+        <item>Activating the muscles! 🔋</item>
+        <item>Better than staying on the couch! 🛋️</item>
+        <item>Easy and in control! 🎮</item>
+        <item>Endorphins activated! 🧠</item>
+        <item>Smooth sailing! 🚀</item>
+        <item>Active recovery! 🧘</item>
+        <item>Building the habit! 🧱</item>
+        <item>Slow and steady! 🐢</item>
+        <item>The important thing is to start! 🏁</item>
+        <item>Leaving laziness behind! 🥱</item>
+        <item>Just the beginning! 🌱</item>
+        <item>Breaking inertia! ⚙️</item>
+        <item>Movement generates movement! 🔄</item>
+        <item>Just a light sweat! 💧</item>
+        <item>Energy recharged! ⚡</item>
+        <item>Good to loosen up the muscles! 🥨</item>
+        <item>Mission accomplished (zen mode)! 🧘‍♂️</item>
+        <item>A great starting point! 📍</item>
+        <item>Walk in the park! 🌳</item>
+        <item>Blood flowing! 🩸</item>
+        <item>The basics work! 🛠️</item>
+        <item>Deep breaths and keep going! 🌬️</item>
+        <item>No rush, but no pauses! ⏳</item>
+        <item>That essential stretch! 📏</item>
+        <item>Chill and easy! ✌️</item>
+        <item>Waking up the body! 🌅</item>
+    </string-array>
+
+    <string-array name="workout_difficulty_medium_phrases">
+        <item>Good sweat! 💦</item>
+        <item>Solid work! 🔨</item>
+        <item>Keeping the pace! 🏃</item>
+        <item>Great workout! 👊</item>
+        <item>Building the foundation! 🏗️</item>
+        <item>Mission accomplished! ✅</item>
+        <item>Stronger than yesterday! 💪</item>
+        <item>Sweat is fat crying! 😅</item>
+        <item>Great job! 👏</item>
+        <item>Perfect pace! ⏱️</item>
+        <item>Made it count today! 📈</item>
+        <item>No shortcuts! 🛤️</item>
+        <item>Discipline in action! 🦾</item>
+        <item>No excuses! 🚫</item>
+        <item>Focus on the process! 🔍</item>
+        <item>Consistency is key! 🔑</item>
+        <item>One day at a time! 📅</item>
+        <item>Bulletproof body! 🛡️</item>
+        <item>Hit the goal! 🎯</item>
+        <item>Doing what needs to be done! 🛠️</item>
+        <item>Stepping out of the comfort zone! 🚪</item>
+        <item>The machine never stops! 🚂</item>
+        <item>Sweating it out! 👕</item>
+        <item>Excellent intensity! 🔋</item>
+        <item>Leveling up! 📶</item>
+        <item>Steady and strong! 👣</item>
+        <item>Strength and honor! ⚔️</item>
+        <item>A workout that cleanses the soul! 🚿</item>
+        <item>You are on the right track! 🛣️</item>
+        <item>Only results! 📊</item>
+    </string-array>
+
+    <string-array name="workout_difficulty_hard_phrases">
+        <item>Intense workout! ⚡</item>
+        <item>Pushing limits! 🚀</item>
+        <item>You are made of iron! 🦾</item>
+        <item>Brutal workout! 💥</item>
+        <item>No pain, no gain! 😤</item>
+        <item>Left it all in the gym! 🩸</item>
+        <item>Breaking plateaus! 🔨</item>
+        <item>Brute force! 🦍</item>
+        <item>Maximum effort! 💯</item>
+        <item>Testing the limits! 🧪</item>
+        <item>You survived! 🥵</item>
+        <item>Insane intensity! 🌋</item>
+        <item>Warrior mode activated! 🥷</item>
+        <item>Defying gravity! 🌍</item>
+        <item>Destroying it! 🧨</item>
+        <item>Today was tough! 🪨</item>
+        <item>Elite workout! 🎖️</item>
+        <item>Heart beating out of your chest! ❤️‍🔥</item>
+        <item>Blood, sweat, and tears! 💦</item>
+        <item>Unreal strength! 🏋️‍♂️</item>
+        <item>No muscle left behind! 🦴</item>
+        <item>You are a machine! 🤖</item>
+        <item>Absolutely formidable! 🦅</item>
+        <item>A natural giant! 🦖</item>
+        <item>Crying is free, and so is the weight! 😭</item>
+        <item>Had to be carried out! 🚑</item>
+        <item>Complete muscle fatigue! 🪫</item>
+        <item>Leaving your soul at the gym! 👻</item>
+        <item>Those who want to, do it; those who don\'t, make excuses! 🗣️</item>
+        <item>Absolute focus, total strength! 🧿</item>
+    </string-array>
+
+    <string-array name="workout_difficulty_super_hard_phrases">
+        <item>EPIC WORKOUT! 👑</item>
+        <item>God mode activated! ⚡⚡</item>
+        <item>Legendary! 🐉</item>
+        <item>Out of this world workout! 👽</item>
+        <item>Made for the history books! 📜</item>
+        <item>Beyond the impossible! 🌌</item>
+        <item>A true titan! 🏔️</item>
+        <item>Limitless power! ♾️</item>
+        <item>Absolutely legendary! 🏆</item>
+        <item>Writing your name on Olympus! 🏛️</item>
+        <item>Super Saiyan level! ☄️</item>
+        <item>A force of nature! 🌪️</item>
+        <item>Top of the world! 🏔️</item>
+        <item>Heroic feats! 🦸‍♂️</item>
+        <item>Unstoppable! 🚧</item>
+        <item>Caged monster! 🦍</item>
+        <item>Absolute dominance! 👑</item>
+        <item>Zero gravity! 🚀</item>
+        <item>Celestial strength! ✨</item>
+        <item>Masterclass workout! 🧘‍♂️</item>
+        <item>Reached gym nirvana! 🧘</item>
+        <item>A living legend! 🐉</item>
+        <item>Made the gods jealous! ⚡</item>
+        <item>Mythical! 🦄</item>
+        <item>Broke the matrix! 💻</item>
+        <item>Apotheotic! 🎆</item>
+        <item>Cosmic energy! 🌠</item>
+        <item>Simply spectacular! 🎪</item>
+        <item>Transcended! 🌌</item>
+        <item>A milestone in your journey! 🗺️</item>
+    </string-array>
 </resources>

@@ -251,7 +251,6 @@ fun WorkoutScreen(
                         }
                     }
 
-
                     ExerciseCard(
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                         exercise = exercise,

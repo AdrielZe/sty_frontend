@@ -24,6 +24,7 @@ import com.example.training_tracker.ui.screens.workout_details.WorkoutDetailsScr
 import com.example.training_tracker.ui.screens.workout_details.WorkoutDetailsViewModel
 import com.example.training_tracker.ui.screens.workout_history.WorkoutHistoryScreen
 import com.example.training_tracker.ui.screens.workout_history.WorkoutHistoryViewModel
+import com.example.training_tracker.ui.screens.workout_report.WorkoutReportScreen
 import com.example.training_tracker.ui.screens.workout_screen.WorkoutScreen
 import com.example.training_tracker.ui.screens.workout_screen.WorkoutViewModel
 
@@ -184,6 +185,22 @@ fun GymTrackerNavHost() {
                 },
                 onBackClick = { navController.popBackStack() },
                 onCompleteWorkout = { workoutViewModel.completeWorkout()}
+            )
+        }
+
+        composable(
+            route = "${Routes.WorkoutReport.name}/{workoutId}",
+            arguments = listOf(
+                navArgument("workoutId") {
+                    type = NavType.StringType
+                }
+            )
+        ){
+            WorkoutReportScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToHistory =  { workoutId ->
+                    navController.navigate("${Routes.WorkoutReport.name}/$workoutId")
+                }
             )
         }
     }

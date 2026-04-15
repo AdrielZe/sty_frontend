@@ -18,6 +18,8 @@ interface WorkoutHistoryDao {
     @Query("SELECT * FROM workoutHistories WHERE completionDate = :date")
     fun getHistoryByDate(date: LocalDate): Flow<List<WorkoutHistory>>
 
+    @Query("SELECT * FROM workoutHistories WHERE id = :id")
+    fun getWorkoutById(id: String): Flow<WorkoutHistory?>
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(workoutHistory: WorkoutHistory)
 

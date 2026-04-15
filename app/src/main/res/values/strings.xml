@@ -117,4 +117,140 @@
     <string name="content_description_check">Check</string>
     <string name="workout_screen_default_error_message">Ocorreu um erro</string>
 
+    <!--  Workout Report SCREEN-->
+    <string name="workout_report_default_title" translatable="false">Treino Finalizado! ✅</string>
+
+    <string-array name="workout_difficulty_easy_phrases">
+        <item>Aquecimento concluído! 🔥</item>
+        <item>Treino leve, mas constante! 🚶</item>
+        <item>Um passo de cada vez! 🐾</item>
+        <item>Corpo em movimento! 🌊</item>
+        <item>Ativando os músculos! 🔋</item>
+        <item>Melhor que ficar no sofá! 🛋️</item>
+        <item>Fácil e no controle! 🎮</item>
+        <item>Endorfina ativada! 🧠</item>
+        <item>Suave na nave! 🚀</item>
+        <item>Recuperação ativa! 🧘</item>
+        <item>Construindo o hábito! 🧱</item>
+        <item>Devagar e sempre! 🐢</item>
+        <item>O importante é começar! 🏁</item>
+        <item>Deixando a preguiça de lado! 🥱</item>
+        <item>Apenas o começo! 🌱</item>
+        <item>Saindo da inércia! ⚙️</item>
+        <item>Movimento gera movimento! 🔄</item>
+        <item>Aquele suor de leve! 💧</item>
+        <item>Energia recarregada! ⚡</item>
+        <item>Bom pra soltar a musculatura! 🥨</item>
+        <item>Missão cumprida (no modo zen)! 🧘‍♂️</item>
+        <item>Um ótimo ponto de partida! 📍</item>
+        <item>Passeio no parque! 🌳</item>
+        <item>Sangue circulando! 🩸</item>
+        <item>O básico funciona! 🛠️</item>
+        <item>Respirando fundo e indo! 🌬️</item>
+        <item>Sem pressa, mas sem pausa! ⏳</item>
+        <item>Aquela esticada essencial! 📏</item>
+        <item>Tranquilo e favorável! ✌️</item>
+        <item>Despertando o corpo! 🌅</item>
+    </string-array>
+
+    <string-array name="workout_difficulty_medium_phrases">
+        <item>Bom suor! 💦</item>
+        <item>Trabalho sólido! 🔨</item>
+        <item>Mantendo o ritmo! 🏃</item>
+        <item>Treino de responsa! 👊</item>
+        <item>Construindo a base! 🏗️</item>
+        <item>Missão cumprida! ✅</item>
+        <item>Mais forte que ontem! 💪</item>
+        <item>O suor é a gordura chorando! 😅</item>
+        <item>Belo trabalho! 👏</item>
+        <item>Ritmo perfeito! ⏱️</item>
+        <item>Hoje rendeu! 📈</item>
+        <item>Não tem atalho! 🛤️</item>
+        <item>Disciplina em ação! 🦾</item>
+        <item>Sem desculpas! 🚫</item>
+        <item>Foco no processo! 🔍</item>
+        <item>Consistência é a chave! 🔑</item>
+        <item>Um dia de cada vez! 📅</item>
+        <item>Corpo blindado! 🛡️</item>
+        <item>Bateu a meta! 🎯</item>
+        <item>Fazendo o que tem que ser feito! 🛠️</item>
+        <item>Saindo da zona de conforto! 🚪</item>
+        <item>A máquina não para! 🚂</item>
+        <item>Suando a camisa! 👕</item>
+        <item>Excelente intensidade! 🔋</item>
+        <item>Subindo o nível! 📶</item>
+        <item>Passo firme e forte! 👣</item>
+        <item>Força e honra! ⚔️</item>
+        <item>Treino que lava a alma! 🚿</item>
+        <item>Você está no caminho certo! 🛣️</item>
+        <item>Apenas resultados! 📊</item>
+    </string-array>
+
+    <string-array name="workout_difficulty_hard_phrases">
+        <item>Treino Intenso! ⚡</item>
+        <item>Superando limites! 🚀</item>
+        <item>Você é de ferro! 🦾</item>
+        <item>Treino brutal! 💥</item>
+        <item>Sem dor, sem ganho! 😤</item>
+        <item>Deixou tudo no treino! 🩸</item>
+        <item>Quebrando platôs! 🔨</item>
+        <item>Força bruta! 🦍</item>
+        <item>Máximo esforço! 💯</item>
+        <item>Testando os limites! 🧪</item>
+        <item>Sobreviveu! 🥵</item>
+        <item>Intensidade insana! 🌋</item>
+        <item>Modo guerreiro ativado! 🥷</item>
+        <item>Desafiando a gravidade! 🌍</item>
+        <item>Destruindo tudo! 🧨</item>
+        <item>Hoje foi pedreira! 🪨</item>
+        <item>Treino de elite! 🎖️</item>
+        <item>Coração na boca! ❤️‍🔥</item>
+        <item>Suor, sangue e lágrimas! 💦</item>
+        <item>Força surreal! 🏋️‍♂️</item>
+        <item>Nenhum músculo ileso! 🦴</item>
+        <item>Você é uma máquina! 🤖</item>
+        <item>Absolutamente formidável! 🦅</item>
+        <item>Gigante pela própria natureza! 🦖</item>
+        <item>O choro é livre, o peso também! 😭</item>
+        <item>Saiu carregado! 🚑</item>
+        <item>Fadiga muscular completa! 🪫</item>
+        <item>Deixando a alma na academia! 👻</item>
+        <item>Quem quer faz, quem não quer arruma desculpa! 🗣️</item>
+        <item>Foco absoluto, força total! 🧿</item>
+    </string-array>
+
+    <string-array name="workout_difficulty_super_hard_phrases">
+        <item>TREINO ÉPICO! 👑</item>
+        <item>Modo Deus ativado! ⚡⚡</item>
+        <item>Lendário! 🐉</item>
+        <item>Treino de outro mundo! 👽</item>
+        <item>Feito para a história! 📜</item>
+        <item>Além do impossível! 🌌</item>
+        <item>Um verdadeiro titã! 🏔️</item>
+        <item>Poder sem limites! ♾️</item>
+        <item>Absolutamente lendário! 🏆</item>
+        <item>Escrevendo seu nome no Olimpo! 🏛️</item>
+        <item>Nível Super Saiyajin! ☄️</item>
+        <item>Uma força da natureza! 🌪️</item>
+        <item>O topo do mundo! 🏔️</item>
+        <item>Feitos heroicos! 🦸‍♂️</item>
+        <item>Imparável! 🚧</item>
+        <item>Monstro enjaulado! 🦍</item>
+        <item>Domínio absoluto! 👑</item>
+        <item>Zero gravidade! 🚀</item>
+        <item>Força celestial! ✨</item>
+        <item>Treino de mestre! 🧘‍♂️</item>
+        <item>Atingiu o nirvana maromba! 🧘</item>
+        <item>Uma lenda viva! 🐉</item>
+        <item>Deixou os deuses com inveja! ⚡</item>
+        <item>Mítico! 🦄</item>
+        <item>Quebrou a matriz! 💻</item>
+        <item>Apoteótico! 🎆</item>
+        <item>Energia cósmica! 🌠</item>
+        <item>Simplesmente espetacular! 🎪</item>
+        <item>Transcendeu! 🌌</item>
+        <item>Um marco na sua jornada! 🗺️</item>
+    </string-array>
+
+
 </resources>

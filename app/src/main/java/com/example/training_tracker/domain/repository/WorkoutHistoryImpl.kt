@@ -11,6 +11,10 @@ class WorkoutHistoryImpl(
 ) : WorkoutHistoryRepository{
     override val workoutHistories = workoutHistoryDao.getAllWorkoutHistories()
 
+    override suspend fun getWorkoutById(id: String): Flow<WorkoutHistory?> {
+        return workoutHistoryDao.getWorkoutById(id)
+    }
+
     override fun getHistoryByDate(date: LocalDate): Flow<List<WorkoutHistory>> {
         return workoutHistoryDao.getHistoryByDate(date)
     }

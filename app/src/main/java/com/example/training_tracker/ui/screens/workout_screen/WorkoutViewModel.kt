@@ -17,6 +17,7 @@ import com.example.training_tracker.data.models.WorkoutHistory
 import com.example.training_tracker.data.repository.WorkoutHistoryRepository
 import com.example.training_tracker.data.repository.WorkoutRepository
 import com.example.training_tracker.ui.screens.home.HomeViewModel
+import com.example.training_tracker.ui.screens.workout_report.WorkoutDifficulty
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -197,7 +198,8 @@ class WorkoutViewModel(
                     name = completedWorkout.name,
                     completionDate = completedWorkout.completionDate!!,
                     exercises = completedWorkout.exercises,
-                    workoutId = completedWorkout.id
+                    workoutId = completedWorkout.id,
+                    difficulty = WorkoutDifficulty.MEDIUM
                 )
             )
 
