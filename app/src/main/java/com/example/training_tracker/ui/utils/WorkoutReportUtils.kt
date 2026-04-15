@@ -2,6 +2,8 @@ package com.example.training_tracker.ui.utils
 
 import android.content.Context
 import com.example.training_tracker.R
+import com.example.training_tracker.data.models.Exercise
+import com.example.training_tracker.ui.screens.workout_report.TotalWeightLiftedInfo
 import com.example.training_tracker.ui.screens.workout_report.WorkoutDifficulty
 
 fun WorkoutDifficulty?.generateHeroTitle(context: Context): String {
@@ -15,4 +17,81 @@ fun WorkoutDifficulty?.generateHeroTitle(context: Context): String {
     }
 
     return context.resources.getStringArray(arrayId).random()
+}
+
+fun generateTotalWeightedInfo(context: Context, exercises: List<Exercise>): TotalWeightLiftedInfo {
+    val totalWeight = exercises.sumOf { exercise ->
+        exercise.exerciseSets.sumOf { set ->
+            (set.reps.toDouble() * set.weight.toDouble())
+        }
+    }
+
+    val title = generateTotalWeightedTitle(context, totalWeight)
+    val image = generateTotalWeightedImage(totalWeight)
+    val comparison = generateWeightComparison(context, totalWeight)
+
+    return TotalWeightLiftedInfo(
+        value = totalWeight,
+        title = title,
+        image = image,
+        comparisonText = comparison
+    )
+}
+
+fun generateTotalWeightedTitle(context: Context, totalWeight: Double): String {
+    val stringId = when {
+        totalWeight == 0.0 -> R.string.weight_title_0
+        totalWeight < 1500.0 -> R.string.weight_title_1500
+        totalWeight < 3000.0 -> R.string.weight_title_3000
+        totalWeight < 4200.0 -> R.string.weight_title_4200
+        totalWeight < 6000.0 -> R.string.weight_title_6000
+        totalWeight < 10000.0 -> R.string.weight_title_10000
+        else -> R.string.weight_title_legendary
+    }
+
+    return context.getString(stringId)
+}
+
+fun generateTotalWeightedImage(totalWeight: Double): Int {
+    return when {
+        totalWeight == 0.0 -> R.drawable.confused_0kg
+        totalWeight < 1500.0 -> R.drawable.feather_1kg
+        totalWeight < 3000.0 -> R.drawable.lifting_2kg
+        totalWeight < 4200.0 -> R.drawable.strong_3k
+        totalWeight < 6000.0 -> R.drawable.strong_4k
+        totalWeight < 10000.0 -> R.drawable.strong_5k
+        else -> R.drawable.strong_6k
+    }
+}
+
+fun generateWeightComparison(context: Context, totalWeight: Double): String {
+    val arrayId = when {
+        totalWeight == 0.0 -> R.array.weight_comparison_0
+        totalWeight < 1500.0 -> R.array.weight_comparison_1500
+        totalWeight < 3000.0 -> R.array.weight_comparison_3000
+        totalWeight < 4200.0 -> R.array.weight_comparison_4200
+        totalWeight < 6000.0 -> R.array.weight_comparison_6000
+        totalWeight < 10000.0 -> R.array.weight_comparison_10000
+        else -> R.array.weight_comparison_legendary
+    }
+
+    val randomComparison = context.resources.getStringArray(arrayId).random()
+
+    return if (totalWeight == 0.0) {
+        randomComparison
+    } else {
+        context.getString(R.string.weight_comparison_template, randomComparison)
+    }
+}
+
+fun countTotalSets(exercises: List<Exercise>): Int {
+    val totalSets = exercises.sumOf { exercise -> exercise.exerciseSets.size }
+
+    return totalSets
+}
+
+fun countTotalReps(exercises: List<Exercise>): Int {
+    val totalReps = exercises.sumOf { exercise -> exercise.exerciseSets.sumOf { it.reps.toInt() } }
+
+    return totalReps
 }

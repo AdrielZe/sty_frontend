@@ -18,6 +18,7 @@ import com.example.training_tracker.data.repository.WorkoutHistoryRepository
 import com.example.training_tracker.data.repository.WorkoutRepository
 import com.example.training_tracker.ui.screens.home.HomeViewModel
 import com.example.training_tracker.ui.screens.workout_report.WorkoutDifficulty
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -34,6 +35,12 @@ class WorkoutViewModel(
 ) : ViewModel() {
     private val workoutId: String = checkNotNull(savedStateHandle["workoutId"])
     private val _finishedWorkoutSession = MutableStateFlow<Workout?>(null)
+    private val _navigateToReport = MutableStateFlow<String?>(null)
+    val navigateToReport = _navigateToReport.asStateFlow()
+
+    fun onNavigatedToReport() {
+        _navigateToReport.value = null
+    }
 
     fun Exercise.isValidToComplete(): Boolean {
         return exerciseSets.all { set ->
@@ -89,7 +96,7 @@ class WorkoutViewModel(
 
         val updatedExercises = currentWorkout.exercises.map { exercise ->
             if (exercise.id == exerciseId) {
-                val updatedExercisesSet = exercise.exerciseSets.filter { it.set != setNumber}
+                val updatedExercisesSet = exercise.exerciseSets.filter { it.set != setNumber }
                 exercise.copy(exerciseSets = updatedExercisesSet)
             } else {
                 exercise
@@ -129,7 +136,7 @@ class WorkoutViewModel(
     fun completeExercise(exerciseId: String) {
         val currentWorkout = uiState.value.workout ?: return
 
-        val updatedExerciseList = currentWorkout.exercises.map {exercise ->
+        val updatedExerciseList = currentWorkout.exercises.map { exercise ->
             if (exercise.id == exerciseId) {
                 val updatedSets = exercise.exerciseSets.map { set ->
                     set.copy(isCompleted = true)
@@ -171,7 +178,7 @@ class WorkoutViewModel(
     fun completeWorkout() {
         val currentWorkout = uiState.value.workout ?: return
 
-        // 1. Prepara os dados CONCLUÍDOS (Para o Histórico e para Congelar a Tela)
+        // 1. Prepara os dados CONCLUÍDOS (Para o Histórico e para Congelar a Tela
         val completedExercises = currentWorkout.exercises.map { exercise ->
             val completedSets = exercise.exerciseSets.map { set ->
                 set.copy(isCompleted = true)
@@ -182,26 +189,28 @@ class WorkoutViewModel(
             )
         }
 
+        val newHistoryEntry = WorkoutHistory(
+            name = currentWorkout.name,
+            completionDate = java.time.LocalDate.now(),
+            exercises = completedExercises,
+            workoutId = currentWorkout.id,
+            difficulty = WorkoutDifficulty.MEDIUM
+        )
+
+        val historyId = newHistoryEntry.id
+
         val completedWorkout = currentWorkout.copy(
             exercises = completedExercises,
             isCompleted = true,
             completionDate = java.time.LocalDate.now()
         )
 
-        // 2. A MÁGICA: Congela a UI com o treino verde e preenchido!
         _finishedWorkoutSession.value = completedWorkout
 
         viewModelScope.launch {
             // 3. Salva no histórico
-            workoutHistoryRepository.addWorkoutHistory(
-                workoutHistory = WorkoutHistory(
-                    name = completedWorkout.name,
-                    completionDate = completedWorkout.completionDate!!,
-                    exercises = completedWorkout.exercises,
-                    workoutId = completedWorkout.id,
-                    difficulty = WorkoutDifficulty.MEDIUM
-                )
-            )
+
+            workoutHistoryRepository.addWorkoutHistory(newHistoryEntry)
 
             // 4. Prepara os dados RESETADOS (Para o Template da próxima semana)
             val resetExercises = currentWorkout.exercises.map { exercise ->
@@ -224,8 +233,10 @@ class WorkoutViewModel(
                 completionDate = null
             )
 
-            // 5. Salva o Template limpo no banco (A tela não vai piscar porque está congelada)
             workoutRepository.updateWorkout(resetWorkout)
+            delay(500)
+            _navigateToReport.value = historyId
+
         }
     }
 
@@ -233,7 +244,12 @@ class WorkoutViewModel(
 
     }
 
-    fun updateExercise(exerciseId: String, setNumber: Int ?= 1, newReps: String? = null, newWeight: String? = null) {
+    fun updateExercise(
+        exerciseId: String,
+        setNumber: Int? = 1,
+        newReps: String? = null,
+        newWeight: String? = null
+    ) {
         val currentWorkout = uiState.value.workout ?: return
 
         val updatedExercises = currentWorkout.exercises.map { exercise ->

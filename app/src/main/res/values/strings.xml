@@ -252,5 +252,69 @@
         <item>Um marco na sua jornada! 🗺️</item>
     </string-array>
 
+    <string name="weight_comparison_template">Você levantou o equivalente a %1$s!</string>
+
+    <string-array name="weight_comparison_0">
+        <item>Foco total na técnica e calistenia! 🤸</item>
+        <item>Apenas o peso do seu corpo e muita força de vontade! 🧘‍♂️</item>
+        <item>Desafiando a gravidade sem usar anilhas! 🕊️</item>
+    </string-array>
+
+    <string-array name="weight_comparison_1500">
+        <item>um urso pardo adulto 🐻</item>
+        <item>um carro popular compacto 🚗</item>
+        <item>um cavalo de corrida 🐎</item>
+        <item>um piano de cauda acústico 🎹</item>
+        <item>uma moto estradeira pesada 🏍️</item>
+    </string-array>
+
+    <string-array name="weight_comparison_3000">
+        <item>um rinoceronte branco adulto 🦏</item>
+        <item>uma caminhonete 4x4 carregada 🛻</item>
+        <item>um tubarão-branco gigante 🦈</item>
+        <item>uma girafa macho adulta 🦒</item>
+        <item>um container de carga vazio 📦</item>
+    </string-array>
+
+    <string-array name="weight_comparison_4200">
+        <item>um hipopótamo adulto 🦛</item>
+        <item>um elefante asiático 🐘</item>
+        <item>uma orca (baleia-assassina) 🐋</item>
+        <item>um caminhão de entrega pequeno 🚚</item>
+        <item>uma limusine blindada 🚙</item>
+    </string-array>
+
+    <string-array name="weight_comparison_6000">
+        <item>um elefante africano macho 🐘</item>
+        <item>uma ambulância totalmente equipada 🚑</item>
+        <item>um helicóptero militar leve 🚁</item>
+        <item>uma retroescavadeira de obras 🚜</item>
+        <item>um Tiranossauro Rex adolescente 🦖</item>
+    </string-array>
+
+    <string-array name="weight_comparison_10000">
+        <item>um ônibus escolar amarelo 🚌</item>
+        <item>um Tiranossauro Rex adulto Rex 🦖</item>
+        <item>um caça F-16 (sem mísseis) 🛩️</item>
+        <item>um trator agrícola de grande porte 🚜</item>
+        <item>uma âncora de navio de cruzeiro ⚓</item>
+    </string-array>
+
+    <string-array name="weight_comparison_legendary">
+        <item>um ônibus de viagem de dois andares 🚍</item>
+        <item>um tanque de guerra leve 🪖</item>
+        <item>o sino Big Ben de Londres 🔔</item>
+        <item>um tubarão Megalodonte 🦈</item>
+        <item>um vagão de trem carregado 🚆</item>
+    </string-array>
+
+    <string name="weight_title_0">Sem carga registrada 🤷‍♂️</string>
+    <string name="weight_title_1500">Volume Leve 🪶</string>
+    <string name="weight_title_3000">Volume Médio 🔋</string>
+    <string name="weight_title_4200">Volume Grande 🦍</string>
+    <string name="weight_title_6000">Volume Massivo! 🐘</string>
+    <string name="weight_title_10000">Força de Titã! 🏔️</string>
+    <string name="weight_title_legendary">Volume Lendário! 🌌</string>
+
 
 </resources>

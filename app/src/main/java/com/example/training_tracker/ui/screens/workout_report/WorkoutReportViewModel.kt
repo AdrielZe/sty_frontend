@@ -1,10 +1,23 @@
 package com.example.training_tracker.ui.screens.workout_report
 
+import android.content.Context
+import android.util.Log
+import androidx.compose.ui.autofill.ContentType
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
+import com.example.training_tracker.GymTrackerApplication
 import com.example.training_tracker.data.repository.WorkoutHistoryRepository
 import com.example.training_tracker.data.repository.WorkoutRepository
+import com.example.training_tracker.ui.screens.workout_details.WorkoutDetailsViewModel
+import com.example.training_tracker.ui.utils.countTotalReps
+import com.example.training_tracker.ui.utils.countTotalSets
+import com.example.training_tracker.ui.utils.generateHeroTitle
+import com.example.training_tracker.ui.utils.generateTotalWeightedInfo
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -14,6 +27,7 @@ import kotlinx.coroutines.flow.stateIn
 
 class WorkoutReportViewModel(
     val workoutHistoryRepository: WorkoutHistoryRepository,
+    applicationContext: Context,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
     private val workoutId: String = checkNotNull(savedStateHandle["workoutId"])
@@ -25,18 +39,40 @@ class WorkoutReportViewModel(
         .getWorkoutById(workoutId)
         .map { workout ->
 
+            Log.d("DEBUG", "Buscando treino com ID: $workoutId")
+            val heroTitle = workout?.difficulty.generateHeroTitle(context = applicationContext)
+            val totalWeightLiftedInfo = generateTotalWeightedInfo(context = applicationContext,
+                workout?.exercises ?: emptyList()
+            )
+            val totalSets = countTotalSets(workout?.exercises ?: emptyList())
+            val totalReps = countTotalReps(workout?.exercises ?: emptyList())
+
             WorkoutReportUiState(
                 workoutDifficulty = workout?.difficulty,//Criar enum de workout difficulty em workout e workout history
-                heroSectionTitle = ,//Gerar dentro da view model um texto aleatorio com base na dificuldade do treino
-                completionDate = workout.completionDate,
-                totalWeightLiftedInfo =, // calcular aqui com base nos exercises feitos (montar o objeto TotalWeightLiftedInfo)
-                totalSets = ,//calcular aqui com base nos exercises feitos
-                totalReps = ,//calcular aqui com base nos exercises feitos
-                totalMinutes = ,//calcular aqui com base nos exercises feitos
+                heroSectionTitle = heroTitle,//Gerar dentro da view model um texto aleatorio com base na dificuldade do treino
+                completionDate = workout?.completionDate,
+                totalWeightLiftedInfo = totalWeightLiftedInfo, // calcular aqui com base nos exercises feitos (montar o objeto TotalWeightLiftedInfo)
+                totalSets = totalSets,//calcular aqui com base nos exercises feitos
+                totalReps = totalReps,//calcular aqui com base nos exercises feitos
+                totalMinutes = 80, // Mockando por enquanto
             )
         }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(500),
             initialValue = WorkoutReportUiState()
         )
+
+    companion object {
+        val Factory: ViewModelProvider.Factory = viewModelFactory {
+            initializer {
+                val application = (this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as GymTrackerApplication)
+                val workoutHistoryRepository = application.container.workoutHistoryRepository
+                WorkoutReportViewModel(
+                    workoutHistoryRepository = workoutHistoryRepository,
+                    savedStateHandle = createSavedStateHandle(),
+                    applicationContext = application
+                )
+            }
+        }
+    }
 }

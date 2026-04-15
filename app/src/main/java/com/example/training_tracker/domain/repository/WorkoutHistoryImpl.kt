@@ -11,7 +11,7 @@ class WorkoutHistoryImpl(
 ) : WorkoutHistoryRepository{
     override val workoutHistories = workoutHistoryDao.getAllWorkoutHistories()
 
-    override suspend fun getWorkoutById(id: String): Flow<WorkoutHistory?> {
+    override fun getWorkoutById(id: String): Flow<WorkoutHistory?> {
         return workoutHistoryDao.getWorkoutById(id)
     }
 

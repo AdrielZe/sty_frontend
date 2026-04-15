@@ -41,7 +41,8 @@ fun WorkoutHistoryScreen(
     uiState: WorkoutHistoryUiState,
     onSearchQueryChange: (String) -> Unit,
     onSortOrderChange: (SortOrder) -> Unit,
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    onClickHistory: (String) -> Unit,
 ) {
     var showSortMenu by remember { mutableStateOf(false) }
 
@@ -149,7 +150,10 @@ fun WorkoutHistoryScreen(
                     contentPadding = PaddingValues(bottom = 24.dp, top = 8.dp)
                 ) {
                     items(uiState.savedWorkouts, key = { it.id }) { workout ->
-                        HistoryWorkoutCard(workout = workout)
+                        HistoryWorkoutCard(
+                            onClickHistory = onClickHistory,
+                            workout = workout
+                        )
                     }
                 }
             }
@@ -225,7 +229,10 @@ fun HistorySearchBar(
 }
 
 @Composable
-fun HistoryWorkoutCard(workout: WorkoutHistory) {
+fun HistoryWorkoutCard(
+    workout: WorkoutHistory,
+    onClickHistory: (String) -> Unit
+) {
     var expanded by remember { mutableStateOf(false) }
     val dateText = remember(workout.completionDate) {
         val formatter = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")
@@ -239,6 +246,9 @@ fun HistoryWorkoutCard(workout: WorkoutHistory) {
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
+        onClick = {
+            onClickHistory(workout.workoutId)
+        },
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {

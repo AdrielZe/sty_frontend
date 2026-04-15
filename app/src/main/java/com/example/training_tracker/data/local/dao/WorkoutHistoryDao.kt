@@ -20,8 +20,9 @@ interface WorkoutHistoryDao {
 
     @Query("SELECT * FROM workoutHistories WHERE id = :id")
     fun getWorkoutById(id: String): Flow<WorkoutHistory?>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insert(workoutHistory: WorkoutHistory)
+    suspend fun insert(workoutHistory: WorkoutHistory) : Long
 
     @Update
     suspend fun update(workoutHistory: WorkoutHistory)

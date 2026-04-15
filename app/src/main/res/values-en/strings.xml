@@ -234,4 +234,68 @@
         <item>Transcended! 🌌</item>
         <item>A milestone in your journey! 🗺️</item>
     </string-array>
+
+    <string name="weight_comparison_template">You lifted the equivalent of %1$s!</string>
+
+    <string-array name="weight_comparison_0">
+        <item>Total focus on technique and calisthenics! 🤸</item>
+        <item>Just your body weight and a lot of willpower! 🧘‍♂️</item>
+        <item>Defying gravity without using plates! 🕊️</item>
+    </string-array>
+
+    <string-array name="weight_comparison_1500">
+        <item>an adult grizzly bear 🐻</item>
+        <item>a compact car 🚗</item>
+        <item>a racehorse 🐎</item>
+        <item>an acoustic grand piano 🎹</item>
+        <item>a heavy touring motorcycle 🏍️</item>
+    </string-array>
+
+    <string-array name="weight_comparison_3000">
+        <item>an adult white rhinoceros 🦏</item>
+        <item>a loaded 4x4 pickup truck 🛻</item>
+        <item>a giant great white shark 🦈</item>
+        <item>an adult male giraffe 🦒</item>
+        <item>an empty shipping container 📦</item>
+    </string-array>
+
+    <string-array name="weight_comparison_4200">
+        <item>an adult hippopotamus 🦛</item>
+        <item>an Asian elephant 🐘</item>
+        <item>an orca (killer whale) 🐋</item>
+        <item>a small delivery truck 🚚</item>
+        <item>an armored limousine 🚙</item>
+    </string-array>
+
+    <string-array name="weight_comparison_6000">
+        <item>a male African elephant 🐘</item>
+        <item>a fully equipped ambulance 🚑</item>
+        <item>a light military helicopter 🚁</item>
+        <item>a construction backhoe 🚜</item>
+        <item>a teenage Tyrannosaurus Rex 🦖</item>
+    </string-array>
+
+    <string-array name="weight_comparison_10000">
+        <item>a yellow school bus 🚌</item>
+        <item>an adult Tyrannosaurus Rex 🦖</item>
+        <item>an F-16 fighter jet (without missiles) 🛩️</item>
+        <item>a large agricultural tractor 🚜</item>
+        <item>a cruise ship anchor ⚓</item>
+    </string-array>
+
+    <string-array name="weight_comparison_legendary">
+        <item>a double-decker touring bus 🚍</item>
+        <item>a light military tank 🪖</item>
+        <item>London\'s Big Ben bell 🔔</item>
+        <item>a Megalodon shark 🦈</item>
+        <item>a loaded train car 🚆</item>
+    </string-array>
+
+    <string name="weight_title_0">No recorded weight 🤷‍♂️</string>
+    <string name="weight_title_1500">Light Volume 🪶</string>
+    <string name="weight_title_3000">Medium Volume 🔋</string>
+    <string name="weight_title_4200">Heavy Volume 🦍</string>
+    <string name="weight_title_6000">Massive Volume! 🐘</string>
+    <string name="weight_title_10000">Titan Strength! 🏔️</string>
+    <string name="weight_title_legendary">Legendary Volume! 🌌</string>
 </resources>

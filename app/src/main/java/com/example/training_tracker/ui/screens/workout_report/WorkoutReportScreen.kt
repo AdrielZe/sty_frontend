@@ -15,6 +15,8 @@ import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -29,16 +31,17 @@ import com.example.training_tracker.ui.theme.CyanGradient
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WorkoutReportScreen(
+    workoutReportScreenViewModel: WorkoutReportViewModel,
     onNavigateBack: () -> Unit,
-    onNavigateToHistory: (String) -> Unit
 ) {
+    val uiState by workoutReportScreenViewModel.uiState.collectAsState()
 
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        "RESUMO DO TREINO",
+                        "WORKOUT SUMMARY",
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.Bold,
                             color = CyanAccent,
@@ -103,20 +106,19 @@ fun WorkoutReportScreen(
         ) {
             // 1. Hero Section
             item {
-                HeroSection()
+                HeroSection(uiState = uiState)
             }
 
             // 2. Gamification Card
             item {
                 GamificationCard(
-                    totalWeight = "4.250kg",
-                    comparison = "Elefante Africano filhote"
+                    uiState = uiState
                 )
             }
 
             // 3. Métricas Gerais
             item {
-                MetricsGrid()
+                MetricsGrid(uiState = uiState)
             }
 
             // 4. Recordes
@@ -155,7 +157,9 @@ fun WorkoutReportScreen(
 }
 
 @Composable
-fun HeroSection() {
+fun HeroSection(
+    uiState: WorkoutReportUiState
+) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
@@ -176,11 +180,11 @@ fun HeroSection() {
                     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(4.dp)) {
                         Icon(Icons.Default.Timer, contentDescription = null, modifier = Modifier.size(14.dp))
                         Spacer(Modifier.width(4.dp))
-                        Text("DIFICULDADE: INTENSO", fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                        Text("DIFICULDADE: ${uiState.workoutDifficulty}", fontSize = 10.sp, fontWeight = FontWeight.Bold)
                     }
                 }
                 Text(
-                    "TREINO\nÉPICO! ⚡",
+                    "${uiState.heroSectionTitle}",
                     style = MaterialTheme.typography.headlineLarge.copy(
                         fontWeight = FontWeight.ExtraBold,
                         color = Color.White,
@@ -188,7 +192,7 @@ fun HeroSection() {
                     )
                 )
                 Text(
-                    "Finalizado em 15 Abr às 18:45",
+                    "Finalizado em ${uiState.completionDate}",
                     style = MaterialTheme.typography.bodyMedium.copy(color = Color.White.copy(alpha = 0.8f))
                 )
             }
@@ -197,7 +201,9 @@ fun HeroSection() {
 }
 
 @Composable
-fun GamificationCard(totalWeight: String, comparison: String) {
+fun GamificationCard(
+    uiState: WorkoutReportUiState
+) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
@@ -218,15 +224,15 @@ fun GamificationCard(totalWeight: String, comparison: String) {
             Spacer(Modifier.width(16.dp))
             Column {
                 Text(
-                    "Volume Massivo!",
+                    uiState.totalWeightLiftedInfo?.title ?: "Treino Concluído",
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = Color.White)
                 )
                 Text(
                     buildString {
                         append("Você levantou ")
-                        append(totalWeight)
+                        append(uiState.totalWeightLiftedInfo?.value)
                         append(" no total! Isso equivale ao peso de um ")
-                        append(comparison)
+                        append(uiState.totalWeightLiftedInfo?.comparisonText)
                         append("!")
                     },
                     style = MaterialTheme.typography.bodySmall.copy(color = Color.LightGray, lineHeight = 18.sp)
@@ -237,14 +243,16 @@ fun GamificationCard(totalWeight: String, comparison: String) {
 }
 
 @Composable
-fun MetricsGrid() {
+fun MetricsGrid(
+    uiState: WorkoutReportUiState
+) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        MetricItem(Modifier.weight(1f), "24", "SÉRIES", Icons.Default.FitnessCenter)
-        MetricItem(Modifier.weight(1f), "280", "REPS", Icons.Default.Repeat)
-        MetricItem(Modifier.weight(1f), "52", "MINUTOS TUT", Icons.Default.Timer)
+        MetricItem(Modifier.weight(1f), uiState.totalSets.toString(), "SÉRIES", Icons.Default.FitnessCenter)
+        MetricItem(Modifier.weight(1f), uiState.totalReps.toString(), "REPS", Icons.Default.Repeat)
+        MetricItem(Modifier.weight(1f), uiState.totalMinutes.toString(), "MINUTOS TUT", Icons.Default.Timer)
     }
 }
 

@@ -25,6 +25,8 @@ import com.example.training_tracker.ui.screens.workout_details.WorkoutDetailsVie
 import com.example.training_tracker.ui.screens.workout_history.WorkoutHistoryScreen
 import com.example.training_tracker.ui.screens.workout_history.WorkoutHistoryViewModel
 import com.example.training_tracker.ui.screens.workout_report.WorkoutReportScreen
+import com.example.training_tracker.ui.screens.workout_report.WorkoutReportUiState
+import com.example.training_tracker.ui.screens.workout_report.WorkoutReportViewModel
 import com.example.training_tracker.ui.screens.workout_screen.WorkoutScreen
 import com.example.training_tracker.ui.screens.workout_screen.WorkoutViewModel
 
@@ -130,7 +132,8 @@ fun GymTrackerNavHost() {
                 uiState = historyUiState,
                 onSearchQueryChange = { historyViewModel.onSearchQueryChange(it) },
                 onSortOrderChange = { historyViewModel.onSortOrderChange(it) },
-                onNavigateBack = { navController.popBackStack() }
+                onNavigateBack = { navController.popBackStack() },
+                onClickHistory = {workoutId -> navController.navigate("${Routes.WorkoutReport.name}/$workoutId")}
             )
         }
 
@@ -145,6 +148,17 @@ fun GymTrackerNavHost() {
         ) {
             val workoutViewModel: WorkoutViewModel = viewModel(factory = WorkoutViewModel.Factory)
             val workoutUiState by workoutViewModel.uiState.collectAsState()
+
+            val navigateToId by workoutViewModel.navigateToReport.collectAsState()
+
+            LaunchedEffect(navigateToId) {
+                navigateToId?.let { id ->
+                    navController.navigate("${Routes.WorkoutReport.name}/$id") {
+                        popUpTo("${Routes.Workout.name}/$id") { inclusive = true }
+                    }
+                    workoutViewModel.onNavigatedToReport()
+                }
+            }
 
             WorkoutScreen(
                 workoutUiState = workoutUiState,
@@ -184,7 +198,7 @@ fun GymTrackerNavHost() {
                     workoutViewModel.reopenExercise(exerciseId)
                 },
                 onBackClick = { navController.popBackStack() },
-                onCompleteWorkout = { workoutViewModel.completeWorkout()}
+                onCompleteWorkout = { workoutViewModel.completeWorkout()},
             )
         }
 
@@ -196,11 +210,11 @@ fun GymTrackerNavHost() {
                 }
             )
         ){
+            val workoutReportScreenViewModel: WorkoutReportViewModel = viewModel(factory = WorkoutReportViewModel.Factory)
+
             WorkoutReportScreen(
+                workoutReportScreenViewModel = workoutReportScreenViewModel,
                 onNavigateBack = { navController.popBackStack() },
-                onNavigateToHistory =  { workoutId ->
-                    navController.navigate("${Routes.WorkoutReport.name}/$workoutId")
-                }
             )
         }
     }
