@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -35,11 +36,14 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Done
+import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -52,6 +56,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ProgressIndicatorDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -65,6 +70,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.shadow
@@ -80,12 +86,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.training_tracker.R
 import com.example.training_tracker.data.models.Exercise
 import com.example.training_tracker.data.models.Workout
 import com.example.training_tracker.data.models.extensions.isValidToComplete
+import com.example.training_tracker.ui.screens.registered_workouts.TextGray
 import com.example.training_tracker.ui.theme.AppTheme
 import com.example.training_tracker.ui.theme.CyanAccent
 import com.example.training_tracker.ui.theme.CyanGradient
@@ -110,8 +118,6 @@ fun WorkoutScreen(
     onReopenExercise: (String) -> Unit,
     onCompleteWorkout: () -> Unit,
 ) {
-    // 1. Estabilidade de Callbacks: Usamos rememberUpdatedState para que os lambdas criados
-    // dentro do itemsIndexed não causem recomposições em cascata quando o ViewModel mudar.
     val currentOnWeightChange by rememberUpdatedState(onWeightChange)
     val currentOnRepsChange by rememberUpdatedState(onRepsChange)
     val currentOnCompleteSet by rememberUpdatedState(onCompleteSet)
@@ -143,7 +149,19 @@ fun WorkoutScreen(
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
-            WorkoutTopBar(onBackClick = onBackClick)
+            val exercisesFinished = workout?.exercises?.count { it.isCompleted } ?: 0
+            val totalCount = workout?.exercises?.size ?: 0
+            val percentage =
+                if (totalCount > 0) (exercisesFinished.toFloat() / totalCount.toFloat()) * 100 else 0f
+
+            WorkoutTopBar(
+                workoutName = workout?.name
+                    ?: stringResource(id = R.string.workout_screen_default_workout_name),
+                progressPercentage = percentage,
+                finishedCount = exercisesFinished,
+                totalCount = totalCount,
+                onBackClick = onBackClick
+            )
         }
     ) { innerPadding ->
         Box(
@@ -153,50 +171,11 @@ fun WorkoutScreen(
         ) {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
-                horizontalAlignment = Alignment.CenterHorizontally
+                horizontalAlignment = Alignment.CenterHorizontally,
+                contentPadding = PaddingValues(top = 16.dp, bottom = 100.dp)
             ) {
-                // HERO SECTION do Treino
-                item {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 24.dp, vertical = 16.dp),
-                        horizontalAlignment = Alignment.Start
-                    ) {
-                        Text(
-                            text = workout?.name
-                                ?: stringResource(id = R.string.workout_screen_default_workout_name),
-                            fontSize = 36.sp,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = MaterialTheme.colorScheme.onBackground,
-                            lineHeight = 40.sp
-                        )
-                        Spacer(modifier = Modifier.height(18.dp))
-                        Row {
-                            Text(
-                                text = stringResource(id = R.string.workout_screen_in_progress_label),
-                                style = TextStyle(
-                                    brush = CyanGradient
-                                ),
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Bold,
-                                letterSpacing = 1.sp
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.height(4.dp))
-                        WorkoutProgressBar(
-                            modifier = Modifier,
-                            workout = workout
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(8.dp))
-                }
-
                 val exercises = workout?.exercises ?: emptyList()
 
-                // 3. Otimização do itemsIndexed (Performance de Scroll):
-                // Usamos apenas o exercise.id como chave para estabilidade total.
                 itemsIndexed(
                     items = exercises,
                     key = { _, exercise -> exercise.id }
@@ -230,7 +209,8 @@ fun WorkoutScreen(
                     val onCompleteExerciseLambda = remember(exercise.id, index) {
                         {
                             currentOnCompleteExercise(exercise.id)
-                            val nextExercise = exercises.drop(index + 1).firstOrNull { !it.isCompleted }
+                            val nextExercise =
+                                exercises.drop(index + 1).firstOrNull { !it.isCompleted }
                             expandedExercises = if (nextExercise != null) {
                                 setOf(nextExercise.id)
                             } else {
@@ -280,7 +260,6 @@ fun WorkoutScreen(
                         },
                         workout = workout
                     )
-                    Spacer(modifier = Modifier.height(40.dp))
                 }
             }
 
@@ -307,18 +286,74 @@ fun WorkoutScreen(
 }
 
 @Composable
-fun WorkoutTopBar(onBackClick: () -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 16.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        IconButton(onClick = onBackClick) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = stringResource(id = R.string.content_description_back),
-                tint = MaterialTheme.colorScheme.onBackground
+fun WorkoutTopBar(
+    workoutName: String,
+    progressPercentage: Float,
+    finishedCount: Int,
+    totalCount: Int,
+    onBackClick: () -> Unit
+) {
+    val animatedProgress by animateFloatAsState(
+        targetValue = progressPercentage / 100f,
+        animationSpec = ProgressIndicatorDefaults.ProgressAnimationSpec,
+        label = "TopBarProgress"
+    )
+
+    Column(modifier = Modifier
+        .fillMaxWidth()
+        .background(MaterialTheme.colorScheme.surface)) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 8.dp, top = 8.dp, end = 24.dp, bottom = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                IconButton(onClick = onBackClick) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = stringResource(id = R.string.content_description_back),
+                        tint = MaterialTheme.colorScheme.onBackground
+                    )
+                }
+                Spacer(modifier = Modifier.width(4.dp))
+                Column {
+                    Text(
+                        text = workoutName.uppercase(),
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = MaterialTheme.colorScheme.onBackground,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Text(
+                        text = "$finishedCount of $totalCount exercises completed",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = TextGray
+                    )
+                }
+            }
+            Text(
+                text = "%.0f%%".format(progressPercentage),
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Black,
+                color = CyanAccent
+            )
+        }
+
+        // Progress line as bottom border
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(3.dp)
+                .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f))
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(animatedProgress)
+                    .fillMaxHeight()
+                    .background(CyanGradient)
             )
         }
     }
@@ -345,7 +380,8 @@ fun ExerciseCard(
     var showErrorDialog by rememberSaveable { mutableStateOf(false) }
     var errorText by rememberSaveable { mutableStateOf("") }
 
-    // Side effect para resetar modo deleção se não houver mais séries
+    val totalSets = exercise.exerciseSets.size
+
     LaunchedEffect(exercise.exerciseSets.isEmpty()) {
         if (exercise.exerciseSets.isEmpty()) {
             isDeleteMode = false
@@ -409,86 +445,148 @@ fun ExerciseCard(
         )
     }
 
-    // 6. Otimização de Modificadores:
-    // Clip antes do background e sombra apenas no container externo.
-    Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .shadow(
-                elevation = if (isExpanded) 8.dp else 2.dp,
-                shape = RoundedCornerShape(20.dp)
-            )
-            .clip(RoundedCornerShape(20.dp))
-            .background(
-                brush = AppTheme.brushes.backgroundGradient
-            ),
-        colors = CardDefaults.cardColors(
-            containerColor = Color.Transparent
-        ),
-        shape = RoundedCornerShape(20.dp),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
-    ) {
-        if (!isLocked) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                horizontalAlignment = Alignment.Start
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { onExpandedChange(!isExpanded) }
-                        .background(color = Color.Transparent),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Row(
-                        modifier = Modifier.weight(1f),
-                        verticalAlignment = Alignment.CenterVertically
+    if (exercise.isCompleted) {
+        Card(
+            modifier = modifier
+                .fillMaxWidth()
+                .clickable { onExpandedChange(!isExpanded) },
+            shape = RoundedCornerShape(20.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+        ) {
+            Column(modifier = Modifier.padding(20.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(32.dp)
+                            .background(Color(0xFF4CAF50).copy(alpha = 0.1f), CircleShape),
+                        contentAlignment = Alignment.Center
                     ) {
-                        Text(
-                            modifier = Modifier.weight(1f, fill = false),
-                            text = exercise.name,
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = if (exercise.isCompleted) Color(0xFF4CAF50) else MaterialTheme.colorScheme.onSurface,
+                        Icon(
+                            Icons.Default.CheckCircle,
+                            null,
+                            tint = Color(0xFF4CAF50),
+                            modifier = Modifier.size(20.dp)
                         )
+                    }
+                    Spacer(Modifier.width(16.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            exercise.name,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF4CAF50),
+                            fontSize = 16.sp
+                        )
+                        Text(
+                            "${exercise.exerciseSets.size} Sets",
+                            color = TextGray,
+                            fontSize = 12.sp
+                        )
+                    }
 
-                        if (exercise.isCompleted) {
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Icon(
-                                imageVector = Icons.Default.CheckCircle,
-                                contentDescription = "Exercício concluído",
-                                tint = Color(0xFF4CAF50),
-                                modifier = Modifier.size(22.dp)
+                    Box {
+                        IconButton(onClick = { isMenuExpanded = true }) {
+                            Icon(Icons.Default.MoreVert, null, tint = TextGray, modifier = Modifier.size(24.dp))
+                        }
+                        DropdownMenu(
+                            expanded = isMenuExpanded,
+                            onDismissRequest = { isMenuExpanded = false }) {
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        stringResource(id = R.string.workout_screen_reopen_exercise_menu),
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                },
+                                onClick = { onReopenExercise(); isMenuExpanded = false },
+                                leadingIcon = {
+                                    Icon(
+                                        Icons.Default.Refresh,
+                                        null,
+                                        tint = MaterialTheme.colorScheme.primary
+                                    )
+                                }
                             )
                         }
                     }
+
+                    Icon(
+                        imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                        contentDescription = null,
+                        tint = TextGray,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+
+                AnimatedVisibility(visible = isExpanded) {
+                    Column {
+                        Spacer(Modifier.height(16.dp))
+                        exercise.exerciseSets.forEach { set ->
+                            SetLine(
+                                modifier = Modifier.fillMaxWidth(),
+                                exercise = exercise,
+                                inputValueReps = set.reps,
+                                inputValueWeight = set.weight,
+                                isDeleteMode = false,
+                                isCompleted = true,
+                                onRepsChange = { _, _ -> },
+                                onWeightChange = { _, _ -> },
+                                onDeleteClick = { },
+                                onCompleteClick = { },
+                                setNumber = set.set,
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    } else if (!isLocked) {
+        Card(
+            modifier = modifier
+                .fillMaxWidth()
+                .background(
+                    brush = AppTheme.brushes.backgroundGradient,
+                    shape = RoundedCornerShape(24.dp)
+                )
+                .border(1.dp, CyanAccent.copy(alpha = 0.3f), RoundedCornerShape(24.dp)),
+            colors = CardDefaults.cardColors(Color.Transparent)
+        ) {
+            Column(modifier = Modifier.padding(24.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.Top
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            "SETS: $totalSets",
+                            color = CyanAccent,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 10.sp
+                        )
+                        Text(
+                            exercise.name,
+                            fontWeight = FontWeight.Black,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontSize = 22.sp,
+                            lineHeight = 28.sp
+                        )
+                    }
+
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Box {
-                            if (!isDeleteMode) {
-                                IconButton(onClick = { isMenuExpanded = true }) {
-                                    Icon(
-                                        Icons.Default.MoreVert,
-                                        contentDescription = stringResource(id = R.string.content_description_options),
-                                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
-                            } else {
-                                IconButton(onClick = { isDeleteMode = false }) {
-                                    Icon(
-                                        Icons.Default.Check,
-                                        contentDescription = stringResource(id = R.string.content_description_confirm),
-                                        tint = MaterialTheme.colorScheme.error
-                                    )
-                                }
+                            IconButton(onClick = { isMenuExpanded = true }) {
+                                Icon(
+                                    Icons.Default.MoreVert,
+                                    contentDescription = stringResource(id = R.string.content_description_options),
+                                    tint = TextGray,
+                                    modifier = Modifier.size(24.dp)
+                                )
                             }
 
                             DropdownMenu(
                                 expanded = isMenuExpanded,
-                                onDismissRequest = { isMenuExpanded = false }) {
-                                if (!exercise.isCompleted) {
+                                onDismissRequest = { isMenuExpanded = false }
+                            ) {
+                                if (!isDeleteMode) {
                                     DropdownMenuItem(
                                         text = {
                                             Text(
@@ -502,7 +600,7 @@ fun ExerciseCard(
                                         leadingIcon = {
                                             Icon(
                                                 Icons.Default.Delete,
-                                                contentDescription = null,
+                                                null,
                                                 tint = MaterialTheme.colorScheme.error
                                             )
                                         }
@@ -511,19 +609,18 @@ fun ExerciseCard(
                                     DropdownMenuItem(
                                         text = {
                                             Text(
-                                                stringResource(id = R.string.workout_screen_reopen_exercise_menu),
-                                                color = MaterialTheme.colorScheme.primary
+                                                "Done",
+                                                color = MaterialTheme.colorScheme.onSurface
                                             )
                                         },
                                         onClick = {
-                                            onReopenExercise()
-                                            isMenuExpanded = false
+                                            isDeleteMode = !isDeleteMode; isMenuExpanded = false
                                         },
                                         leadingIcon = {
                                             Icon(
-                                                Icons.Default.Refresh,
-                                                contentDescription = null,
-                                                tint = MaterialTheme.colorScheme.primary
+                                                Icons.Default.Done,
+                                                null,
+                                                tint = CyanAccent
                                             )
                                         }
                                     )
@@ -531,118 +628,133 @@ fun ExerciseCard(
                             }
                         }
 
-                        IconButton(onClick = { onExpandedChange(!isExpanded) }) {
+                        Box(
+                            modifier = Modifier
+                                .size(40.dp)
+                                .background(CyanAccent.copy(alpha = 0.1f), CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) {
                             Icon(
-                                imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                                contentDescription = if (isExpanded) stringResource(id = R.string.content_description_collapse) else stringResource(
-                                    id = R.string.content_description_expand
-                                ),
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                Icons.Default.FitnessCenter,
+                                null,
+                                tint = CyanAccent,
+                                modifier = Modifier.size(20.dp)
                             )
                         }
                     }
                 }
 
-                AnimatedVisibility(visible = isExpanded) {
-                    Column(
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Spacer(modifier = Modifier.height(16.dp))
+                Column {
+                    Spacer(Modifier.height(24.dp))
 
-                        Row(
+                    Surface(
+                        color = CyanAccent.copy(alpha = 0.1f),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        val activeSet =
+                            exercise.exerciseSets.firstOrNull { !it.isCompleted }?.set ?: 1
+                        Text(
+                            "CURRENT SET: $activeSet",
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                            color = CyanAccent,
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+
+                    Spacer(Modifier.height(16.dp))
+
+                    exercise.exerciseSets.forEach { set ->
+                        SetLine(
+                            modifier = Modifier.fillMaxWidth(),
+                            exercise = exercise,
+                            inputValueReps = set.reps,
+                            inputValueWeight = set.weight,
+                            isDeleteMode = isDeleteMode,
+                            isCompleted = set.isCompleted,
+                            onRepsChange = { _, newText ->
+                                onRepsChange(set.set, newText)
+                            },
+                            onWeightChange = { _, newText ->
+                                onWeightChange(set.set, newText)
+                            },
+                            onDeleteClick = { onRemoveSet(exercise.id, set.set) },
+                            onCompleteClick = { onCompleteSet(exercise.id, set.set) },
+                            setNumber = set.set,
+                        )
+                    }
+
+                    if (!isDeleteMode) {
+                        Spacer(modifier = Modifier.height(24.dp))
+
+                        Button(
+                            onClick = { onAddSetClick(exercise.id) },
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(bottom = 8.dp)
+                                .height(56.dp),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = CyanAccent)
+                        ) {
+                            Icon(Icons.Default.Add, null, tint = Color.Black)
+                            Spacer(Modifier.width(8.dp))
+                            Text(
+                                "ADD SET",
+                                fontWeight = FontWeight.ExtraBold,
+                                color = Color.Black
+                            )
+                        }
+
+                        TextButton(
+                            onClick = { showCompleteDialog = true },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 8.dp)
                         ) {
                             Text(
-                                modifier = Modifier.weight(0.15f),
-                                text = stringResource(id = R.string.workout_screen_set_column),
-                                textAlign = TextAlign.Center,
-                                style = Typography.labelMedium,
-                                color = Color.Gray
+                                "FINALIZE EXERCISE",
+                                color = TextGray,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 12.sp
                             )
-                            Text(
-                                modifier = Modifier.weight(0.3f),
-                                text = stringResource(id = R.string.workout_screen_weight_column),
-                                textAlign = TextAlign.Center,
-                                style = Typography.labelMedium,
-                                color = Color.Gray
-                            )
-                            Text(
-                                modifier = Modifier.weight(0.3f),
-                                text = stringResource(id = R.string.workout_screen_reps_column),
-                                textAlign = TextAlign.Center,
-                                style = Typography.labelMedium,
-                                color = Color.Gray
-                            )
-                            Spacer(modifier = Modifier.weight(0.15f))
-                        }
-
-                        exercise.exerciseSets.forEach { set ->
-                            SetLine(
-                                modifier = Modifier.fillMaxWidth(),
-                                exercise = exercise,
-                                inputValueReps = set.reps,
-                                inputValueWeight = set.weight,
-                                isDeleteMode = isDeleteMode,
-                                isCompleted = set.isCompleted,
-                                onRepsChange = { _, newText -> onRepsChange(set.set, newText) },
-                                onWeightChange = { _, newText -> onWeightChange(set.set, newText) },
-                                onDeleteClick = { onRemoveSet(exercise.id, set.set) },
-                                onCompleteClick = { onCompleteSet(exercise.id, set.set) },
-                                setNumber = set.set,
-                            )
-                        }
-
-                        if (!isDeleteMode && !exercise.isCompleted) {
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Row {
-                                AddSetButton(
-                                    modifier = Modifier.weight(0.5f),
-                                    onAddSetClick = { onAddSetClick(exercise.id) }
-                                )
-                                FinishExerciseButton(
-                                    modifier = Modifier.weight(0.5f),
-                                    onFinishExercise = {
-                                        showCompleteDialog = true
-                                    }
-                                )
-                            }
                         }
                     }
                 }
             }
-        } else {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                horizontalAlignment = Alignment.Start
+        }
+    } else {
+        Card(
+            modifier = modifier
+                .fillMaxWidth()
+                .alpha(0.4f)
+                .clickable { onExpandedChange(!isExpanded) },
+            shape = RoundedCornerShape(20.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+        ) {
+            Row(
+                modifier = Modifier.padding(20.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(color = Color.Transparent),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Row(
-                        modifier = Modifier.weight(1f),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = exercise.name,
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.Gray
-                        )
-                    }
-                    Icon(
-                        imageVector = Icons.Default.Lock,
-                        contentDescription = "Lock",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                Icon(Icons.Default.Lock, null, tint = TextGray, modifier = Modifier.size(20.dp))
+                Spacer(Modifier.width(16.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        exercise.name,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        fontSize = 16.sp
+                    )
+                    Text(
+                        "${exercise.exerciseSets.size} Sets • ${exercise.exerciseSets.firstOrNull()?.reps ?: 0} Reps",
+                        color = TextGray,
+                        fontSize = 12.sp
                     )
                 }
+                Icon(
+                    imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                    contentDescription = null,
+                    tint = TextGray,
+                    modifier = Modifier.size(24.dp)
+                )
             }
         }
     }
@@ -702,8 +814,6 @@ fun FinishWorkoutButton(
     val progress = remember { Animatable(0f) }
     val hapticFeedback = LocalHapticFeedback.current
 
-    // 7. derivedStateOf para otimizar recomposição do botão:
-    // Evita reavaliar a lógica complexa a cada pequena mudança de UI se as condições não mudarem.
     val currentWorkout by rememberUpdatedState(workout)
     val canCompleteWorkout by remember {
         derivedStateOf {
@@ -787,7 +897,9 @@ fun FinishWorkoutButton(
         Text(
             text = when {
                 workout?.isCompleted == true -> stringResource(id = R.string.workout_screen_finish_button_completed)
-                (workout?.exercises?.count { it.isCompleted } ?: 0) < 3 -> "Realize pelo menos 3 exercícios"
+                (workout?.exercises?.count { it.isCompleted }
+                    ?: 0) < 3 -> "Realize pelo menos 3 exercícios"
+
                 !canCompleteWorkout -> stringResource(id = R.string.workout_screen_finish_button_fill_sets)
                 else -> stringResource(id = R.string.workout_screen_finish_button_hold)
             },
@@ -802,6 +914,7 @@ fun FinishWorkoutButton(
 @Composable
 fun InputTextBox(
     modifier: Modifier = Modifier,
+    label: String,
     isLocked: Boolean = false,
     inputValue: String,
     onValueChange: (String) -> Unit
@@ -819,55 +932,59 @@ fun InputTextBox(
         }
     }
 
-    Box(
-        modifier = modifier
-            .padding(start = 8.dp)
-            .background(
-                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                shape = RoundedCornerShape(4.dp)
-            )
-            .border(
-                width = 1.dp,
-                color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.5f),
-                shape = RoundedCornerShape(4.dp)
-            )
-            .padding(vertical = 4.dp, horizontal = 8.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        BasicTextField(
-            value = textFieldValue,
-            onValueChange = { newValue ->
-                if (newValue.text.all { it.isDigit() || it == '.' || it == ',' }) {
-                    textFieldValue = newValue
-                    onValueChange(newValue.text)
-                }
-            },
-            enabled = !isLocked,
-            textStyle = MaterialTheme.typography.titleMedium.copy(
-                color = if (isLocked) Color.Gray else MaterialTheme.colorScheme.onPrimary,
-                textAlign = TextAlign.Center
-            ),
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            decorationBox = { innerTextField ->
-                Box(
-                    modifier = Modifier.fillMaxWidth(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    if (textFieldValue.text.isEmpty()) {
-                        Text(
-                            text = "0",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.5f),
-                            textAlign = TextAlign.Center
-                        )
+    Column(modifier = modifier) {
+        Text(label, fontSize = 10.sp, color = TextGray, fontWeight = FontWeight.Bold)
+        Spacer(Modifier.height(8.dp))
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp)
+                .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(12.dp))
+                .border(
+                    width = 1.dp,
+                    color = if (isLocked) Color.Transparent else CyanAccent.copy(alpha = 0.2f),
+                    shape = RoundedCornerShape(12.dp)
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            BasicTextField(
+                value = textFieldValue,
+                onValueChange = { newValue ->
+                    if (newValue.text.all { it.isDigit() || it == '.' || it == ',' }) {
+                        textFieldValue = newValue
+                        onValueChange(newValue.text)
                     }
-                    innerTextField()
+                },
+                enabled = !isLocked,
+                textStyle = MaterialTheme.typography.titleLarge.copy(
+                    color = if (isLocked) Color.Gray else MaterialTheme.colorScheme.onSurface,
+                    textAlign = TextAlign.Center,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp
+                ),
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                decorationBox = { innerTextField ->
+                    Box(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (textFieldValue.text.isEmpty()) {
+                            Text(
+                                text = "0",
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
+                                textAlign = TextAlign.Center,
+                                fontSize = 18.sp
+                            )
+                        }
+                        innerTextField()
+                    }
                 }
-            }
-        )
+            )
+        }
     }
 }
 
@@ -1017,138 +1134,67 @@ fun SetLine(
             }
         )
     }
-    Card(
+
+    Column(
         modifier = modifier
-            .padding(vertical = Dimens.paddingMedium)
-            .height(65.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.background
-        )
+            .padding(vertical = Dimens.paddingSmall)
+            .clickable(enabled = !isCompleted) {
+                if (isDeleteMode) {
+                    if (isCompleted) {
+                        errorText = removeSavedSetError
+                        showErrorDialog = true
+                    } else {
+                        showDeleteDialog = true
+                    }
+                } else if (!isCompleted) {
+                    if (inputValueReps != "0" && inputValueReps != "" && inputValueWeight != "" && inputValueWeight != "0") {
+                        showCompleteDialog = true
+                    } else {
+                        errorText = saveIncompleteSetError
+                        showErrorDialog = true
+                    }
+                }
+            }
     ) {
         Row(
-            modifier = Modifier
-                .padding(vertical = Dimens.paddingExtraSmall, horizontal = Dimens.paddingExtraSmall)
-                .fillMaxSize()
-                .height(36.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.Bottom
         ) {
-            Text(
-                modifier = Modifier
-                    .weight(0.1f)
-                    .height(36.dp)
-                    .wrapContentSize(Alignment.Center),
-                text = setNumber.toString(),
-                textAlign = TextAlign.Center,
-                style = Typography.bodyLarge,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.secondary
+            InputTextBox(
+                label = "SET",
+                modifier = Modifier.weight(1f),
+                isLocked = true, // O número da série é fixo
+                inputValue = setNumber.toString(),
+                onValueChange = {}
             )
 
             InputTextBox(
-                modifier = Modifier
-                    .weight(0.15f)
-                    .height(50.dp),
+                label = "WEIGHT (KG)",
+                modifier = Modifier.weight(2f),
                 isLocked = isCompleted,
                 inputValue = inputValueWeight,
-                onValueChange = { onWeightChange(setNumber, it) }
+                onValueChange = {
+                    onWeightChange(setNumber, it)
+                }
             )
 
             InputTextBox(
-                modifier = Modifier
-                    .weight(0.15f)
-                    .height(50.dp),
+                label = "REPS",
+                modifier = Modifier.weight(2f),
                 isLocked = isCompleted,
                 inputValue = inputValueReps,
                 onValueChange = { onRepsChange(setNumber, it) }
             )
+        }
 
-            Box(
-                modifier = Modifier
-                    .weight(0.1f)
-                    .height(36.dp)
-                    .clip(CircleShape)
-                    .clickable {
-                        if (isDeleteMode) {
-                            if (isCompleted) {
-                                errorText = removeSavedSetError
-                                showErrorDialog = true
-                            } else {
-                                showDeleteDialog = true
-                            }
-                        } else {
-                            if (!isCompleted) {
-                                if (inputValueReps != "0" && inputValueReps != "" && inputValueWeight != "" && inputValueWeight != "0") {
-                                    showCompleteDialog = true
-                                } else {
-                                    errorText = saveIncompleteSetError
-                                    showErrorDialog = true
-                                }
-                            }
-                        }
-                    },
-                contentAlignment = Alignment.Center
+        if (isDeleteMode && !isCompleted) {
+            TextButton(
+                onClick = { showDeleteDialog = true },
+                modifier = Modifier.align(Alignment.End)
             ) {
-                if (isDeleteMode) {
-                    Icon(
-                        imageVector = Icons.Default.Delete,
-                        contentDescription = stringResource(id = R.string.content_description_delete),
-                        tint = Color.Gray,
-                        modifier = Modifier.size(32.dp)
-                    )
-                }
+                Text("Delete Set", color = MaterialTheme.colorScheme.error, fontSize = 12.sp)
             }
-        }
-    }
-}
-
-@Composable
-fun WorkoutProgressBar(modifier: Modifier = Modifier, workout: Workout?) {
-    val exercisesFinished = workout?.exercises?.count { it.isCompleted } ?: 0
-    val totalCount = workout?.exercises?.size ?: 1
-
-    val currentProgress = exercisesFinished.toFloat() / totalCount.toFloat()
-    val percentage = currentProgress * 100
-
-    val animatedProgress by animateFloatAsState(
-        targetValue = currentProgress,
-        animationSpec = ProgressIndicatorDefaults.ProgressAnimationSpec,
-        label = "WorkoutProgress"
-    )
-
-    Column(modifier = modifier.fillMaxWidth()) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.Bottom
-        ) {
-            Text(
-                text = "$exercisesFinished of $totalCount exercises done",
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-
-            Text(
-                text = "%.1f%%".format(percentage),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = CyanAccent
-            )
-        }
-        Spacer(modifier = Modifier.height(8.dp))
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(12.dp)
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.surfaceVariant)
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth(animatedProgress)
-                    .fillMaxSize()
-                    .background(CyanGradient)
-            )
         }
     }
 }
