@@ -24,7 +24,9 @@ private val LightColorScheme = lightColorScheme(
     onPrimary = Color.Black,
     onSecondary = Color.White,
     onBackground = LightText,
-    onSurface = LightText
+    onSurface = LightText,
+    tertiary = GrayDarkText,
+    outline = DarkOutlineText
 )
 
 private val DarkColorScheme = darkColorScheme(
@@ -36,7 +38,9 @@ private val DarkColorScheme = darkColorScheme(
     onPrimary = Color.White,
     onSecondary = Color.Black,
     onBackground = DarkText,
-    onSurface = DarkText
+    onSurface = DarkText,
+    tertiary = GrayWhiteText,
+    outline = LightOutlineText
 )
 @Composable
 fun Training_trackerTheme(

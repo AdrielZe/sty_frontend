@@ -23,8 +23,12 @@ val GreenGradient = Brush.linearGradient(
 
 val LightBrushes = CustomBrushes(
     primaryGradient = Brush.linearGradient(listOf(CyanDark, CyanAccent)),
-    backgroundGradient = Brush.verticalGradient(listOf(Color(0xFFF2F2F2), // Cinza muito claro (substitui o Branco)
-        Color(0xFFE0E0E0)))
+    backgroundGradient = Brush.verticalGradient(
+        listOf(
+            Color(0xFFFDFDFD), // Off-white
+            Color(0xFFF2F2F2)  // O cinza claro que você usou, mas na base
+        )
+    )
 )
 
 val DarkBrushes = CustomBrushes(
@@ -43,6 +47,14 @@ val LightSurface = Color(0xFFF0F4F8)
 val LightText = Color(0xFF1A1A1A)
 
 // Modo Escuro
-val DarkBackground = Color(0xFF121212)
+val DarkBackground = Color(0xFF131319)
 val DarkSurface = Color(0xFF1E1E24)
 val DarkText = Color(0xFFE0E0E0)
+
+val GrayWhiteText = Color(0xFFcfd1cf)
+
+val GrayDarkText = Color(0xFF323332)
+
+val LightOutlineText = Color(0xFF94A3B8)
+
+val DarkOutlineText = Color(0xFF94A3B8 )

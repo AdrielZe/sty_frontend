@@ -93,16 +93,6 @@ fun HomeScreen(
                 onProfileClick = { /* Abrir Perfil/Configurações */ }
             )
         },
-        bottomBar = {
-            HomeBottomBar(
-                selectedTab = selectedBottomTab,
-                onTabSelected = {
-                    selectedBottomTab = it
-                    if (it == 1) onNavigateToRegisteredWorkouts()
-                    if (it == 2) onNavigateToWorkoutsHistory()
-                }
-            )
-        }
     ) { innerPadding ->
         Column(
             modifier = modifier
@@ -441,7 +431,7 @@ fun MainGradientButton(
             )
             .clip(RoundedCornerShape(32.dp))
             .background(
-                brush = AppTheme.brushes.primaryGradient
+                brush = CyanGradient
             )
             .clickable { onClick() },
         contentAlignment = Alignment.Center
@@ -696,68 +686,68 @@ fun EmptyWorkoutCard(modifier: Modifier = Modifier) {
     }
 }
 
-@Composable
-fun HomeBottomBar(
-    selectedTab: Int,
-    onTabSelected: (Int) -> Unit
-) {
-    NavigationBar(
-        containerColor = MaterialTheme.colorScheme.surface,
-        tonalElevation = 8.dp
-    ) {
-        NavigationBarItem(
-            icon = {
-                Icon(
-                    Icons.Default.Home,
-                    contentDescription = stringResource(id = R.string.content_description_home)
-                )
-            },
-            label = { Text(stringResource(id = R.string.home_bottom_bar_home)) },
-            selected = selectedTab == 0,
-            onClick = { onTabSelected(0) },
-            colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = CyanAccent,
-                selectedTextColor = CyanAccent,
-                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                indicatorColor = CyanAccent.copy(alpha = 0.1f)
-            )
-        )
-        NavigationBarItem(
-            icon = {
-                Icon(
-                    Icons.Default.List,
-                    contentDescription = stringResource(id = R.string.content_description_registered_workouts)
-                )
-            },
-            label = { Text(stringResource(id = R.string.home_bottom_bar_workouts)) },
-            selected = selectedTab == 1,
-            onClick = { onTabSelected(1) },
-            colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = CyanAccent,
-                selectedTextColor = CyanAccent,
-                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                indicatorColor = CyanAccent.copy(alpha = 0.1f)
-            )
-        )
-        NavigationBarItem(
-            icon = {
-                Icon(
-                    Icons.Default.List,
-                    contentDescription = stringResource(id = R.string.content_description_history)
-                )
-            },
-            label = { Text(stringResource(id = R.string.home_bottom_bar_history)) },
-            selected = selectedTab == 2,
-            onClick = { onTabSelected(2) },
-            colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = CyanAccent,
-                selectedTextColor = CyanAccent,
-                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                indicatorColor = CyanAccent.copy(alpha = 0.1f)
-            )
-        )
-    }
-}
+//@Composable
+//fun HomeBottomBar(
+//    selectedTab: Int,
+//    onTabSelected: (Int) -> Unit
+//) {
+//    NavigationBar(
+//        containerColor = MaterialTheme.colorScheme.surface,
+//        tonalElevation = 8.dp
+//    ) {
+//        NavigationBarItem(
+//            icon = {
+//                Icon(
+//                    Icons.Default.Home,
+//                    contentDescription = stringResource(id = R.string.content_description_home)
+//                )
+//            },
+//            label = { Text(stringResource(id = R.string.home_bottom_bar_home)) },
+//            selected = selectedTab == 0,
+//            onClick = { onTabSelected(0) },
+//            colors = NavigationBarItemDefaults.colors(
+//                selectedIconColor = CyanAccent,
+//                selectedTextColor = CyanAccent,
+//                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+//                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+//                indicatorColor = CyanAccent.copy(alpha = 0.1f)
+//            )
+//        )
+//        NavigationBarItem(
+//            icon = {
+//                Icon(
+//                    Icons.Default.List,
+//                    contentDescription = stringResource(id = R.string.content_description_registered_workouts)
+//                )
+//            },
+//            label = { Text(stringResource(id = R.string.home_bottom_bar_workouts)) },
+//            selected = selectedTab == 1,
+//            onClick = { onTabSelected(1) },
+//            colors = NavigationBarItemDefaults.colors(
+//                selectedIconColor = CyanAccent,
+//                selectedTextColor = CyanAccent,
+//                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+//                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+//                indicatorColor = CyanAccent.copy(alpha = 0.1f)
+//            )
+//        )
+//        NavigationBarItem(
+//            icon = {
+//                Icon(
+//                    Icons.Default.List,
+//                    contentDescription = stringResource(id = R.string.content_description_history)
+//                )
+//            },
+//            label = { Text(stringResource(id = R.string.home_bottom_bar_history)) },
+//            selected = selectedTab == 2,
+//            onClick = { onTabSelected(2) },
+//            colors = NavigationBarItemDefaults.colors(
+//                selectedIconColor = CyanAccent,
+//                selectedTextColor = CyanAccent,
+//                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+//                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+//                indicatorColor = CyanAccent.copy(alpha = 0.1f)
+//            )
+//        )
+//    }
+//}

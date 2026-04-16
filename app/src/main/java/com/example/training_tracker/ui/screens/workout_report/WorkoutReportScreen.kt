@@ -59,42 +59,6 @@ fun WorkoutReportScreen(
                 )
             )
         },
-        bottomBar = {
-            NavigationBar(
-                tonalElevation = 8.dp
-            ) {
-                NavigationBarItem(
-                    selected = true,
-                    onClick = { },
-                    icon = { Icon(Icons.Default.FitnessCenter, contentDescription = null) },
-                    label = { Text("Treino") },
-                    colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = CyanAccent,
-                        selectedTextColor = CyanAccent,
-                        unselectedIconColor = Color.Gray,
-                        indicatorColor = CyanAccent.copy(alpha = 0.1f)
-                    )
-                )
-                NavigationBarItem(
-                    selected = false,
-                    onClick = { },
-                    icon = { Icon(Icons.Default.Leaderboard, contentDescription = null) },
-                    label = { Text("Estatísticas") }
-                )
-                NavigationBarItem(
-                    selected = false,
-                    onClick = { },
-                    icon = { Icon(Icons.Default.EmojiEvents, contentDescription = null) },
-                    label = { Text("Desafios") }
-                )
-                NavigationBarItem(
-                    selected = false,
-                    onClick = { },
-                    icon = { Icon(Icons.Default.Person, contentDescription = null) },
-                    label = { Text("Perfil") }
-                )
-            }
-        }
     ) { paddingValues ->
         LazyColumn(
             modifier = Modifier
