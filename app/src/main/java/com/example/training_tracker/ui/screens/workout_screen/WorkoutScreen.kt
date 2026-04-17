@@ -6,6 +6,7 @@ import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -78,7 +79,10 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.modifier.modifierLocalConsumer
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
@@ -91,6 +95,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.training_tracker.R
 import com.example.training_tracker.data.models.Exercise
+import com.example.training_tracker.data.models.MuscleGroups
 import com.example.training_tracker.data.models.Workout
 import com.example.training_tracker.data.models.extensions.isValidToComplete
 import com.example.training_tracker.ui.screens.registered_workouts.TextGray
@@ -299,9 +304,11 @@ fun WorkoutTopBar(
         label = "TopBarProgress"
     )
 
-    Column(modifier = Modifier
-        .fillMaxWidth()
-        .background(MaterialTheme.colorScheme.surface)) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.surface)
+    ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -381,6 +388,15 @@ fun ExerciseCard(
     var errorText by rememberSaveable { mutableStateOf("") }
 
     val totalSets = exercise.exerciseSets.size
+    val cardImage = when (exercise.muscleGroup) {
+        MuscleGroups.CHEST -> R.drawable.chest
+        MuscleGroups.BACK -> R.drawable.back
+        MuscleGroups.LEGS -> R.drawable.legs
+        MuscleGroups.ABS -> R.drawable.abs
+        MuscleGroups.BICEPS -> R.drawable.biceps
+        MuscleGroups.TRICEPS -> R.drawable.triceps
+        else -> R.drawable.ic_launcher_background
+    }
 
     LaunchedEffect(exercise.exerciseSets.isEmpty()) {
         if (exercise.exerciseSets.isEmpty()) {
@@ -451,7 +467,11 @@ fun ExerciseCard(
                 .fillMaxWidth()
                 .clickable { onExpandedChange(!isExpanded) },
             shape = RoundedCornerShape(20.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(
+                    alpha = 0.5f
+                )
+            )
         ) {
             Column(modifier = Modifier.padding(20.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -469,6 +489,7 @@ fun ExerciseCard(
                         )
                     }
                     Spacer(Modifier.width(16.dp))
+
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
                             exercise.name,
@@ -485,7 +506,12 @@ fun ExerciseCard(
 
                     Box {
                         IconButton(onClick = { isMenuExpanded = true }) {
-                            Icon(Icons.Default.MoreVert, null, tint = TextGray, modifier = Modifier.size(24.dp))
+                            Icon(
+                                Icons.Default.MoreVert,
+                                null,
+                                tint = TextGray,
+                                modifier = Modifier.size(24.dp)
+                            )
                         }
                         DropdownMenu(
                             expanded = isMenuExpanded,
@@ -518,8 +544,19 @@ fun ExerciseCard(
                 }
 
                 AnimatedVisibility(visible = isExpanded) {
-                    Column {
-                        Spacer(Modifier.height(16.dp))
+                    Spacer(Modifier.height(16.dp))
+                    Column (modifier = Modifier.fillMaxWidth()) {
+                        Image(
+                            modifier = Modifier
+                                .size(150.dp)
+                                .clip(CircleShape)
+                                .align(Alignment.CenterHorizontally)
+                                .background(color = Color.White)
+                                .border(width = 2.dp, color = CyanAccent),
+                            painter = painterResource(id = cardImage),
+                            contentScale = ContentScale.Fit,
+                            contentDescription = null
+                        )
                         exercise.exerciseSets.forEach { set ->
                             SetLine(
                                 modifier = Modifier.fillMaxWidth(),
@@ -645,20 +682,42 @@ fun ExerciseCard(
                 }
 
                 Column {
-                    Spacer(Modifier.height(24.dp))
+                    Spacer(Modifier.height(4.dp))
 
-                    Surface(
-                        color = CyanAccent.copy(alpha = 0.1f),
-                        shape = RoundedCornerShape(8.dp)
+                    Row(
+                        modifier = Modifier,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        val activeSet =
-                            exercise.exerciseSets.firstOrNull { !it.isCompleted }?.set ?: 1
-                        Text(
-                            "CURRENT SET: $activeSet",
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                            color = CyanAccent,
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Bold
+                        Surface(
+                            modifier = Modifier
+                                .weight(1f),
+                            color = CyanAccent.copy(alpha = 0.1f),
+                            shape = RoundedCornerShape(8.dp),
+                        ) {
+                            val activeSet =
+                                exercise.exerciseSets.firstOrNull { !it.isCompleted }?.set ?: 1
+                            Text(
+                                "CURRENT SET: $activeSet",
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                color = CyanAccent,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+
+                        Spacer(Modifier.width(12.dp))
+
+                        Image(
+                            modifier = Modifier
+                                .height(150.dp)
+                                .width(300.dp)
+                                .clip(CircleShape)
+                                .weight(1f)
+                                .border(width = 1.dp, color = CyanAccent)
+                                .background(color = Color.White),
+                            painter = painterResource(id = cardImage),
+                            contentScale = ContentScale.Fit,
+                            contentDescription = null
                         )
                     }
 

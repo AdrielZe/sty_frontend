@@ -1,0 +1,7 @@
+abdomen
+biceps
+costas
+ombro
+peito
+perna
+triceps

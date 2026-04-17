@@ -33,6 +33,7 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -44,7 +45,9 @@ import com.example.training_tracker.data.models.Workout
 import com.example.training_tracker.data.models.mocks.availableExercises
 import com.example.training_tracker.ui.screens.home.MainGradientButton
 import com.example.training_tracker.ui.theme.CyanAccent
+import com.example.training_tracker.ui.theme.CyanGradient
 import com.example.training_tracker.ui.theme.Dimens
+import kotlin.math.max
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -394,13 +397,35 @@ fun ExerciseDetailItem(
 
             Spacer(modifier = Modifier.width(Dimens.paddingMedium))
 
-            Text(
-                text = exercise.name,
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.Medium,
-                color = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.weight(1f)
-            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = exercise.name,
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.weight(1f)
+                )
+
+                Surface(
+                    modifier = Modifier.padding(4.dp),
+                    color = CyanAccent,
+                    shape = RoundedCornerShape(4.dp)
+                ) {
+                    Text(
+                        modifier = Modifier
+                            .padding(4.dp).weight(1f),
+                        text = exercise.muscleGroup.toString(),
+                        style = MaterialTheme.typography.labelSmall,
+                        maxLines = 1,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+            }
 
             if (isEditMode) {
                 Box {
@@ -476,7 +501,7 @@ fun AddExerciseSelectionDialog(
         text = {
             Column(modifier = Modifier
                 .fillMaxWidth()
-                .height(400.dp)) {
+                .height(500.dp)) {
                 OutlinedTextField(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
@@ -532,11 +557,32 @@ fun AddExerciseSelectionDialog(
                             shape = RoundedCornerShape(8.dp),
                             color = Color.Transparent
                         ) {
-                            Text(
-                                text = exercise.name,
-                                modifier = Modifier.padding(12.dp),
-                                style = MaterialTheme.typography.bodyLarge
-                            )
+                            Row(modifier = Modifier
+                                .fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+//                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(
+                                    text = exercise.name,
+                                    modifier = Modifier.padding(12.dp).weight(1f),
+                                    style = MaterialTheme.typography.bodyLarge
+                                )
+                                Surface(
+                                    modifier = Modifier.padding(4.dp),
+                                    color = CyanAccent,
+                                    shape = RoundedCornerShape(4.dp)
+                                ) {
+                                    Text(
+                                        modifier = Modifier
+                                            .padding(4.dp).weight(1f),
+                                        text = exercise.muscleGroup.toString(),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        maxLines = 1,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                }
+                            }
                         }
                         HorizontalDivider(
                             color = MaterialTheme.colorScheme.outlineVariant.copy(

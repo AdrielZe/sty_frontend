@@ -7,9 +7,12 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.training_tracker.GymTrackerApplication
 import com.example.training_tracker.data.models.Exercise
+import com.example.training_tracker.data.models.MuscleGroups
 import com.example.training_tracker.data.models.Workout
 import com.example.training_tracker.data.repository.ExerciseRepository
 import com.example.training_tracker.data.repository.WorkoutRepository
+import com.example.training_tracker.domain.classifiers.ExerciseClassifier
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -24,7 +27,8 @@ import java.time.DayOfWeek
 
 class CreateWorkoutViewModel(
     private val workoutRepository: WorkoutRepository,
-    private val exerciseRepository: ExerciseRepository
+    private val exerciseRepository: ExerciseRepository,
+    private val classifier: ExerciseClassifier
 ) : ViewModel() {
 
     private val _draftState = MutableStateFlow(CreateWorkoutUiState())
@@ -46,18 +50,19 @@ class CreateWorkoutViewModel(
 
     fun updateWorkoutName(name: String) {
         _draftState.update {
-            it.copy(workoutName = name) 
+            it.copy(workoutName = name)
         }
     }
 
     fun updateSelectedDay(day: DayOfWeek) {
         _draftState.update {
-            it.copy(selectedDay = day) 
+            it.copy(selectedDay = day)
         }
     }
 
     fun addExercise(exerciseName: String) {
         if (exerciseName.isBlank()) return
+
         val nameFormatted = exerciseName
             .trim()
             .split("\\s+".toRegex())
@@ -65,26 +70,59 @@ class CreateWorkoutViewModel(
                 word.lowercase().replaceFirstChar { it.uppercase() }
             }
 
-        // 1. Verifica se esse exercício já existe na lista do banco de dados
         val existingExercise = uiState.value.availableExercises.find {
             it.name.equals(nameFormatted, ignoreCase = true)
         }
 
-        // 2. Se for novo, salva permanentemente usando o repositório
         if (existingExercise == null) {
-            viewModelScope.launch {
+            // É um exercício novo. Vamos consultar a IA.
+            viewModelScope.launch(Dispatchers.Default) {
                 try {
-                    val newExerciseToDB = Exercise(name = nameFormatted)
+                    val predictedMuscleKey = classifier.classify(nameFormatted)
+
+                    println(" STRING DA IA EH: $predictedMuscleKey")
+                    val predictedMuscleKeyEnum = when (predictedMuscleKey) {
+                        "peito" -> MuscleGroups.CHEST
+                        "costas" -> MuscleGroups.BACK
+                        "perna" -> MuscleGroups.LEGS
+                        "ombro" -> MuscleGroups.SHOULDERS
+                        "biceps" -> MuscleGroups.BICEPS
+                        "triceps" -> MuscleGroups.TRICEPS
+                        "abdomen" -> MuscleGroups.ABS
+                        else -> MuscleGroups.ABS // Fallback se o modelo retornar nulo
+                    }
+
+                    // Prepara o exercício com a predição da IA
+                    val newExerciseToDB = Exercise(
+                        name = nameFormatted,
+                        muscleGroup = predictedMuscleKeyEnum
+                    )
+
+                    // Salva no banco de dados local
                     exerciseRepository.addExercise(newExerciseToDB)
-                } catch (e: Exception) {
+
+                    println("IA PREVIU O MÚSCULO: $predictedMuscleKeyEnum para $nameFormatted")
+
+                    // Adiciona à lista da tela (draft)
+                    val exerciseToAdd = newExerciseToDB.copy(id = java.util.UUID.randomUUID().toString())
+                    _draftState.update {
+                        it.copy(exercises = it.exercises + exerciseToAdd)
+                    }
+
+                }catch (e: Exception) {
+                    // ADICIONE ESTAS DUAS LINHAS:
+                    e.printStackTrace()
+                    android.util.Log.e("CriarTreino", "ERRO AO SALVAR EXERCICIO: ", e)
+
                     _uiEvent.send("Erro ao salvar novo exercício: ${e.message}")
                 }
             }
-        }
-
-        val exerciseToAdd = (existingExercise ?: Exercise(name = nameFormatted)).copy(id = java.util.UUID.randomUUID().toString())
-        _draftState.update {
-            it.copy(exercises = it.exercises + exerciseToAdd)
+        } else {
+            // O exercício já existe no banco, apenas reaproveitamos
+            val exerciseToAdd = existingExercise.copy(id = java.util.UUID.randomUUID().toString())
+            _draftState.update {
+                it.copy(exercises = it.exercises + exerciseToAdd)
+            }
         }
     }
 
@@ -122,6 +160,8 @@ class CreateWorkoutViewModel(
                 try {
                     workoutRepository.addWorkout(newWorkout)
                 } catch (e: Exception) {
+                    e.printStackTrace()
+                    android.util.Log.e("TREINO", "ERRO O TREINO: ", e)
                     _uiEvent.send("Erro ao salvar o treino: ${e.message}")
                 }
             }
@@ -137,7 +177,8 @@ class CreateWorkoutViewModel(
                 val application = (this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as GymTrackerApplication)
                 val workoutRepository = application.container.workoutRepository
                 val exerciseRepository = application.container.exerciseRepository
-                CreateWorkoutViewModel(workoutRepository = workoutRepository, exerciseRepository = exerciseRepository)
+                val classifier = application.container.exerciseClassifier
+                CreateWorkoutViewModel(workoutRepository = workoutRepository, exerciseRepository = exerciseRepository, classifier= classifier)
             }
         }
     }

@@ -8,6 +8,7 @@ import androidx.room.PrimaryKey
 data class Exercise (
     @PrimaryKey @ColumnInfo(name = "id") val id: String = java.util.UUID.randomUUID().toString(),
     @ColumnInfo(name = "name") val name: String,
+    @ColumnInfo(name = "muscleGroup") val muscleGroup: MuscleGroups? = null,
     @ColumnInfo(name = "exerciseSets") val exerciseSets: List<ExerciseSet> = listOf(ExerciseSet(1, "", "")),
     @ColumnInfo(name = "isDefault") val isDefault: Boolean = false,
     @ColumnInfo(name = "isCompleted") val isCompleted: Boolean = false,
