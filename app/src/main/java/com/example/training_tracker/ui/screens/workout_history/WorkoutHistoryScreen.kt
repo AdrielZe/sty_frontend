@@ -39,6 +39,8 @@ import java.util.*
 @Composable
 fun WorkoutHistoryScreen(
     uiState: WorkoutHistoryUiState,
+    onDateSelected: (LocalDate?) -> Unit,
+    onMoveMonth: (Long) -> Unit,
     onSearchQueryChange: (String) -> Unit,
     onSortOrderChange: (SortOrder) -> Unit,
     onNavigateBack: () -> Unit,
@@ -82,7 +84,13 @@ fun WorkoutHistoryScreen(
         ) {
             // Seção do Calendário
             item {
-                HistoryCalendarCard(uiState.savedWorkouts)
+                HistoryCalendarCard(
+                    savedWorkouts = uiState.savedWorkouts,
+                    currentMonthDate = uiState.currentCalendarMonth,
+                    selectedDate = uiState.selectedDate,
+                    onDateSelected = onDateSelected,
+                    onMoveMonth = onMoveMonth
+                )
             }
 
             // Filtros Rápidos
@@ -119,8 +127,16 @@ fun WorkoutHistoryScreen(
 }
 
 @Composable
-fun HistoryCalendarCard(savedWorkouts: List<WorkoutHistory>) {
-    val currentMonth = remember { LocalDate.now().format(DateTimeFormatter.ofPattern("MMMM yyyy", Locale.ENGLISH)) }
+fun HistoryCalendarCard(
+    savedWorkouts: List<WorkoutHistory>,
+    currentMonthDate: LocalDate,
+    selectedDate: LocalDate?,
+    onDateSelected: (LocalDate?) -> Unit,
+    onMoveMonth: (Long) -> Unit
+) {
+    val monthTitle = currentMonthDate.format(DateTimeFormatter.ofPattern("MMMM yyyy", Locale.ENGLISH))
+    val daysInMonth = currentMonthDate.lengthOfMonth()
+    val firstDayOfMonth = currentMonthDate.withDayOfMonth(1).dayOfWeek.value % 7
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -133,10 +149,10 @@ fun HistoryCalendarCard(savedWorkouts: List<WorkoutHistory>) {
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(currentMonth, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface, fontSize = 20.sp)
+                Text(monthTitle, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface, fontSize = 20.sp)
                 Row {
-                    IconButton(onClick = {}) { Icon(Icons.Default.ChevronLeft, null, tint = MaterialTheme.colorScheme.onSurface) }
-                    IconButton(onClick = {}) { Icon(Icons.Default.ChevronRight, null, tint = MaterialTheme.colorScheme.onSurface) }
+                    IconButton(onClick = { onMoveMonth(-1) }) { Icon(Icons.Default.ChevronLeft, null, tint = MaterialTheme.colorScheme.onSurface) }
+                    IconButton(onClick = { onMoveMonth(1) }) { Icon(Icons.Default.ChevronRight, null, tint = MaterialTheme.colorScheme.onSurface) }
                 }
             }
 
@@ -151,29 +167,45 @@ fun HistoryCalendarCard(savedWorkouts: List<WorkoutHistory>) {
             
             Spacer(Modifier.height(12.dp))
             
-            // Grid simplificada da semana atual para o exemplo
-            val firstDayOfWeek = remember { LocalDate.now().with(java.time.temporal.TemporalAdjusters.previousOrSame(java.time.DayOfWeek.SUNDAY)) }
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                (0..6).forEach { i ->
-                    val date = firstDayOfWeek.plusDays(i.toLong())
-                    val isWorkoutDay = savedWorkouts.any { it.completionDate == date }
-                    val isToday = date == LocalDate.now()
+            // Grid de dias dinâmica
+            var currentDay = 1
+            for (week in 0..5) {
+                if (currentDay > daysInMonth) break
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    for (dayOfWeek in 0..6) {
+                        if ((week == 0 && dayOfWeek < firstDayOfMonth) || currentDay > daysInMonth) {
+                            Spacer(Modifier.size(32.dp))
+                        } else {
+                            val date = currentMonthDate.withDayOfMonth(currentDay)
+                            val isWorkoutDay = savedWorkouts.any { it.completionDate == date }
+                            val isSelected = selectedDate == date
+                            val isToday = date == LocalDate.now()
 
-                    Box(
-                        modifier = Modifier
-                            .size(32.dp)
-                            .clip(CircleShape)
-                            .background(if (isWorkoutDay) CyanAccent else if (isToday) CyanAccent.copy(alpha = 0.2f) else Color.Transparent),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            date.dayOfMonth.toString(),
-                            color = if (isWorkoutDay) Color.Black else MaterialTheme.colorScheme.onSurface,
-                            fontSize = 12.sp,
-                            fontWeight = if (isWorkoutDay) FontWeight.Bold else FontWeight.Normal
-                        )
+                            Box(
+                                modifier = Modifier
+                                    .size(32.dp)
+                                    .clip(CircleShape)
+                                    .background(
+                                        if (isSelected) CyanAccent 
+                                        else if (isWorkoutDay) CyanAccent.copy(alpha = 0.3f)
+                                        else if (isToday) CyanAccent.copy(alpha = 0.1f) 
+                                        else Color.Transparent
+                                    )
+                                    .clickable { onDateSelected(date) },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    currentDay.toString(),
+                                    color = if (isSelected) Color.Black else MaterialTheme.colorScheme.onSurface,
+                                    fontSize = 12.sp,
+                                    fontWeight = if (isWorkoutDay || isSelected) FontWeight.Bold else FontWeight.Normal
+                                )
+                            }
+                            currentDay++
+                        }
                     }
                 }
+                Spacer(Modifier.height(8.dp))
             }
         }
     }
@@ -277,8 +309,6 @@ fun MomentumCard(count: Int) {
             .clip(RoundedCornerShape(24.dp))
             .background(MaterialTheme.colorScheme.surfaceVariant)
     ) {
-        // Imagem de Fundo
-        // Para usar, basta descomentar e substituir R.drawable.momentum_bg pela sua imagem
         Image(
             painter = painterResource(id = R.drawable.strong_6k),
             contentDescription = null,

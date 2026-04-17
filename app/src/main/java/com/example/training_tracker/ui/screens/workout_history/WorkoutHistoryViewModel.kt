@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import java.time.LocalDate
 
 class WorkoutHistoryViewModel(
     private val workoutHistoryRepository: WorkoutHistoryRepository,
@@ -25,14 +26,19 @@ class WorkoutHistoryViewModel(
 
     private val _searchQuery = MutableStateFlow("")
     private val _sortOrder = MutableStateFlow(SortOrder.DATE_DESC)
+    private val _selectedDate = MutableStateFlow<LocalDate?>(null)
+    private val _currentCalendarMonth = MutableStateFlow<LocalDate>(LocalDate.now().withDayOfMonth(1))
 
     val uiState: StateFlow<WorkoutHistoryUiState> = combine(
         workoutHistoryRepository.workoutHistories,
         _searchQuery,
-        _sortOrder
-    ) { history, query, sort ->
+        _sortOrder,
+        _selectedDate,
+        _currentCalendarMonth
+    ) { history, query, sort, selectedDate, currentMonth ->
         val filteredList = history.filter {
-            it.name.contains(query, ignoreCase = true)
+            it.name.contains(query, ignoreCase = true) &&
+                    (selectedDate == null || it.completionDate == selectedDate)
         }
 
         val sortedList = when (sort) {
@@ -45,7 +51,9 @@ class WorkoutHistoryViewModel(
         WorkoutHistoryUiState(
             savedWorkouts = sortedList,
             searchQuery = query,
-            sortOrder = sort
+            sortOrder = sort,
+            selectedDate = selectedDate,
+            currentCalendarMonth = currentMonth
         )
     }.stateIn(
         scope = viewModelScope,
@@ -59,6 +67,14 @@ class WorkoutHistoryViewModel(
 
     fun onSortOrderChange(newSortOrder: SortOrder) {
         _sortOrder.value = newSortOrder
+    }
+
+    fun onDateSelected(date: LocalDate?) {
+        _selectedDate.value = if (_selectedDate.value == date) null else date
+    }
+
+    fun onMoveMonth(delta: Long) {
+        _currentCalendarMonth.update { it.plusMonths(delta) }
     }
 
     companion object {

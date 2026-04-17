@@ -1,6 +1,8 @@
 package com.example.training_tracker.ui.screens.workout_report
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -19,12 +21,16 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.training_tracker.R
 import com.example.training_tracker.ui.theme.CyanAccent
 import com.example.training_tracker.ui.theme.CyanGradient
 
@@ -168,6 +174,17 @@ fun HeroSection(
 fun GamificationCard(
     uiState: WorkoutReportUiState
 ) {
+    val image = when {
+        uiState.totalWeightLiftedInfo?.value == null -> R.drawable.confused_0kg
+
+        uiState.totalWeightLiftedInfo.value >= 10000.0 -> R.drawable.strong_5k
+        uiState.totalWeightLiftedInfo.value >= 6000.0 -> R.drawable.strong_4k
+        uiState.totalWeightLiftedInfo.value >= 4200.0 -> R.drawable.strong_3k
+        uiState.totalWeightLiftedInfo.value >= 3000.0 -> R.drawable.lifting_2kg
+        uiState.totalWeightLiftedInfo.value >= 1500.0 -> R.drawable.feather_1kg
+
+        else -> R.drawable.confused_0kg
+    }
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
@@ -183,7 +200,14 @@ fun GamificationCard(
                     .background(Color.White.copy(alpha = 0.05f), RoundedCornerShape(14.dp)),
                 contentAlignment = Alignment.Center
             ) {
-                Text("🐘", fontSize = 28.sp)
+                Image(
+                    painter = painterResource(id = image), // A variável 'image' do seu 'when'
+                    contentDescription = "Achievement Image",
+                    modifier = Modifier
+                        .size(100.dp) // Defina um tamanho
+                        .clip(RoundedCornerShape(12.dp)), // Arredonda os cantos
+                    contentScale = ContentScale.Crop
+                )
             }
             Spacer(Modifier.width(16.dp))
             Column {
@@ -193,11 +217,10 @@ fun GamificationCard(
                 )
                 Text(
                     buildString {
-                        append("Você levantou ")
+                        append("You lifted ")
                         append(uiState.totalWeightLiftedInfo?.value)
-                        append(" no total! Isso equivale ao peso de um ")
+                        append(", ")
                         append(uiState.totalWeightLiftedInfo?.comparisonText)
-                        append("!")
                     },
                     style = MaterialTheme.typography.bodySmall.copy(color = Color.LightGray, lineHeight = 18.sp)
                 )

@@ -140,6 +140,7 @@ fun DragAndDropContainer(
 fun RegisteredWorkoutsScreen(
     onNavigateBack: () -> Unit,
     onWorkoutClick: (String) -> Unit,
+    onCreateWorkoutClick: () -> Unit,
     viewModel: RegisteredWorkoutsViewModel = viewModel(factory = RegisteredWorkoutsViewModel.Factory)
 ) {
     val uiState = viewModel.uiState.collectAsState().value
@@ -184,7 +185,7 @@ fun RegisteredWorkoutsScreen(
                         }
                     },
                     actions = {
-                        IconButton(onClick = { /* Mais opções */ }) {
+                        IconButton(onClick = { }) {
                             Icon(Icons.Default.MoreVert, contentDescription = null, tint = CyanAccent)
                         }
                     },
@@ -193,7 +194,7 @@ fun RegisteredWorkoutsScreen(
             },
             floatingActionButton = {
                 FloatingActionButton(
-                    onClick = { /* Adicionar treino */ },
+                    onClick = {onCreateWorkoutClick() },
                     containerColor = Color.Transparent,
                     contentColor = Color.Black,
                     shape = CircleShape,
@@ -235,7 +236,7 @@ fun RegisteredWorkoutsScreen(
                                 isHighlighted = isOver
                             ) {
                                 if (workouts.isEmpty()) {
-                                    NoActivityCard()
+                                    NoActivityCard(onCreateWorkoutClick)
                                 } else {
                                     workouts.forEach { workout ->
                                         DragTarget(data = workout) {
@@ -519,7 +520,9 @@ fun RestDayCard(icon: ImageVector) {
 }
 
 @Composable
-fun NoActivityCard() {
+fun NoActivityCard(
+    onCreateWorkoutClick: () -> Unit
+) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -529,7 +532,7 @@ fun NoActivityCard() {
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             IconButton(
-                onClick = { /* Add */ },
+                onClick = { onCreateWorkoutClick() },
                 modifier = Modifier.background(Color.Transparent, CircleShape)
             ) {
                 Icon(Icons.Default.Add, contentDescription = null, tint =  MaterialTheme.colorScheme.outline.copy(alpha = 0.5f))

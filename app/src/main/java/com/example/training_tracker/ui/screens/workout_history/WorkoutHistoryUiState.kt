@@ -2,11 +2,14 @@ package com.example.training_tracker.ui.screens.workout_history
 
 import com.example.training_tracker.data.models.Workout
 import com.example.training_tracker.data.models.WorkoutHistory
+import java.time.LocalDate
 
 data class WorkoutHistoryUiState(
     val savedWorkouts: List<WorkoutHistory> = emptyList(),
     val searchQuery: String = "",
-    val sortOrder: SortOrder = SortOrder.DATE_DESC
+    val sortOrder: SortOrder = SortOrder.DATE_DESC,
+    val selectedDate: LocalDate? = null,
+    val currentCalendarMonth: LocalDate = LocalDate.now().withDayOfMonth(1)
 )
 
 enum class SortOrder {

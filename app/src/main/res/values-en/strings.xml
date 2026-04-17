@@ -235,7 +235,7 @@
         <item>A milestone in your journey! 🗺️</item>
     </string-array>
 
-    <string name="weight_comparison_template">You lifted the equivalent of %1$s!</string>
+    <string name="weight_comparison_template">the equivalent of %1$s!</string>
 
     <string-array name="weight_comparison_0">
         <item>Total focus on technique and calisthenics! 🤸</item>

@@ -18,7 +18,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.training_tracker.data.routes.Routes
@@ -32,7 +31,6 @@ import com.example.training_tracker.ui.screens.workout_details.WorkoutDetailsVie
 import com.example.training_tracker.ui.screens.workout_history.WorkoutHistoryScreen
 import com.example.training_tracker.ui.screens.workout_history.WorkoutHistoryViewModel
 import com.example.training_tracker.ui.screens.workout_report.WorkoutReportScreen
-import com.example.training_tracker.ui.screens.workout_report.WorkoutReportUiState
 import com.example.training_tracker.ui.screens.workout_report.WorkoutReportViewModel
 import com.example.training_tracker.ui.screens.workout_screen.WorkoutScreen
 import com.example.training_tracker.ui.screens.workout_screen.WorkoutViewModel
@@ -55,14 +53,11 @@ fun GymTrackerNavHost() {
 
     Scaffold(
         bottomBar = {
-            // Só mostra a barra se a rota atual estiver na lista
             if (currentRoute in routesWithBottomBar) {
                 GroffitBottomNavBar(
                     currentRoute = currentRoute ?: Routes.Home.name,
                     onNavigate = { routeName ->
                         navController.navigate(routeName) {
-                            // Navega para o destino inicial do grafo para evitar
-                            // o acúmulo de telas na pilha enquanto o usuário troca de abas
                             popUpTo(navController.graph.findStartDestination().id) {
                                 saveState = true
                             }
@@ -139,6 +134,9 @@ fun GymTrackerNavHost() {
                     onNavigateBack = { navController.popBackStack() },
                     onWorkoutClick = { workoutId ->
                         navController.navigate("${Routes.WorkoutDetails.name}/$workoutId/false")
+                    },
+                    onCreateWorkoutClick = {
+                        navController.navigate(Routes.CreateWorkout.name)
                     }
                 )
             }
@@ -175,7 +173,9 @@ fun GymTrackerNavHost() {
                     onSearchQueryChange = { historyViewModel.onSearchQueryChange(it) },
                     onSortOrderChange = { historyViewModel.onSortOrderChange(it) },
                     onNavigateBack = { navController.popBackStack() },
-                    onClickHistory = { id -> navController.navigate("${Routes.WorkoutReport.name}/$id") }
+                    onClickHistory = { id -> navController.navigate("${Routes.WorkoutReport.name}/$id") },
+                    onDateSelected = { historyViewModel.onDateSelected(it) },
+                    onMoveMonth = { historyViewModel.onMoveMonth(it) }
                 )
             }
 
