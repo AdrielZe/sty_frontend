@@ -7,16 +7,18 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.example.training_tracker.data.local.dao.ExerciseDao
+import com.example.training_tracker.data.local.dao.RecordsDao
 import com.example.training_tracker.data.local.dao.WorkoutDao
 import com.example.training_tracker.data.local.dao.WorkoutHistoryDao
 import com.example.training_tracker.data.models.Exercise
+import com.example.training_tracker.data.models.Records
 import com.example.training_tracker.data.models.Workout
 import com.example.training_tracker.data.models.WorkoutHistory
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-@Database(entities = [Workout::class, Exercise::class, WorkoutHistory::class], version = 12)
+@Database(entities = [Workout::class, Exercise::class, WorkoutHistory::class, Records::class], version = 13)
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
 
@@ -24,7 +26,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun exerciseDao(): ExerciseDao
 
     abstract fun workoutHistoryDao(): WorkoutHistoryDao
-
+    abstract fun recordsDao() : RecordsDao
     companion object {
         @Volatile
         private var INSTANCE: AppDatabase? = null

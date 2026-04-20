@@ -1,5 +1,6 @@
 package com.example.training_tracker.ui.screens.workout_report
 
+import com.example.training_tracker.data.models.Exercise
 import java.time.LocalDate
 
 data class TotalWeightLiftedInfo(
@@ -25,7 +26,7 @@ enum class WorkoutDifficulty{
     HARD,
     SUPER_HARD
 }
-class WorkoutReportUiState(
+data class WorkoutReportUiState(
     val isLoading: Boolean = false,
     val workoutDifficulty: WorkoutDifficulty? = null,
     val heroSectionTitle: String? = "",
@@ -34,4 +35,5 @@ class WorkoutReportUiState(
     val totalSets: Int = 0,
     val totalReps: Int = 0,
     val totalMinutes: Int = 0,
+    val exercises: List<Exercise> = emptyList()
 )

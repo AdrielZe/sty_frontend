@@ -12,12 +12,15 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.training_tracker.GymTrackerApplication
 import com.example.training_tracker.data.models.Exercise
 import com.example.training_tracker.data.models.ExerciseSet
+import com.example.training_tracker.data.models.Records
 import com.example.training_tracker.data.models.Workout
 import com.example.training_tracker.data.models.WorkoutHistory
+import com.example.training_tracker.data.repository.RecordsRepository
 import com.example.training_tracker.data.repository.WorkoutHistoryRepository
 import com.example.training_tracker.data.repository.WorkoutRepository
 import com.example.training_tracker.ui.screens.home.HomeViewModel
 import com.example.training_tracker.ui.screens.workout_report.WorkoutDifficulty
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -31,7 +34,8 @@ import kotlinx.coroutines.launch
 class WorkoutViewModel(
     savedStateHandle: SavedStateHandle,
     private val workoutRepository: WorkoutRepository,
-    private val workoutHistoryRepository: WorkoutHistoryRepository
+    private val workoutHistoryRepository: WorkoutHistoryRepository,
+    private val recordsRepository: RecordsRepository
 ) : ViewModel() {
     private val workoutId: String = checkNotNull(savedStateHandle["workoutId"])
     private val _finishedWorkoutSession = MutableStateFlow<Workout?>(null)
@@ -175,6 +179,48 @@ class WorkoutViewModel(
         }
     }
 
+    fun updateRecords() {
+        val currentWorkout = uiState.value.workout ?: return
+
+        viewModelScope.launch(Dispatchers.IO) {
+            var records = recordsRepository.getRecord()
+            var isFirstTime = false
+
+            if (records == null) {
+                records = Records()
+                isFirstTime = true
+            }
+
+            var recordsUpdated = false
+
+            currentWorkout.exercises.forEach { exercise ->
+                val maxWeightThisWorkout = exercise.exerciseSets.maxByOrNull { it.weight }?.weight?.toInt()
+
+                if (maxWeightThisWorkout != null) {
+                    // Como garantimos ali em cima que 'records' não é mais nulo, podemos tirar os '?'
+                    val currentRecord = records.exercisesRecordMap[exercise.name]
+
+                    if (currentRecord == null || maxWeightThisWorkout > currentRecord) {
+                        println("RECORDE BATIDO: ${exercise.name} - $maxWeightThisWorkout")
+                        records.exercisesRecordMap[exercise.name] = maxWeightThisWorkout
+                        recordsUpdated = true
+                    }
+                }
+            }
+
+            // 4. Salvamos a alteração
+            if (recordsUpdated) {
+                println("NOVO RECORDE OBTIDO!!: ${records.exercisesRecordMap}")
+
+                // Se foi a primeira vez que criamos o objeto, fazemos INSERT. Se não, UPDATE.
+                if (isFirstTime) {
+                    recordsRepository.addRecord(records)
+                } else {
+                    recordsRepository.updateRecord(records)
+                }
+            }
+        }
+    }
     fun completeWorkout() {
         val currentWorkout = uiState.value.workout ?: return
 
@@ -207,7 +253,9 @@ class WorkoutViewModel(
 
         _finishedWorkoutSession.value = completedWorkout
 
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
+
+            updateRecords()
             // 3. Salva no histórico
 
             workoutHistoryRepository.addWorkoutHistory(newHistoryEntry)
@@ -293,13 +341,15 @@ class WorkoutViewModel(
                 val application = (this[APPLICATION_KEY] as GymTrackerApplication)
                 val workoutRepository = application.container.workoutRepository
                 val workoutHistoryRepository = application.container.workoutHistoryRepository
+                val recordsRepository = application.container.recordsRepository
 
                 val savedStateHandle = createSavedStateHandle()
 
                 WorkoutViewModel(
                     savedStateHandle = savedStateHandle,
                     workoutRepository = workoutRepository,
-                    workoutHistoryRepository = workoutHistoryRepository
+                    workoutHistoryRepository = workoutHistoryRepository,
+                    recordsRepository = recordsRepository
                 )
             }
         }
