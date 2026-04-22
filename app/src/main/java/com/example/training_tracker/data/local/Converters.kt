@@ -12,6 +12,31 @@ import java.time.LocalDate
 class Converters {
     private val gson = com.google.gson.Gson()
 
+    // Converte o Mapa com histórico de listas para String (JSON)
+    @TypeConverter
+    fun fromRecordsMap(map: MutableMap<String, MutableList<Int>>?): String {
+        return gson.toJson(map ?: mutableMapOf<String, MutableList<Int>>())
+    }
+
+    // Converte a String (JSON) de volta para o Mapa com as listas
+    @TypeConverter
+    fun toRecordsMap(jsonString: String?): MutableMap<String, MutableList<Int>> {
+        if (jsonString.isNullOrEmpty()) return mutableMapOf()
+        val mapType = object : TypeToken<MutableMap<String, MutableList<Int>>>() {}.type
+        return gson.fromJson(jsonString, mapType) ?: mutableMapOf()
+    }
+
+    @TypeConverter
+    fun fromIntList(value: MutableList<Int>?): String {
+        return gson.toJson(value ?: mutableListOf<Int>())
+    }
+
+    @TypeConverter
+    fun toIntList(value: String?): MutableList<Int> {
+        if (value.isNullOrEmpty()) return mutableListOf()
+        val listType = object : TypeToken<MutableList<Int>>() {}.type
+        return gson.fromJson(value, listType) ?: mutableListOf()
+    }
     @TypeConverter
     fun fromExerciseList(value: List<Exercise>): String = gson.toJson(value)
 

@@ -265,10 +265,19 @@ fun RecordsSection(records: Records?) {
         )
 
         records?.exercisesRecordMap?.forEach { (string, i) ->
-            RecordCard("CARGA MÁXIMA", "${i}kg ($string)", "🏆")
+            RecordCard("CARGA MÁXIMA", "${i.firstOrNull()}kg- $string", "🏆")
         }
 
-        RecordCard("VOLUME TOTAL", "Volume Recorde: 12.400kg", "📈")
+        if (records?.volumeRecords != null && records.volumeRecords?.isEmpty() == false) {
+            records.volumeRecords?.let {
+                RecordCard(
+                    "VOLUME MÁXIMO",
+                    "Volume recorde: ${(records.volumeRecords?.firstOrNull() ?: 0)}kg",
+                    "📈"
+                )
+            }
+        }
+
         RecordCard("ESTIMATIVA DE FORÇA", "1RM Estimado: 155kg", "⚡")
     }
 }

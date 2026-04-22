@@ -57,8 +57,7 @@ class WorkoutViewModel(
     }
 
     val uiState = combine(
-        workoutRepository.getWorkoutById(workoutId),
-        _finishedWorkoutSession
+        workoutRepository.getWorkoutById(workoutId), _finishedWorkoutSession
     ) { dbWorkout, finishedWorkout ->
 
         // Se já finalizamos o treino agora, congelamos a tela com a versão pronta!
@@ -180,14 +179,15 @@ class WorkoutViewModel(
         }
     }
 
-    suspend fun updateRecords() : MutableMap<String, Int> {
+    suspend fun updateExerciseRecords(): MutableMap<String, MutableList<Int>> {
         return withContext(Dispatchers.IO) {
-            val mapOfRecords: MutableMap<String, Int> = mutableMapOf()
-            val currentWorkout = uiState.value.workout
+            val mapOfRecords: MutableMap<String, MutableList<Int>> = mutableMapOf()
+            val currentWorkout = uiState.value.workout ?: return@withContext mapOfRecords
 
             var records = recordsRepository.getRecord()
             var isFirstTime = false
 
+            // Proteção caso o banco esteja vazio
             if (records == null) {
                 records = Records()
                 isFirstTime = true
@@ -195,23 +195,27 @@ class WorkoutViewModel(
 
             var recordsUpdated = false
 
-            currentWorkout?.exercises?.forEach { exercise ->
-                val maxWeightThisWorkout =
-                    exercise.exerciseSets.maxByOrNull { it.weight }?.weight?.toInt()
+            currentWorkout.exercises.forEach { exercise ->
+                val maxWeightThisWorkout = exercise.exerciseSets.maxByOrNull {
+                    it.weight.toDoubleOrNull() ?: 0.0
+                }?.weight?.toInt()
 
                 if (maxWeightThisWorkout != null) {
+                    val exerciseRecords =
+                        records.exercisesRecordMap.getOrPut(exercise.name) { mutableListOf() }
+                    val currentBest = exerciseRecords.firstOrNull()
 
-                    val currentRecord = records.exercisesRecordMap[exercise.name]
-                    if (currentRecord == null || maxWeightThisWorkout > currentRecord) {
-                        records.exercisesRecordMap[exercise.name] = maxWeightThisWorkout
-                        mapOfRecords[exercise.name] = maxWeightThisWorkout
+                    if (currentBest == null || maxWeightThisWorkout > currentBest) {
+                        exerciseRecords.add(0, maxWeightThisWorkout)
+                        mapOfRecords.getOrPut(exercise.name) { mutableListOf() }
+                            .add(0, maxWeightThisWorkout)
                         recordsUpdated = true
                     }
                 }
             }
 
-            // 4. Salvamos a alteração
-            if (recordsUpdated) {
+            // Salva as alterações de exercícios
+            if (recordsUpdated || isFirstTime) {
                 if (isFirstTime) {
                     recordsRepository.addRecord(records)
                 } else {
@@ -223,17 +227,66 @@ class WorkoutViewModel(
         }
     }
 
+    suspend fun updateVolumeRecord(): MutableList<Int>? { // 1. Mudamos o retorno para a Lista
+        return withContext(Dispatchers.IO) {
+            val currentWorkout = uiState.value.workout ?: return@withContext null
+
+            var records = recordsRepository.getRecord()
+            var isFirstTime = false
+
+            // Proteção caso o banco esteja vazio (útil se essa for a primeira função a rodar)
+            if (records == null) {
+                records = Records()
+                isFirstTime = true
+            }
+
+            val totalVolumeWorkout = currentWorkout.exercises.sumOf { exercise ->
+                exercise.exerciseSets.sumOf { set ->
+                    val weight = set.weight.toDoubleOrNull() ?: 0.0
+                    val reps = set.reps.toIntOrNull() ?: 0
+                    weight * reps
+                }
+            }.toInt()
+
+            val bestVolume = records.volumeRecords?.firstOrNull() ?: 0
+
+            if (totalVolumeWorkout > bestVolume) {
+                // Adiciona o novo recorde na posição 0
+                records.volumeRecords?.add(0, totalVolumeWorkout)
+
+                // Salva a alteração de volume
+                if (isFirstTime) {
+                    recordsRepository.addRecord(records)
+                } else {
+                    recordsRepository.updateRecord(records)
+                }
+
+                // 2. Retornamos a lista inteira já atualizada com o novo valor na pos 0
+                return@withContext records.volumeRecords
+            }
+
+            // Se for a primeira vez e o volume for 0 (treino vazio), garantimos a criação do documento
+            if (isFirstTime) {
+                recordsRepository.addRecord(records)
+            }
+
+            null // Retorna nulo se o recorde não foi batido
+        }
+    }
+
     fun completeWorkout() {
         val currentWorkout = uiState.value.workout ?: return
 
+        viewModelScope.launch(Dispatchers.IO) {
+            println("CURRENT RECORDS OBJECT: ${recordsRepository.getRecord()}")
+        }
         // 1. Prepara os dados CONCLUÍDOS (Para o Histórico e para Congelar a Tela
         val completedExercises = currentWorkout.exercises.map { exercise ->
             val completedSets = exercise.exerciseSets.map { set ->
                 set.copy(isCompleted = true)
             }
             exercise.copy(
-                isCompleted = true,
-                exerciseSets = completedSets
+                isCompleted = true, exerciseSets = completedSets
             )
         }
 
@@ -257,11 +310,13 @@ class WorkoutViewModel(
 
         viewModelScope.launch(Dispatchers.IO) {
 
-           val records =  updateRecords()
+            val exerciseRecords = updateExerciseRecords()
+            val volumeRecords = updateVolumeRecord()
 
             val newHistoryEntryRecords = newHistoryEntry.copy(
                 records = Records(
-                    exercisesRecordMap = records
+                    exercisesRecordMap = exerciseRecords,
+                    volumeRecords = volumeRecords
                 )
             )
 
@@ -270,21 +325,17 @@ class WorkoutViewModel(
             val resetExercises = currentWorkout.exercises.map { exercise ->
                 val resetSets = exercise.exerciseSets.map { set ->
                     set.copy(
-                        isCompleted = false,
-                        reps = "",   // Apaga as reps
+                        isCompleted = false, reps = "",   // Apaga as reps
                         weight = ""  // Apaga os pesos
                     )
                 }
                 exercise.copy(
-                    isCompleted = false,
-                    exerciseSets = resetSets
+                    isCompleted = false, exerciseSets = resetSets
                 )
             }
 
             val resetWorkout = currentWorkout.copy(
-                exercises = resetExercises,
-                isCompleted = false,
-                completionDate = null
+                exercises = resetExercises, isCompleted = false, completionDate = null
             )
 
             workoutRepository.updateWorkout(resetWorkout)
@@ -299,10 +350,7 @@ class WorkoutViewModel(
     }
 
     fun updateExercise(
-        exerciseId: String,
-        setNumber: Int? = 1,
-        newReps: String? = null,
-        newWeight: String? = null
+        exerciseId: String, setNumber: Int? = 1, newReps: String? = null, newWeight: String? = null
     ) {
         val currentWorkout = uiState.value.workout ?: return
 
@@ -311,8 +359,7 @@ class WorkoutViewModel(
                 val updatedSets = exercise.exerciseSets.map { set ->
                     if (set.set == setNumber) {
                         set.copy(
-                            reps = newReps ?: set.reps,
-                            weight = newWeight ?: set.weight
+                            reps = newReps ?: set.reps, weight = newWeight ?: set.weight
                         )
                     } else {
                         set

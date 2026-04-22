@@ -8,7 +8,7 @@ import java.util.UUID
 @Entity(tableName = "records")
 data class Records(
     @PrimaryKey @ColumnInfo("id") val id: String = UUID.randomUUID().toString(),
-    @ColumnInfo("exercisesRecord") val exercisesRecordMap: MutableMap<String, Int> = mutableMapOf(),
-    @ColumnInfo("volumeRecord") val volumeRecord: Int = 0,
+    @ColumnInfo("exercisesRecord") val exercisesRecordMap: MutableMap<String, MutableList<Int>> = mutableMapOf(),
+    @ColumnInfo("volumeRecordS") var volumeRecords: MutableList<Int>? = mutableListOf(),
     @ColumnInfo("strengthRecord") val strengthRecord: Int = 0,
 )
