@@ -13,4 +13,5 @@ data class Exercise (
     @ColumnInfo(name = "isDefault") val isDefault: Boolean = false,
     @ColumnInfo(name = "isCompleted") val isCompleted: Boolean = false,
     @ColumnInfo(name = "setsCompleted") val setsCompleted: Int = 1,
+    @ColumnInfo(name = "weightRecord") val weightRecord: Int = 0
 )

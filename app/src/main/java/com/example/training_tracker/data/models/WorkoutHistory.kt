@@ -14,5 +14,6 @@ data class WorkoutHistory(
     @ColumnInfo(name = "completionDate") val completionDate: LocalDate,
     @ColumnInfo(name = "exercises") val exercises: List<Exercise>,
     @ColumnInfo(name = "workoutId") val workoutId: String,
-    @ColumnInfo(name = "difficulty") val difficulty: WorkoutDifficulty
+    @ColumnInfo(name = "difficulty") val difficulty: WorkoutDifficulty,
+    @ColumnInfo(name = "records") val records: Records ?= null
 )

@@ -30,6 +30,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class WorkoutViewModel(
     savedStateHandle: SavedStateHandle,
@@ -179,10 +180,11 @@ class WorkoutViewModel(
         }
     }
 
-    fun updateRecords() {
-        val currentWorkout = uiState.value.workout ?: return
+    suspend fun updateRecords() : MutableMap<String, Int> {
+        return withContext(Dispatchers.IO) {
+            val mapOfRecords: MutableMap<String, Int> = mutableMapOf()
+            val currentWorkout = uiState.value.workout
 
-        viewModelScope.launch(Dispatchers.IO) {
             var records = recordsRepository.getRecord()
             var isFirstTime = false
 
@@ -193,16 +195,16 @@ class WorkoutViewModel(
 
             var recordsUpdated = false
 
-            currentWorkout.exercises.forEach { exercise ->
-                val maxWeightThisWorkout = exercise.exerciseSets.maxByOrNull { it.weight }?.weight?.toInt()
+            currentWorkout?.exercises?.forEach { exercise ->
+                val maxWeightThisWorkout =
+                    exercise.exerciseSets.maxByOrNull { it.weight }?.weight?.toInt()
 
                 if (maxWeightThisWorkout != null) {
-                    // Como garantimos ali em cima que 'records' não é mais nulo, podemos tirar os '?'
-                    val currentRecord = records.exercisesRecordMap[exercise.name]
 
+                    val currentRecord = records.exercisesRecordMap[exercise.name]
                     if (currentRecord == null || maxWeightThisWorkout > currentRecord) {
-                        println("RECORDE BATIDO: ${exercise.name} - $maxWeightThisWorkout")
                         records.exercisesRecordMap[exercise.name] = maxWeightThisWorkout
+                        mapOfRecords[exercise.name] = maxWeightThisWorkout
                         recordsUpdated = true
                     }
                 }
@@ -210,17 +212,17 @@ class WorkoutViewModel(
 
             // 4. Salvamos a alteração
             if (recordsUpdated) {
-                println("NOVO RECORDE OBTIDO!!: ${records.exercisesRecordMap}")
-
-                // Se foi a primeira vez que criamos o objeto, fazemos INSERT. Se não, UPDATE.
                 if (isFirstTime) {
                     recordsRepository.addRecord(records)
                 } else {
                     recordsRepository.updateRecord(records)
                 }
             }
+
+            mapOfRecords
         }
     }
+
     fun completeWorkout() {
         val currentWorkout = uiState.value.workout ?: return
 
@@ -240,7 +242,7 @@ class WorkoutViewModel(
             completionDate = java.time.LocalDate.now(),
             exercises = completedExercises,
             workoutId = currentWorkout.id,
-            difficulty = WorkoutDifficulty.MEDIUM
+            difficulty = WorkoutDifficulty.MEDIUM,
         )
 
         val historyId = newHistoryEntry.id
@@ -255,12 +257,16 @@ class WorkoutViewModel(
 
         viewModelScope.launch(Dispatchers.IO) {
 
-            updateRecords()
-            // 3. Salva no histórico
+           val records =  updateRecords()
 
-            workoutHistoryRepository.addWorkoutHistory(newHistoryEntry)
+            val newHistoryEntryRecords = newHistoryEntry.copy(
+                records = Records(
+                    exercisesRecordMap = records
+                )
+            )
 
-            // 4. Prepara os dados RESETADOS (Para o Template da próxima semana)
+            workoutHistoryRepository.addWorkoutHistory(newHistoryEntryRecords)
+
             val resetExercises = currentWorkout.exercises.map { exercise ->
                 val resetSets = exercise.exerciseSets.map { set ->
                     set.copy(

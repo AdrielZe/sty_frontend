@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.training_tracker.R
 import com.example.training_tracker.data.models.Exercise
+import com.example.training_tracker.data.models.Records
 import com.example.training_tracker.ui.theme.CyanAccent
 import com.example.training_tracker.ui.theme.CyanGradient
 
@@ -88,7 +89,7 @@ fun WorkoutReportScreen(
 
             // 4. Recordes
             item {
-                RecordsSection()
+                RecordsSection(uiState.records)
             }
 
             // 5. Tabela de Exercícios (Novo)
@@ -252,7 +253,7 @@ fun MetricItem(modifier: Modifier, value: String, label: String, icon: ImageVect
 }
 
 @Composable
-fun RecordsSection() {
+fun RecordsSection(records: Records?) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(
             "NOVOS RECORDES",
@@ -262,7 +263,11 @@ fun RecordsSection() {
                 fontWeight = FontWeight.Bold
             )
         )
-        RecordCard("CARGA MÁXIMA", "140kg (Agachamento)", "🏆")
+
+        records?.exercisesRecordMap?.forEach { (string, i) ->
+            RecordCard("CARGA MÁXIMA", "${i}kg ($string)", "🏆")
+        }
+
         RecordCard("VOLUME TOTAL", "Volume Recorde: 12.400kg", "📈")
         RecordCard("ESTIMATIVA DE FORÇA", "1RM Estimado: 155kg", "⚡")
     }

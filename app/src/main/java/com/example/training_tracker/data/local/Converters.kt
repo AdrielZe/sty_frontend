@@ -3,6 +3,7 @@ package com.example.training_tracker.data.local
 import androidx.room.TypeConverter
 import com.example.training_tracker.data.models.Exercise
 import com.example.training_tracker.data.models.ExerciseSet
+import com.example.training_tracker.data.models.Records
 import com.example.training_tracker.data.models.WorkoutHistory
 import com.google.gson.reflect.TypeToken
 import java.time.DayOfWeek
@@ -20,6 +21,17 @@ class Converters {
         return gson.fromJson(value, listType)
     }
 
+    @TypeConverter
+    fun fromRecords(records: Records?): String? {
+        return records?.let { gson.toJson(it) }
+    }
+
+    @TypeConverter
+    fun toRecords(recordsString: String?): Records? {
+        return recordsString?.let {
+            gson.fromJson(it, Records::class.java)
+        }
+    }
     @TypeConverter
     fun fromString(value: String?): LocalDate? {
         return value?.let { LocalDate.parse(it) }

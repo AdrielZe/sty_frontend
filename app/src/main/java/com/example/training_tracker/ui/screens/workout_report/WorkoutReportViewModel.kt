@@ -44,6 +44,8 @@ class WorkoutReportViewModel(
             val totalSets = countTotalSets(workout?.exercises ?: emptyList())
             val totalReps = countTotalReps(workout?.exercises ?: emptyList())
 
+            println("Received Records: ${workout?.records}")
+
             WorkoutReportUiState(
                 workoutDifficulty = workout?.difficulty,
                 heroSectionTitle = heroTitle,
@@ -51,14 +53,16 @@ class WorkoutReportViewModel(
                 totalWeightLiftedInfo = totalWeightLiftedInfo,
                 totalSets = totalSets,
                 totalReps = totalReps,
-                totalMinutes = 80, // Mockando por enquanto
-                exercises = workout?.exercises ?: emptyList()
+                totalMinutes = 80,
+                exercises = workout?.exercises ?: emptyList(),
+                records = workout?.records
             )
         }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(500),
             initialValue = WorkoutReportUiState()
         )
+
 
     companion object {
         val Factory: ViewModelProvider.Factory = viewModelFactory {

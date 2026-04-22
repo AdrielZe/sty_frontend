@@ -1,6 +1,7 @@
 package com.example.training_tracker.ui.screens.workout_report
 
 import com.example.training_tracker.data.models.Exercise
+import com.example.training_tracker.data.models.Records
 import java.time.LocalDate
 
 data class TotalWeightLiftedInfo(
@@ -35,5 +36,6 @@ data class WorkoutReportUiState(
     val totalSets: Int = 0,
     val totalReps: Int = 0,
     val totalMinutes: Int = 0,
+    val records: Records ?= null,
     val exercises: List<Exercise> = emptyList()
 )
