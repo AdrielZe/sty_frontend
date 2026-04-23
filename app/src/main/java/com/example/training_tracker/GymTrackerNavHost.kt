@@ -24,6 +24,8 @@ import com.example.training_tracker.data.routes.Routes
 import com.example.training_tracker.ui.screens.create_workout.CreateWorkoutScreen
 import com.example.training_tracker.ui.screens.home.HomeScreen
 import com.example.training_tracker.ui.screens.home.HomeViewModel
+import com.example.training_tracker.ui.screens.records.RecordsScreen
+import com.example.training_tracker.ui.screens.records.RecordsViewModel
 import com.example.training_tracker.ui.screens.registered_workouts.GroffitBottomNavBar
 import com.example.training_tracker.ui.screens.registered_workouts.RegisteredWorkoutsScreen
 import com.example.training_tracker.ui.screens.workout_details.WorkoutDetailsScreen
@@ -34,6 +36,7 @@ import com.example.training_tracker.ui.screens.workout_report.WorkoutReportScree
 import com.example.training_tracker.ui.screens.workout_report.WorkoutReportViewModel
 import com.example.training_tracker.ui.screens.workout_screen.WorkoutScreen
 import com.example.training_tracker.ui.screens.workout_screen.WorkoutViewModel
+import java.time.DayOfWeek
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
@@ -48,7 +51,8 @@ fun GymTrackerNavHost() {
     val routesWithBottomBar = listOf(
         Routes.Home.name,
         Routes.RegisteredWorkouts.name,
-        Routes.WorkoutHistory.name
+        Routes.WorkoutHistory.name,
+        Routes.Records.name
     )
 
     Scaffold(
@@ -103,8 +107,15 @@ fun GymTrackerNavHost() {
                     onClickWorkoutCard = { workoutId ->
                         val workout = homeUiState.todayWorkouts.find { it.id == workoutId }
                         if (workout?.isOnGoing == true) {
+                            println(workout)
+
                             navController.navigate("${Routes.Workout.name}/$workoutId")
-                        } else {
+                        } else if (workout?.isCompleted == true) {
+                            navController.navigate("${Routes.WorkoutReport.name}/${workout.historyId}")
+                        }
+                        else {
+                            println(workout)
+
                             navController.navigate("${Routes.WorkoutDetails.name}/$workoutId/true")
                         }
                     },
@@ -119,13 +130,26 @@ fun GymTrackerNavHost() {
                     },
                     onClickBrowseWorkouts = {
                         navController.navigate(Routes.RegisteredWorkouts.name)
-                    }
+                    },
                 )
             }
 
-            composable(route = Routes.CreateWorkout.name) {
+            composable(
+                route = "${Routes.CreateWorkout.name}?dayOfWeek={dayOfWeek}",
+                arguments = listOf(
+                    navArgument("dayOfWeek") {
+                        type = NavType.StringType
+                        nullable = true
+                        defaultValue = null
+                    }
+                )
+            ) { backStackEntry ->
+                val dayOfWeekString = backStackEntry.arguments?.getString("dayOfWeek")
+                val dayOfWeek = dayOfWeekString?.let { DayOfWeek.valueOf(it) }
+                
                 CreateWorkoutScreen(
-                    onNavigateBack = { navController.popBackStack() }
+                    onNavigateBack = { navController.popBackStack() },
+                    initialDayOfWeek = dayOfWeek
                 )
             }
 
@@ -135,8 +159,12 @@ fun GymTrackerNavHost() {
                     onWorkoutClick = { workoutId ->
                         navController.navigate("${Routes.WorkoutDetails.name}/$workoutId/false")
                     },
-                    onCreateWorkoutClick = {
-                        navController.navigate(Routes.CreateWorkout.name)
+                    onCreateWorkoutClick = { dayOfWeek ->
+                        if (dayOfWeek != null) {
+                            navController.navigate("${Routes.CreateWorkout.name}?dayOfWeek=${dayOfWeek.name}")
+                        } else {
+                            navController.navigate(Routes.CreateWorkout.name)
+                        }
                     }
                 )
             }
@@ -179,6 +207,16 @@ fun GymTrackerNavHost() {
                 )
             }
 
+            composable(route = Routes.Records.name) {
+                val recordsViewModel: RecordsViewModel = viewModel(factory = RecordsViewModel.Factory)
+                val recordsUiState by recordsViewModel.uiState.collectAsState()
+
+                RecordsScreen(
+                    uiState = recordsUiState,
+                    onNavigateBack = { navController.popBackStack() }
+                )
+            }
+
 
             composable(
                 route = "${Routes.Workout.name}/{workoutId}",
@@ -195,9 +233,9 @@ fun GymTrackerNavHost() {
                 val navigateToId by workoutViewModel.navigateToReport.collectAsState()
 
                 LaunchedEffect(navigateToId) {
-                    navigateToId?.let { id ->
-                        navController.navigate("${Routes.WorkoutReport.name}/$id") {
-                            popUpTo("${Routes.Workout.name}/$id") { inclusive = true }
+                    navigateToId?.let { historyId ->
+                        navController.navigate("${Routes.WorkoutReport.name}/$historyId") {
+                            popUpTo(Routes.Home.name) { inclusive = false }
                         }
                         workoutViewModel.onNavigatedToReport()
                     }

@@ -5,18 +5,25 @@ import androidx.annotation.RequiresApi
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -26,14 +33,18 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.AccessibilityNew
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Timer
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -44,8 +55,11 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -55,6 +69,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
@@ -63,6 +78,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.training_tracker.R
 import com.example.training_tracker.data.models.Workout
 import com.example.training_tracker.ui.theme.AppTheme
@@ -70,6 +87,7 @@ import com.example.training_tracker.ui.theme.CyanAccent
 import com.example.training_tracker.ui.theme.CyanGradient
 import com.example.training_tracker.ui.theme.GreenGradient
 import com.example.training_tracker.ui.theme.Typography
+import kotlin.math.abs
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
@@ -80,9 +98,11 @@ fun HomeScreen(
     onNavigateToRegisteredWorkouts: () -> Unit,
     onNavigateToWorkoutsHistory: () -> Unit,
     onClickBrowseWorkouts: () -> Unit,
-    homeUiState: HomeUiState
+    homeUiState: HomeUiState,
+    homeViewModel: HomeViewModel = viewModel(factory = HomeViewModel.Factory)
 ) {
-    var selectedBottomTab by remember { mutableIntStateOf(0) }
+    var isProfileExpanded by remember { mutableStateOf(false) }
+    var showGoalDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -90,9 +110,26 @@ fun HomeScreen(
         topBar = {
             CustomTopBar(
                 onMenuClick = { /* Abrir Drawer */ },
-                onProfileClick = { /* Abrir Perfil/Configurações */ }
+                onProfileClick = { isProfileExpanded = true }
             )
         },
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = onNavigateToCreateWorkout,
+                containerColor = CyanAccent,
+                contentColor = Color.Black,
+                shape = CircleShape,
+                modifier = Modifier
+                    .size(64.dp)
+                    .shadow(elevation = 8.dp, shape = CircleShape)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = stringResource(id = R.string.home_create_new_workout_button),
+                    modifier = Modifier.size(32.dp)
+                )
+            }
+        }
     ) { innerPadding ->
         Column(
             modifier = modifier
@@ -104,33 +141,32 @@ fun HomeScreen(
         ) {
             Spacer(modifier = Modifier.height(8.dp))
 
-//            Text(
-//                text = stringResource(id = R.string.home_your_workouts_label),
-//                style = TextStyle(
-//                    brush = CyanGradient
-//                ),
-//                fontSize = 12.sp,
-//                fontWeight = FontWeight.Bold,
-//                letterSpacing = 1.5.sp
-//            )
-
-            Spacer(modifier = Modifier.height(4.dp))
-
-            Text(
-                text = stringResource(
-                    id = R.string.home_greeting,
-                    homeUiState.user?.name ?: stringResource(id = R.string.home_default_user_name)
-                ),
-                fontSize = 30.sp,
-                color = MaterialTheme.colorScheme.onBackground
-            )
-
-            homeUiState.currentDate?.let { date ->
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center
+            ) {
                 Text(
-                    text = date,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    text = stringResource(
+                        id = R.string.home_greeting,
+                        homeUiState.user?.name
+                            ?: stringResource(id = R.string.home_default_user_name)
+                    ),
+                    fontSize = 24.sp,
+                    color = MaterialTheme.colorScheme.onBackground
                 )
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                homeUiState.currentDate?.let { date ->
+                    Text(
+                        text = date,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -151,9 +187,7 @@ fun HomeScreen(
                     WorkoutCard(
                         workout = workout,
                         onClick = {
-                            if (!workout.isCompleted) {
-                                onClickWorkoutCard(workout.id)
-                            }
+                            onClickWorkoutCard(workout.id)
                         }
                     )
                 }
@@ -161,15 +195,7 @@ fun HomeScreen(
                 EmptyWorkoutCard()
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            MainGradientButton(
-                text = stringResource(id = R.string.home_create_new_workout_button),
-                onClick = onNavigateToCreateWorkout
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
+            Spacer(modifier = Modifier.height(2.dp))
 
             Text(
                 modifier = Modifier
@@ -189,17 +215,243 @@ fun HomeScreen(
             WorkoutsSummaryCard(count = homeUiState.totalWorkoutsCompleted)
 
             Spacer(modifier = Modifier.height(16.dp))
-            WeeklyProgressCard()
+
+            val weeklyGoal = homeUiState.user?.weeklyGoal
+            if (weeklyGoal != null && weeklyGoal > 0) {
+                WeeklyProgressCard(
+                    currentWorkouts = homeUiState.workoutsCompletedThisWeek,
+                    goalWorkouts = weeklyGoal,
+                    onEditGoal = { showGoalDialog = true }
+                )
+            } else {
+                SetWeeklyGoalCard(onClick = { showGoalDialog = true })
+            }
 
             Spacer(modifier = Modifier.height(24.dp))
+        }
+    }
+
+    if (isProfileExpanded) {
+        Dialog(onDismissRequest = { isProfileExpanded = false }) {
+            Box(
+                modifier = Modifier
+                    .size(280.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                    .border(BorderStroke(4.dp, CyanGradient), CircleShape)
+                    .clickable { isProfileExpanded = false },
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Person,
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxSize(0.6f),
+                    tint = CyanAccent
+                )
+            }
+        }
+    }
+
+    if (showGoalDialog) {
+        WeeklyGoalPickerDialog(
+            currentGoal = homeUiState.user?.weeklyGoal ?: 3,
+            onDismiss = { showGoalDialog = false },
+            onConfirm = { goal ->
+                homeViewModel.updateWeeklyGoal(goal)
+                showGoalDialog = false
+            }
+        )
+    }
+}
+
+@Composable
+fun SetWeeklyGoalCard(onClick: () -> Unit) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() },
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+        border = BorderStroke(1.dp, CyanAccent.copy(alpha = 0.3f))
+    ) {
+        Row(
+            modifier = Modifier.padding(20.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Surface(
+                modifier = Modifier.size(48.dp),
+                shape = CircleShape,
+                color = CyanAccent.copy(alpha = 0.1f)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = null,
+                    tint = CyanAccent,
+                    modifier = Modifier.padding(12.dp)
+                )
+            }
+            Spacer(modifier = Modifier.width(16.dp))
+            Column {
+                Text(
+                    text = "Defina sua meta semanal",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = "Quantos treinos você quer fazer esta semana?",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun WeeklyGoalPickerDialog(
+    currentGoal: Int,
+    onDismiss: () -> Unit,
+    onConfirm: (Int) -> Unit
+) {
+    val items = (1..7).toList()
+    val listState = rememberLazyListState()
+
+    // Calcula o índice do item no meio da tela
+    val selectedGoal by remember {
+        derivedStateOf {
+            val layoutInfo = listState.layoutInfo
+            val visibleItemsInfo = layoutInfo.visibleItemsInfo
+            if (visibleItemsInfo.isEmpty()) currentGoal
+            else {
+                // Calcula o centro do viewport de forma dinâmica
+                val viewportCenter =
+                    (layoutInfo.viewportEndOffset + layoutInfo.viewportStartOffset) / 2f
+
+                // Encontra o item cujo centro está mais próximo do centro do viewport
+                visibleItemsInfo.minByOrNull { item ->
+                    val itemCenter = item.offset + (item.size / 2f)
+                    abs(itemCenter - viewportCenter)
+                }?.index?.plus(1) ?: currentGoal
+            }
+        }
+    }
+
+    // Posiciona no item atual ao abrir
+    LaunchedEffect(Unit) {
+        listState.scrollToItem(currentGoal - 1)
+    }
+
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            shape = RoundedCornerShape(24.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        ) {
+            Column(
+                modifier = Modifier.padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "Meta Semanal",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = CyanAccent
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "Escolha seu objetivo de treinos por semana",
+                    style = MaterialTheme.typography.bodyMedium,
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Box(
+                    modifier = Modifier
+                        .height(180.dp)
+                        .fillMaxWidth(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    // Indicador de Seleção Central (50.dp de altura, centralizado em 180.dp)
+                    Surface(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(50.dp),
+                        color = CyanAccent.copy(alpha = 0.1f),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {}
+
+                    LazyColumn(
+                        state = listState,
+                        modifier = Modifier.fillMaxSize(),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        // Padding vertical para permitir que o primeiro e o último item parem no centro
+                        // 180/2 - 50/2 = 65dp
+                        contentPadding = PaddingValues(vertical = 65.dp)
+                    ) {
+                        items(items) { num ->
+                            val isSelected = num == selectedGoal
+                            Box(
+                                modifier = Modifier
+                                    .height(50.dp)
+                                    .fillMaxWidth(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "$num ${if (num == 1) "treino" else "treinos"}",
+                                    style = if (isSelected) {
+                                        MaterialTheme.typography.headlineMedium.copy(
+                                            fontWeight = FontWeight.Bold,
+                                            color = CyanAccent
+                                        )
+                                    } else {
+                                        MaterialTheme.typography.bodyLarge.copy(
+                                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                                        )
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(32.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    Text(
+                        text = "CANCELAR",
+                        modifier = Modifier
+                            .clickable { onDismiss() }
+                            .padding(12.dp),
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Button(
+                        onClick = { onConfirm(selectedGoal) },
+                        colors = ButtonDefaults.buttonColors(containerColor = CyanAccent),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Text("CONFIRMAR", color = Color.Black, fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
         }
     }
 }
 
 @Composable
 fun WeeklyProgressCard(
-    currentWorkouts: Int = 3,
-    goalWorkouts: Int = 4,
+    currentWorkouts: Int,
+    goalWorkouts: Int,
+    onEditGoal: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val progress = if (goalWorkouts > 0) {
@@ -210,11 +462,7 @@ fun WeeklyProgressCard(
 
     Card(
         modifier = modifier
-            .fillMaxWidth()
-            .background(
-                brush = AppTheme.brushes.backgroundGradient,
-                shape = RoundedCornerShape(16.dp)
-            ),
+            .fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
             // 2. Deixa o fundo padrão transparente
@@ -231,12 +479,23 @@ fun WeeklyProgressCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = "My Progress",
-                    color = MaterialTheme.colorScheme.onSurface,
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = "My Progress",
+                        color = MaterialTheme.colorScheme.onSurface,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = "Editar meta",
+                        modifier = Modifier
+                            .size(16.dp)
+                            .clickable { onEditGoal() },
+                        tint = CyanAccent
+                    )
+                }
 
                 Column(horizontalAlignment = Alignment.End) {
                     Row(verticalAlignment = Alignment.Bottom) {
@@ -312,11 +571,7 @@ fun WorkoutsSummaryCard(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .height(72.dp)
-            .background(
-                brush = AppTheme.brushes.backgroundGradient,
-                shape = RoundedCornerShape(20.dp)
-            ),
+            .height(72.dp),
         colors = CardDefaults.cardColors(
             // 2. Deixa o fundo padrão transparente
             containerColor = Color.Transparent
@@ -371,17 +626,10 @@ fun CustomTopBar(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 24.dp, vertical = 36.dp),
+            .padding(horizontal = 24.dp, vertical = 18.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        IconButton(onClick = onMenuClick, modifier = Modifier.size(28.dp)) {
-            Icon(
-                imageVector = Icons.Default.Menu,
-                contentDescription = stringResource(id = R.string.content_description_menu),
-                tint = MaterialTheme.colorScheme.onBackground
-            )
-        }
 
         Text(
             text = stringResource(id = R.string.home_app_title),
@@ -461,6 +709,7 @@ fun MainGradientButton(
 @Composable
 fun WorkoutCard(modifier: Modifier = Modifier, workout: Workout?, onClick: () -> Unit) {
     val isCompleted = workout?.isCompleted == true
+    val isDark = isSystemInDarkTheme()
 
     Card(
         onClick = onClick,
@@ -470,7 +719,7 @@ fun WorkoutCard(modifier: Modifier = Modifier, workout: Workout?, onClick: () ->
             .padding(vertical = 8.dp),
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = if (isDark) MaterialTheme.colorScheme.surface else Color.Black
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
@@ -480,7 +729,7 @@ fun WorkoutCard(modifier: Modifier = Modifier, workout: Workout?, onClick: () ->
                 contentDescription = null,
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop,
-                alpha = if (isCompleted) 0.2f else 0.5f
+                alpha = if (isCompleted) 0.2f else if (isDark) 0.5f else 0.7f
             )
 
             // Gradient Overlay
@@ -492,7 +741,7 @@ fun WorkoutCard(modifier: Modifier = Modifier, workout: Workout?, onClick: () ->
                             colors = listOf(
                                 Color.Transparent,
                                 if (isCompleted) Color.Black.copy(alpha = 0.4f) else Color.Black.copy(
-                                    alpha = 0.8f
+                                    alpha = if (isDark) 0.8f else 0.9f
                                 )
                             )
                         )
@@ -612,13 +861,14 @@ fun WorkoutCard(modifier: Modifier = Modifier, workout: Workout?, onClick: () ->
 
 @Composable
 fun EmptyWorkoutCard(modifier: Modifier = Modifier) {
+    val isDark = isSystemInDarkTheme()
     Card(
         modifier = modifier
             .fillMaxWidth()
             .height(200.dp),
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
+            containerColor = if (isDark) MaterialTheme.colorScheme.surfaceVariant else Color.Black
         )
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
@@ -627,7 +877,7 @@ fun EmptyWorkoutCard(modifier: Modifier = Modifier) {
                 contentDescription = null,
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop,
-                alpha = 0.3f
+                alpha = if (isDark) 0.3f else 0.55f
             )
 
             Box(
@@ -637,7 +887,7 @@ fun EmptyWorkoutCard(modifier: Modifier = Modifier) {
                         Brush.verticalGradient(
                             colors = listOf(
                                 Color.Transparent,
-                                Color.Black.copy(alpha = 0.7f)
+                                Color.Black.copy(alpha = if (isDark) 0.7f else 0.85f)
                             )
                         )
                     )
@@ -685,69 +935,3 @@ fun EmptyWorkoutCard(modifier: Modifier = Modifier) {
         }
     }
 }
-
-//@Composable
-//fun HomeBottomBar(
-//    selectedTab: Int,
-//    onTabSelected: (Int) -> Unit
-//) {
-//    NavigationBar(
-//        containerColor = MaterialTheme.colorScheme.surface,
-//        tonalElevation = 8.dp
-//    ) {
-//        NavigationBarItem(
-//            icon = {
-//                Icon(
-//                    Icons.Default.Home,
-//                    contentDescription = stringResource(id = R.string.content_description_home)
-//                )
-//            },
-//            label = { Text(stringResource(id = R.string.home_bottom_bar_home)) },
-//            selected = selectedTab == 0,
-//            onClick = { onTabSelected(0) },
-//            colors = NavigationBarItemDefaults.colors(
-//                selectedIconColor = CyanAccent,
-//                selectedTextColor = CyanAccent,
-//                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-//                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
-//                indicatorColor = CyanAccent.copy(alpha = 0.1f)
-//            )
-//        )
-//        NavigationBarItem(
-//            icon = {
-//                Icon(
-//                    Icons.Default.List,
-//                    contentDescription = stringResource(id = R.string.content_description_registered_workouts)
-//                )
-//            },
-//            label = { Text(stringResource(id = R.string.home_bottom_bar_workouts)) },
-//            selected = selectedTab == 1,
-//            onClick = { onTabSelected(1) },
-//            colors = NavigationBarItemDefaults.colors(
-//                selectedIconColor = CyanAccent,
-//                selectedTextColor = CyanAccent,
-//                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-//                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
-//                indicatorColor = CyanAccent.copy(alpha = 0.1f)
-//            )
-//        )
-//        NavigationBarItem(
-//            icon = {
-//                Icon(
-//                    Icons.Default.List,
-//                    contentDescription = stringResource(id = R.string.content_description_history)
-//                )
-//            },
-//            label = { Text(stringResource(id = R.string.home_bottom_bar_history)) },
-//            selected = selectedTab == 2,
-//            onClick = { onTabSelected(2) },
-//            colors = NavigationBarItemDefaults.colors(
-//                selectedIconColor = CyanAccent,
-//                selectedTextColor = CyanAccent,
-//                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-//                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
-//                indicatorColor = CyanAccent.copy(alpha = 0.1f)
-//            )
-//        )
-//    }
-//}

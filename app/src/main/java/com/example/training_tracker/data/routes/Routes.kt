@@ -8,6 +8,6 @@ enum class Routes {
     WorkoutDetails,
 
     WorkoutHistory,
-
-    WorkoutReport
+    WorkoutReport,
+    Records
 }

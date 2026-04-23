@@ -140,7 +140,7 @@ fun DragAndDropContainer(
 fun RegisteredWorkoutsScreen(
     onNavigateBack: () -> Unit,
     onWorkoutClick: (String) -> Unit,
-    onCreateWorkoutClick: () -> Unit,
+    onCreateWorkoutClick: (DayOfWeek?) -> Unit,
     viewModel: RegisteredWorkoutsViewModel = viewModel(factory = RegisteredWorkoutsViewModel.Factory)
 ) {
     val uiState = viewModel.uiState.collectAsState().value
@@ -192,24 +192,6 @@ fun RegisteredWorkoutsScreen(
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
                 )
             },
-            floatingActionButton = {
-                FloatingActionButton(
-                    onClick = {onCreateWorkoutClick() },
-                    containerColor = Color.Transparent,
-                    contentColor = Color.Black,
-                    shape = CircleShape,
-                    modifier = Modifier.size(64.dp)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(CyanGradient),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(Icons.Default.Add, contentDescription = "Add Workout", modifier = Modifier.size(28.dp))
-                    }
-                }
-            },
         ) { paddingValues ->
             LazyColumn(
                 state = listState,
@@ -236,7 +218,7 @@ fun RegisteredWorkoutsScreen(
                                 isHighlighted = isOver
                             ) {
                                 if (workouts.isEmpty()) {
-                                    NoActivityCard(onCreateWorkoutClick)
+                                    NoActivityCard(onCreateWorkoutClick = { onCreateWorkoutClick(day) })
                                 } else {
                                     workouts.forEach { workout ->
                                         DragTarget(data = workout) {
@@ -539,7 +521,7 @@ fun NoActivityCard(
             }
             Spacer(Modifier.height(8.dp))
             Text("No Activity", fontWeight = FontWeight.Bold, color = TextGray)
-            Text("No workouts scheduled. Drag here to add.", fontSize = 11.sp, color = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f))
+            Text("No workouts scheduled. Click to add.", fontSize = 11.sp, color = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f))
         }
     }
 }
@@ -582,6 +564,18 @@ fun GroffitBottomNavBar(
             onClick = { onNavigate(Routes.WorkoutHistory.name) },
             icon = { Icon(Icons.Default.History, contentDescription = null) },
             label = { Text("HISTORY") },
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = CyanAccent,
+                selectedTextColor = CyanAccent,
+                unselectedIconColor = TextGray
+            )
+        )
+
+        NavigationBarItem(
+            selected = currentRoute == Routes.Records.name,
+            onClick = { onNavigate(Routes.Records.name) },
+            icon = { Icon(Icons.Default.EmojiEvents, contentDescription = null) },
+            label = { Text("RECORDS") },
             colors = NavigationBarItemDefaults.colors(
                 selectedIconColor = CyanAccent,
                 selectedTextColor = CyanAccent,

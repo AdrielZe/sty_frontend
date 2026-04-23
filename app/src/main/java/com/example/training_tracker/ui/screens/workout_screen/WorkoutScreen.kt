@@ -392,6 +392,7 @@ fun ExerciseCard(
         MuscleGroups.CHEST -> R.drawable.chest
         MuscleGroups.BACK -> R.drawable.back
         MuscleGroups.LEGS -> R.drawable.legs
+        MuscleGroups.SHOULDERS -> R.drawable.shoulders
         MuscleGroups.ABS -> R.drawable.abs
         MuscleGroups.BICEPS -> R.drawable.biceps
         MuscleGroups.TRICEPS -> R.drawable.triceps

@@ -1,6 +1,12 @@
 package com.example.training_tracker.data.models
 
+import androidx.room.Entity
+import androidx.room.PrimaryKey
+
+@Entity(tableName = "users")
 data class User(
-    val id: String = java.util.UUID.randomUUID().toString(),
+    @PrimaryKey
+    val id: String = "default_user",
     val name: String,
+    val weeklyGoal: Int? = null
 )

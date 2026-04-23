@@ -15,6 +15,9 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
+import java.time.temporal.TemporalAdjusters
+import java.time.DayOfWeek
 
 class HomeViewModel(
     private val userRepository: UserRepository,
@@ -35,17 +38,35 @@ class HomeViewModel(
             workout.copy(isCompleted = isCompletedToday)
         }
 
+        // Calcula treinos feitos na semana atual (Segunda a Domingo)
+        val today = LocalDate.now()
+        val startOfWeek = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+        val endOfWeek = today.with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY))
+        
+        val workoutsThisWeek = workoutHistories.count { history ->
+            val historyDate = history.completionDate
+            (historyDate.isEqual(startOfWeek) || historyDate.isAfter(startOfWeek)) && 
+            (historyDate.isEqual(endOfWeek) || historyDate.isBefore(endOfWeek))
+        }
+
         HomeUiState(
             user = user,
             currentDate = getCurrentDate(),
             todayWorkouts = workoutsWithStatus,
-            totalWorkoutsCompleted = workoutHistories.size
+            totalWorkoutsCompleted = workoutHistories.size,
+            workoutsCompletedThisWeek = workoutsThisWeek
         )
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(500),
         initialValue = HomeUiState()
     )
+
+    fun updateWeeklyGoal(goal: Int) {
+        viewModelScope.launch {
+            userRepository.updateWeeklyGoal(goal)
+        }
+    }
 
     private fun getCurrentDate(): String {
         val formatter = DateTimeFormatter.ofPattern("dd MMM yyyy", Locale("pt", "BR"))

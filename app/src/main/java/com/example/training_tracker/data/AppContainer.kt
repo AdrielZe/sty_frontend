@@ -43,7 +43,7 @@ class DefaultAppContainer(
     // O 'by lazy' garante que o UserRepository só será instanciado
     // na primeira vez que for chamado, e depois a mesma instância será reutilizada.
     override val userRepository: UserRepository by lazy {
-        UserRepository()
+        UserRepository(database.userDao())
     }
 
     override val exerciseRepository: ExerciseRepository by lazy {

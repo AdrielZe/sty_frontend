@@ -335,7 +335,7 @@ class WorkoutViewModel(
             }
 
             val resetWorkout = currentWorkout.copy(
-                exercises = resetExercises, isCompleted = false, completionDate = null
+                exercises = resetExercises, isCompleted = false, historyId = historyId, isOnGoing = false, completionDate = null
             )
 
             workoutRepository.updateWorkout(resetWorkout)

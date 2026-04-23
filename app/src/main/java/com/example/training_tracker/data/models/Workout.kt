@@ -15,4 +15,5 @@ data class Workout(
     @ColumnInfo(name = "isOnGoing") val isOnGoing: Boolean = false,
     @ColumnInfo(name = "dayOfWeek") val dayOfWeek: DayOfWeek? = null,
     @ColumnInfo(name = "completionDate") val completionDate: LocalDate? = null,
+    @ColumnInfo(name = "historyId") val historyId: String? = null,
 )

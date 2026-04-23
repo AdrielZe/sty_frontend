@@ -43,6 +43,7 @@ import java.util.Locale
 @Composable
 fun CreateWorkoutScreen(
     onNavigateBack: () -> Unit,
+    initialDayOfWeek: DayOfWeek? = null,
     viewModel: CreateWorkoutViewModel = viewModel(factory = CreateWorkoutViewModel.Factory)
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -53,6 +54,12 @@ fun CreateWorkoutScreen(
         derivedStateOf { uiState.exercises.size >= 3 }
     }
     val scrollState = rememberScrollState()
+
+    LaunchedEffect(initialDayOfWeek) {
+        if (initialDayOfWeek != null) {
+            viewModel.updateSelectedDay(initialDayOfWeek)
+        }
+    }
 
     LaunchedEffect(uiState.isWorkoutSaved) {
         if (uiState.isWorkoutSaved) {

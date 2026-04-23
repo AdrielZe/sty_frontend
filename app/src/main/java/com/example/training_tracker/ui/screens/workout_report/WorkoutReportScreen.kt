@@ -17,6 +17,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
@@ -27,6 +28,7 @@ import androidx.compose.ui.unit.sp
 import com.example.training_tracker.R
 import com.example.training_tracker.data.models.Exercise
 import com.example.training_tracker.data.models.Records
+import com.example.training_tracker.ui.theme.AppTheme
 import com.example.training_tracker.ui.theme.CyanAccent
 import com.example.training_tracker.ui.theme.CyanGradient
 
@@ -53,7 +55,11 @@ fun WorkoutReportScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Voltar", tint = CyanAccent)
+                        Icon(
+                            Icons.Default.ArrowBack,
+                            contentDescription = "Voltar",
+                            tint = CyanAccent
+                        )
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
@@ -101,7 +107,9 @@ fun WorkoutReportScreen(
             item {
                 Button(
                     onClick = { /* Compartilhar */ },
-                    modifier = Modifier.fillMaxWidth().height(56.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
                     shape = RoundedCornerShape(16.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
                     contentPadding = PaddingValues()
@@ -137,7 +145,7 @@ fun HeroSection(uiState: WorkoutReportUiState) {
             modifier = Modifier
                 .fillMaxWidth()
                 .background(CyanGradient)
-                .padding(24.dp)
+                .padding(18.dp)
         ) {
             Column {
                 Badge(
@@ -145,20 +153,23 @@ fun HeroSection(uiState: WorkoutReportUiState) {
                     contentColor = Color.White,
                     modifier = Modifier.padding(bottom = 8.dp)
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(4.dp)) {
-                        Icon(Icons.Default.Timer, contentDescription = null, modifier = Modifier.size(14.dp))
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(4.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.Timer,
+                            contentDescription = null,
+                            modifier = Modifier.size(14.dp)
+                        )
                         Spacer(Modifier.width(4.dp))
-                        Text("DIFICULDADE: ${uiState.workoutDifficulty}", fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                        Text(
+                            "DIFICULDADE: ${uiState.workoutDifficulty}",
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold
+                        )
                     }
                 }
-                Text(
-                    "${uiState.heroSectionTitle}",
-                    style = MaterialTheme.typography.headlineLarge.copy(
-                        fontWeight = FontWeight.ExtraBold,
-                        color = Color.White,
-                        lineHeight = 36.sp
-                    )
-                )
                 Text(
                     "Finalizado em ${uiState.completionDate}",
                     style = MaterialTheme.typography.bodyMedium.copy(color = Color.White.copy(alpha = 0.8f))
@@ -179,45 +190,67 @@ fun GamificationCard(uiState: WorkoutReportUiState) {
         uiState.totalWeightLiftedInfo.value >= 1500.0 -> R.drawable.feather_1kg
         else -> R.drawable.confused_0kg
     }
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
+
+    // 1. Criamos as cores do gradiente de fundo do Card
+    val cardBackgroundBrush = Brush.horizontalGradient(
+        colors = listOf(
+            Color(0xFF2C3E50), // Substitua pelas cores do seu tema
+            Color(0xFF4CA1AF)
+        )
+    )
+
+    // Trocamos o Card por uma Row com clip e background
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(20.dp)) // Aplica o formato arredondado
+            .background(cardBackgroundBrush) // Aplica o Brush de fundo
+            .padding(20.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(
-            modifier = Modifier.padding(20.dp),
-            verticalAlignment = Alignment.CenterVertically
+        Box(
+            modifier = Modifier
+                .size(56.dp)
+                // 2. O Brush precisa de cores para funcionar. Adicionei um exemplo aqui:
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(Color.DarkGray, Color.LightGray)
+                    ),
+                    shape = RoundedCornerShape(12.dp)
+                )
         ) {
-            Box(
+            Image(
+                painter = painterResource(id = image),
+                contentDescription = "Achievement Image",
                 modifier = Modifier
-                    .size(56.dp)
-                    .background(Color.White.copy(alpha = 0.05f), RoundedCornerShape(14.dp)),
-                contentAlignment = Alignment.Center
-            ) {
-                Image(
-                    painter = painterResource(id = image),
-                    contentDescription = "Achievement Image",
-                    modifier = Modifier
-                        .size(100.dp)
-                        .clip(RoundedCornerShape(12.dp)),
-                    contentScale = ContentScale.Crop
+                    .size(100.dp)
+                    .clip(RoundedCornerShape(12.dp)),
+                contentScale = ContentScale.Crop
+            )
+        }
+
+        Spacer(Modifier.width(16.dp))
+
+        Column {
+            Text(
+                text = "PESO TOTAL LEVANTADO: ",
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
                 )
-            }
-            Spacer(Modifier.width(16.dp))
-            Column {
-                Text(
-                    uiState.totalWeightLiftedInfo?.title ?: "Treino Concluído",
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = Color.White)
+            )
+            Text(
+                text = buildString {
+                    append("You lifted ")
+                    append(uiState.totalWeightLiftedInfo?.value ?: "0.0")
+                    append(", ")
+                    append(uiState.totalWeightLiftedInfo?.comparisonText ?: "")
+                },
+                style = MaterialTheme.typography.bodySmall.copy(
+                    color = Color.LightGray,
+                    lineHeight = 18.sp
                 )
-                Text(
-                    buildString {
-                        append("You lifted ")
-                        append(uiState.totalWeightLiftedInfo?.value)
-                        append(", ")
-                        append(uiState.totalWeightLiftedInfo?.comparisonText)
-                    },
-                    style = MaterialTheme.typography.bodySmall.copy(color = Color.LightGray, lineHeight = 18.sp)
-                )
-            }
+            )
         }
     }
 }
@@ -228,9 +261,19 @@ fun MetricsGrid(uiState: WorkoutReportUiState) {
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        MetricItem(Modifier.weight(1f), uiState.totalSets.toString(), "SÉRIES", Icons.Default.FitnessCenter)
+        MetricItem(
+            Modifier.weight(1f),
+            uiState.totalSets.toString(),
+            "SÉRIES",
+            Icons.Default.FitnessCenter
+        )
         MetricItem(Modifier.weight(1f), uiState.totalReps.toString(), "REPS", Icons.Default.Repeat)
-        MetricItem(Modifier.weight(1f), uiState.totalMinutes.toString(), "MINUTOS TUT", Icons.Default.Timer)
+        MetricItem(
+            Modifier.weight(1f),
+            uiState.totalMinutes.toString(),
+            "MINUTOS TUT",
+            Icons.Default.Timer
+        )
     }
 }
 
@@ -244,7 +287,12 @@ fun MetricItem(modifier: Modifier, value: String, label: String, icon: ImageVect
             modifier = Modifier.padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Icon(icon, contentDescription = null, tint = CyanAccent, modifier = Modifier.size(20.dp))
+            Icon(
+                icon,
+                contentDescription = null,
+                tint = CyanAccent,
+                modifier = Modifier.size(20.dp)
+            )
             Spacer(Modifier.height(8.dp))
             Text(value, fontSize = 24.sp, fontWeight = FontWeight.Bold, color = Color.White)
             Text(label, fontSize = 10.sp, color = Color.Gray, fontWeight = FontWeight.Bold)
@@ -342,15 +390,33 @@ fun ExerciseSummaryCard(exercise: Exercise) {
                 )
             )
             Spacer(Modifier.height(12.dp))
-            
+
             Row(modifier = Modifier.fillMaxWidth()) {
-                Text("SET", modifier = Modifier.weight(0.5f), style = MaterialTheme.typography.labelSmall, color = Color.Gray)
-                Text("CARGA", modifier = Modifier.weight(1f), style = MaterialTheme.typography.labelSmall, color = Color.Gray)
-                Text("REPS", modifier = Modifier.weight(1f), style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+                Text(
+                    "SET",
+                    modifier = Modifier.weight(0.5f),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = Color.Gray
+                )
+                Text(
+                    "CARGA",
+                    modifier = Modifier.weight(1f),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = Color.Gray
+                )
+                Text(
+                    "REPS",
+                    modifier = Modifier.weight(1f),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = Color.Gray
+                )
             }
-            
-            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = Color.White.copy(alpha = 0.1f))
-            
+
+            HorizontalDivider(
+                modifier = Modifier.padding(vertical = 8.dp),
+                color = Color.White.copy(alpha = 0.1f)
+            )
+
             exercise.exerciseSets.forEachIndexed { index, set ->
                 Row(
                     modifier = Modifier
