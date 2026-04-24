@@ -17,12 +17,14 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
@@ -155,7 +157,13 @@ fun WorkoutScreen(
         }
     }
 
-    val elapsedTime = remember(workout?.startTime, currentTime, workout?.isCompleted, workout?.accumulatedTime, workout?.isPaused) {
+    val elapsedTime = remember(
+        workout?.startTime,
+        currentTime,
+        workout?.isCompleted,
+        workout?.accumulatedTime,
+        workout?.isPaused
+    ) {
         val baseTime = workout?.accumulatedTime ?: 0L
         if (workout?.startTime != null && workout.isCompleted == false && workout.isPaused == false) {
             val diff = currentTime - workout.startTime
@@ -180,24 +188,25 @@ fun WorkoutScreen(
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
-        topBar = {
-            val exercisesFinished = workout?.exercises?.count { it.isCompleted } ?: 0
-            val totalCount = workout?.exercises?.size ?: 0
-            val percentage =
-                if (totalCount > 0) (exercisesFinished.toFloat() / totalCount.toFloat()) * 100 else 0f
+        topBar =
+            {
+                val exercisesFinished = workout?.exercises?.count { it.isCompleted } ?: 0
+                val totalCount = workout?.exercises?.size ?: 0
+                val percentage =
+                    if (totalCount > 0) (exercisesFinished.toFloat() / totalCount.toFloat()) * 100 else 0f
 
-            WorkoutTopBar(
-                workoutName = workout?.name
-                    ?: stringResource(id = R.string.workout_screen_default_workout_name),
-                progressPercentage = percentage,
-                finishedCount = exercisesFinished,
-                totalCount = totalCount,
-                onBackClick = onBackClick,
-                elapsedTime = elapsedTime,
-                isPaused = workout?.isPaused ?: false,
-                onPauseToggle = onTogglePause
-            )
-        }
+                WorkoutTopBar(
+                    workoutName = workout?.name
+                        ?: stringResource(id = R.string.workout_screen_default_workout_name),
+                    progressPercentage = percentage,
+                    finishedCount = exercisesFinished,
+                    totalCount = totalCount,
+                    onBackClick = onBackClick,
+                    elapsedTime = elapsedTime,
+                    isPaused = workout?.isPaused ?: false,
+                    onPauseToggle = onTogglePause
+                )
+            },
     ) { innerPadding ->
         Box(
             modifier = Modifier
@@ -626,7 +635,7 @@ fun ExerciseCard(
 
                 AnimatedVisibility(visible = isExpanded) {
                     Spacer(Modifier.height(16.dp))
-                    Column (modifier = Modifier.fillMaxWidth()) {
+                    Column(modifier = Modifier.fillMaxWidth()) {
                         Image(
                             modifier = Modifier
                                 .size(150.dp)

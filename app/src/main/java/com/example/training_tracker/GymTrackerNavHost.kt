@@ -1,19 +1,32 @@
 package com.example.training_tracker
 
 
+import android.annotation.SuppressLint
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.EmojiEvents
+import androidx.compose.material.icons.filled.FitnessCenter
+import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.ListAlt
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -26,8 +39,8 @@ import com.example.training_tracker.ui.screens.home.HomeScreen
 import com.example.training_tracker.ui.screens.home.HomeViewModel
 import com.example.training_tracker.ui.screens.records.RecordsScreen
 import com.example.training_tracker.ui.screens.records.RecordsViewModel
-import com.example.training_tracker.ui.screens.registered_workouts.GroffitBottomNavBar
 import com.example.training_tracker.ui.screens.registered_workouts.RegisteredWorkoutsScreen
+import com.example.training_tracker.ui.screens.registered_workouts.TextGray
 import com.example.training_tracker.ui.screens.workout_details.WorkoutDetailsScreen
 import com.example.training_tracker.ui.screens.workout_details.WorkoutDetailsViewModel
 import com.example.training_tracker.ui.screens.workout_history.WorkoutHistoryScreen
@@ -36,8 +49,10 @@ import com.example.training_tracker.ui.screens.workout_report.WorkoutReportScree
 import com.example.training_tracker.ui.screens.workout_report.WorkoutReportViewModel
 import com.example.training_tracker.ui.screens.workout_screen.WorkoutScreen
 import com.example.training_tracker.ui.screens.workout_screen.WorkoutViewModel
+import com.example.training_tracker.ui.theme.CyanAccent
 import java.time.DayOfWeek
 
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun GymTrackerNavHost() {
@@ -73,7 +88,6 @@ fun GymTrackerNavHost() {
             }
         }
     ) { innerPadding ->
-
         NavHost(
             navController = navController,
             startDestination = Routes.Home.name,
@@ -301,5 +315,76 @@ fun GymTrackerNavHost() {
                 )
             }
         }
+    }
+}
+
+@Composable
+fun GroffitBottomNavBar(
+    currentRoute: String,
+    onNavigate: (String) -> Unit
+) {
+    NavigationBar(
+        containerColor = MaterialTheme.colorScheme.surface,
+        tonalElevation = 0.dp
+    ) {
+        NavigationBarItem(
+            selected = currentRoute == Routes.Home.name,
+            onClick = { onNavigate(Routes.Home.name) },
+            icon = { Icon(Icons.Default.FitnessCenter, contentDescription = null) },
+            label = { Text("HOME") },
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = CyanAccent,
+                selectedTextColor = CyanAccent,
+                unselectedIconColor = TextGray
+            )
+        )
+
+        NavigationBarItem(
+            selected = currentRoute == Routes.RegisteredWorkouts.name,
+            onClick = { onNavigate(Routes.RegisteredWorkouts.name) },
+            icon = { Icon(Icons.Default.ListAlt, contentDescription = null) },
+            label = { Text("WORKOUTS") },
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = CyanAccent,
+                selectedTextColor = CyanAccent,
+                unselectedIconColor = TextGray
+            )
+        )
+
+        NavigationBarItem(
+            selected = currentRoute == Routes.WorkoutHistory.name,
+            onClick = { onNavigate(Routes.WorkoutHistory.name) },
+            icon = { Icon(Icons.Default.History, contentDescription = null) },
+            label = { Text("HISTORY") },
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = CyanAccent,
+                selectedTextColor = CyanAccent,
+                unselectedIconColor = TextGray
+            )
+        )
+
+        NavigationBarItem(
+            selected = currentRoute == Routes.Records.name,
+            onClick = { onNavigate(Routes.Records.name) },
+            icon = { Icon(Icons.Default.EmojiEvents, contentDescription = null) },
+            label = { Text("RECORDS") },
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = CyanAccent,
+                selectedTextColor = CyanAccent,
+                unselectedIconColor = TextGray
+            )
+        )
+
+        NavigationBarItem(
+            selected = currentRoute == "PROFILE_ROUTE",
+            onClick = { /* onNavigate(Routes.Profile.name) */ },
+            icon = { Icon(Icons.Default.Person, contentDescription = null) },
+            label = { Text("PROFILE") },
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = CyanAccent,
+                selectedTextColor = CyanAccent,
+                unselectedIconColor = TextGray
+            )
+        )
     }
 }

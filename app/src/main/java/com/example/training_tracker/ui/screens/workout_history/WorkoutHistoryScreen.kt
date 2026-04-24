@@ -45,8 +45,10 @@ fun WorkoutHistoryScreen(
     onSortOrderChange: (SortOrder) -> Unit,
     onNavigateBack: () -> Unit,
     onClickHistory: (String) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Scaffold(
+        modifier = modifier,
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
@@ -70,7 +72,8 @@ fun WorkoutHistoryScreen(
                         Icon(Icons.Default.AccountCircle, contentDescription = null, tint = CyanAccent)
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
+                windowInsets = WindowInsets(0, 0, 0, 0)
             )
         }
     ) { paddingValues ->

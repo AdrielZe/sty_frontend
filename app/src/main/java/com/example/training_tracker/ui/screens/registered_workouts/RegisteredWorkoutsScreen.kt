@@ -140,12 +140,13 @@ fun RegisteredWorkoutsScreen(
     onNavigateBack: () -> Unit,
     onWorkoutClick: (String) -> Unit,
     onCreateWorkoutClick: (DayOfWeek?) -> Unit,
+    modifier: Modifier = Modifier,
     viewModel: RegisteredWorkoutsViewModel = viewModel(factory = RegisteredWorkoutsViewModel.Factory)
 ) {
     val uiState = viewModel.uiState.collectAsState().value
     val listState = rememberLazyListState()
     
-    DragAndDropContainer {
+    DragAndDropContainer(modifier = modifier) {
         val state = LocalDragAndDropState.current
         var columnBounds by remember { mutableStateOf(Rect.Zero) }
 
@@ -188,7 +189,8 @@ fun RegisteredWorkoutsScreen(
                             Icon(Icons.Default.MoreVert, contentDescription = null, tint = CyanAccent)
                         }
                     },
-                    colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
+                    windowInsets = WindowInsets(0, 0, 0, 0)
                 )
             },
         ) { paddingValues ->
@@ -523,73 +525,4 @@ fun NoActivityCard(
     }
 }
 
-@Composable
-fun GroffitBottomNavBar(
-    currentRoute: String,
-    onNavigate: (String) -> Unit
-) {
-    NavigationBar(
-        containerColor = MaterialTheme.colorScheme.surface,
-        tonalElevation = 0.dp
-    ) {
-        NavigationBarItem(
-            selected = currentRoute == Routes.Home.name,
-            onClick = { onNavigate(Routes.Home.name) },
-            icon = { Icon(Icons.Default.FitnessCenter, contentDescription = null) },
-            label = { Text("HOME") },
-            colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = CyanAccent,
-                selectedTextColor = CyanAccent,
-                unselectedIconColor = TextGray
-            )
-        )
 
-        NavigationBarItem(
-            selected = currentRoute == Routes.RegisteredWorkouts.name,
-            onClick = { onNavigate(Routes.RegisteredWorkouts.name) },
-            icon = { Icon(Icons.Default.ListAlt, contentDescription = null) },
-            label = { Text("WORKOUTS") },
-            colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = CyanAccent,
-                selectedTextColor = CyanAccent,
-                unselectedIconColor = TextGray
-            )
-        )
-
-        NavigationBarItem(
-            selected = currentRoute == Routes.WorkoutHistory.name,
-            onClick = { onNavigate(Routes.WorkoutHistory.name) },
-            icon = { Icon(Icons.Default.History, contentDescription = null) },
-            label = { Text("HISTORY") },
-            colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = CyanAccent,
-                selectedTextColor = CyanAccent,
-                unselectedIconColor = TextGray
-            )
-        )
-
-        NavigationBarItem(
-            selected = currentRoute == Routes.Records.name,
-            onClick = { onNavigate(Routes.Records.name) },
-            icon = { Icon(Icons.Default.EmojiEvents, contentDescription = null) },
-            label = { Text("RECORDS") },
-            colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = CyanAccent,
-                selectedTextColor = CyanAccent,
-                unselectedIconColor = TextGray
-            )
-        )
-
-        NavigationBarItem(
-            selected = currentRoute == "PROFILE_ROUTE",
-            onClick = { /* onNavigate(Routes.Profile.name) */ },
-            icon = { Icon(Icons.Default.Person, contentDescription = null) },
-            label = { Text("PROFILE") },
-            colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = CyanAccent,
-                selectedTextColor = CyanAccent,
-                unselectedIconColor = TextGray
-            )
-        )
-    }
-}

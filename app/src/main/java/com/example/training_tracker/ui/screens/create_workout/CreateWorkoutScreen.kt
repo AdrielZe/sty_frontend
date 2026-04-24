@@ -103,7 +103,8 @@ fun CreateWorkoutScreen(
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.background
-                )
+                ),
+                windowInsets = WindowInsets(0, 0, 0, 0)
             )
         },
         containerColor = MaterialTheme.colorScheme.background
