@@ -190,7 +190,6 @@ fun RegisteredWorkoutsScreen(
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
-                    windowInsets = WindowInsets(0, 0, 0, 0)
                 )
             },
         ) { paddingValues ->

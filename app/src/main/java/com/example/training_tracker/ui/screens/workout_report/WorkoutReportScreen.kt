@@ -82,7 +82,6 @@ fun WorkoutReportScreen(
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                     containerColor = Color.Transparent
                 ),
-                windowInsets = WindowInsets(0, 0, 0, 0)
             )
         },
     ) { paddingValues ->

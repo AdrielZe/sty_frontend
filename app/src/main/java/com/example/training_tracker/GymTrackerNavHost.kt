@@ -1,6 +1,5 @@
 package com.example.training_tracker
 
-
 import android.annotation.SuppressLint
 import android.os.Build
 import androidx.annotation.RequiresApi
@@ -52,7 +51,6 @@ import com.example.training_tracker.ui.screens.workout_screen.WorkoutViewModel
 import com.example.training_tracker.ui.theme.CyanAccent
 import java.time.DayOfWeek
 
-@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun GymTrackerNavHost() {
@@ -61,7 +59,7 @@ fun GymTrackerNavHost() {
     val homeUiState by homeViewModel.uiState.collectAsState()
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentRoute= navBackStackEntry?.destination?.route
+    val currentRoute = navBackStackEntry?.destination?.route
 
     val routesWithBottomBar = listOf(
         Routes.Home.name,
@@ -72,7 +70,11 @@ fun GymTrackerNavHost() {
 
     Scaffold(
         bottomBar = {
-            if (currentRoute in routesWithBottomBar) {
+            AnimatedVisibility(
+                visible = currentRoute in routesWithBottomBar,
+                enter = slideInVertically(initialOffsetY = { it }),
+                exit = slideOutVertically(targetOffsetY = { it })
+            ) {
                 GroffitBottomNavBar(
                     currentRoute = currentRoute ?: Routes.Home.name,
                     onNavigate = { routeName ->
@@ -92,8 +94,7 @@ fun GymTrackerNavHost() {
             navController = navController,
             startDestination = Routes.Home.name,
             modifier = Modifier
-                .background(MaterialTheme.colorScheme.background)
-                .padding(innerPadding),
+                .background(MaterialTheme.colorScheme.background),
             enterTransition = {
                 slideInHorizontally(initialOffsetX = { it }, animationSpec = tween(400)) + fadeIn(
                     animationSpec = tween(400)
@@ -160,7 +161,7 @@ fun GymTrackerNavHost() {
             ) { backStackEntry ->
                 val dayOfWeekString = backStackEntry.arguments?.getString("dayOfWeek")
                 val dayOfWeek = dayOfWeekString?.let { DayOfWeek.valueOf(it) }
-                
+
                 CreateWorkoutScreen(
                     onNavigateBack = { navController.popBackStack() },
                     initialDayOfWeek = dayOfWeek

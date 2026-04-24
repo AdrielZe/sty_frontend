@@ -360,6 +360,7 @@ fun WorkoutTopBar(
     Column(
         modifier = Modifier
             .fillMaxWidth()
+            .statusBarsPadding()
             .background(MaterialTheme.colorScheme.surface)
     ) {
         Row(

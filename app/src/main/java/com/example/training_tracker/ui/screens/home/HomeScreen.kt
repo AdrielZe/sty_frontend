@@ -110,7 +110,9 @@ fun HomeScreen(
     var showGoalDialog by remember { mutableStateOf(false) }
 
     Scaffold(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(bottom = 80.dp),
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             CustomTopBar(
@@ -138,7 +140,6 @@ fun HomeScreen(
     ) { innerPadding ->
         Column(
             modifier = modifier
-                .padding(innerPadding)
                 .padding(horizontal = 24.dp)
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState()),
