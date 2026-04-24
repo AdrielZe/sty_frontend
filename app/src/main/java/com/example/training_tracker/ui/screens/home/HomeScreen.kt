@@ -111,8 +111,7 @@ fun HomeScreen(
 
     Scaffold(
         modifier = Modifier
-            .fillMaxSize()
-            .padding(bottom = 80.dp),
+            .fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             CustomTopBar(
@@ -141,6 +140,7 @@ fun HomeScreen(
         Column(
             modifier = modifier
                 .padding(horizontal = 24.dp)
+                .padding(innerPadding)
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.Start,
