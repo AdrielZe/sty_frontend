@@ -253,6 +253,10 @@ fun HistoryWorkoutCard(workout: WorkoutHistory, onClick: () -> Unit) {
         if (total >= 1000) "%.1fk kg".format(total / 1000) else "%.0f kg".format(total)
     }
 
+    val durationMinutes = remember(workout.durationMillis) {
+        (workout.durationMillis / 60000).toInt()
+    }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -293,7 +297,7 @@ fun HistoryWorkoutCard(workout: WorkoutHistory, onClick: () -> Unit) {
                 )
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Default.Timer, null, tint = TextGray, modifier = Modifier.size(12.dp))
-                    Text(" 45M", fontSize = 11.sp, color = TextGray) // Exemplo fixo ou extraído se houver campo de duração
+                    Text(" ${durationMinutes}M", fontSize = 11.sp, color = TextGray)
                 }
             }
         }

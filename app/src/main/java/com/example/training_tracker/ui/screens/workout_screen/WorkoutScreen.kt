@@ -43,6 +43,8 @@ import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.AlertDialog
@@ -64,6 +66,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -104,6 +107,7 @@ import com.example.training_tracker.ui.theme.CyanAccent
 import com.example.training_tracker.ui.theme.CyanGradient
 import com.example.training_tracker.ui.theme.Dimens
 import com.example.training_tracker.ui.theme.Typography
+import kotlinx.coroutines.delay
 import nl.dionsegijn.konfetti.compose.KonfettiView
 import nl.dionsegijn.konfetti.core.Party
 import nl.dionsegijn.konfetti.core.Position
@@ -122,6 +126,7 @@ fun WorkoutScreen(
     onCompleteExercise: (String) -> Unit,
     onReopenExercise: (String) -> Unit,
     onCompleteWorkout: () -> Unit,
+    onTogglePause: () -> Unit = {}
 ) {
     val currentOnWeightChange by rememberUpdatedState(onWeightChange)
     val currentOnRepsChange by rememberUpdatedState(onRepsChange)
@@ -137,6 +142,28 @@ fun WorkoutScreen(
 
     var hasInitialized by rememberSaveable(workout?.id) { mutableStateOf(false) }
     var expandedExercises by rememberSaveable { mutableStateOf(setOf<String>()) }
+
+    var currentTime by remember { mutableLongStateOf(System.currentTimeMillis()) }
+
+    LaunchedEffect(workout?.isOnGoing, workout?.isCompleted, workout?.isPaused) {
+        if (workout?.isOnGoing == true && workout.isCompleted == false && workout.isPaused == false) {
+            currentTime = System.currentTimeMillis() // Sync immediately
+            while (true) {
+                delay(1000)
+                currentTime = System.currentTimeMillis()
+            }
+        }
+    }
+
+    val elapsedTime = remember(workout?.startTime, currentTime, workout?.isCompleted, workout?.accumulatedTime, workout?.isPaused) {
+        val baseTime = workout?.accumulatedTime ?: 0L
+        if (workout?.startTime != null && workout.isCompleted == false && workout.isPaused == false) {
+            val diff = currentTime - workout.startTime
+            if (diff > 0) baseTime + diff else baseTime
+        } else {
+            baseTime
+        }
+    }
 
     LaunchedEffect(workout?.id) {
         if (!hasInitialized && workout != null && !workout.isCompleted) {
@@ -165,7 +192,10 @@ fun WorkoutScreen(
                 progressPercentage = percentage,
                 finishedCount = exercisesFinished,
                 totalCount = totalCount,
-                onBackClick = onBackClick
+                onBackClick = onBackClick,
+                elapsedTime = elapsedTime,
+                isPaused = workout?.isPaused ?: false,
+                onPauseToggle = onTogglePause
             )
         }
     ) { innerPadding ->
@@ -296,13 +326,27 @@ fun WorkoutTopBar(
     progressPercentage: Float,
     finishedCount: Int,
     totalCount: Int,
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    elapsedTime: Long = 0L,
+    isPaused: Boolean = false,
+    onPauseToggle: () -> Unit = {}
 ) {
     val animatedProgress by animateFloatAsState(
         targetValue = progressPercentage / 100f,
         animationSpec = ProgressIndicatorDefaults.ProgressAnimationSpec,
         label = "TopBarProgress"
     )
+
+    val formattedTime = remember(elapsedTime) {
+        val hours = (elapsedTime / 3600000)
+        val minutes = (elapsedTime / 60000) % 60
+        val seconds = (elapsedTime / 1000) % 60
+        if (hours > 0) {
+            "%02d:%02d:%02d".format(hours, minutes, seconds)
+        } else {
+            "%02d:%02d".format(minutes, seconds)
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -334,11 +378,47 @@ fun WorkoutTopBar(
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
-                    Text(
-                        text = "$finishedCount of $totalCount exercises completed",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = TextGray
-                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = "$finishedCount of $totalCount exercises completed",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = TextGray
+                        )
+                        if (elapsedTime > 0) {
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Box(
+                                modifier = Modifier
+                                    .size(4.dp)
+                                    .background(TextGray, CircleShape)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Icon(
+                                Icons.Default.Timer,
+                                contentDescription = null,
+                                tint = if (isPaused) Color.Gray else CyanAccent,
+                                modifier = Modifier.size(12.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = formattedTime,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = if (isPaused) Color.Gray else CyanAccent,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            IconButton(
+                                onClick = onPauseToggle,
+                                modifier = Modifier.size(20.dp)
+                            ) {
+                                Icon(
+                                    imageVector = if (isPaused) Icons.Default.PlayArrow else Icons.Default.Pause,
+                                    contentDescription = if (isPaused) "Resume" else "Pause",
+                                    tint = CyanAccent,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            }
+                        }
+                    }
                 }
             }
             Text(

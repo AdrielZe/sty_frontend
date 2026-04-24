@@ -30,15 +30,19 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.AccessibilityNew
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.QueryStats
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -266,43 +270,73 @@ fun HomeScreen(
 
 @Composable
 fun SetWeeklyGoalCard(onClick: () -> Unit) {
+    val isDark = isSystemInDarkTheme()
     Card(
         modifier = Modifier
             .fillMaxWidth()
+            .height(100.dp)
             .clickable { onClick() },
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-        border = BorderStroke(1.dp, CyanAccent.copy(alpha = 0.3f))
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isDark) MaterialTheme.colorScheme.surfaceVariant else Color.Black
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
-        Row(
-            modifier = Modifier.padding(20.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Surface(
-                modifier = Modifier.size(48.dp),
-                shape = CircleShape,
-                color = CyanAccent.copy(alpha = 0.1f)
+        Box(modifier = Modifier.fillMaxSize()) {
+            Image(
+                painter = painterResource(id = R.drawable.strong_3k), // Uma imagem que remeta a início/meta
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop,
+                alpha = if (isDark) 0.2f else 0.4f
+            )
+
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(
+                                Color.Transparent,
+                                Color.Black.copy(alpha = 0.7f)
+                            )
+                        )
+                    )
+            )
+
+            Row(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(20.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = null,
-                    tint = CyanAccent,
-                    modifier = Modifier.padding(12.dp)
-                )
-            }
-            Spacer(modifier = Modifier.width(16.dp))
-            Column {
-                Text(
-                    text = "Defina sua meta semanal",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Text(
-                    text = "Quantos treinos você quer fazer esta semana?",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                Surface(
+                    modifier = Modifier.size(48.dp),
+                    shape = CircleShape,
+                    color = CyanAccent.copy(alpha = 0.2f),
+                    border = BorderStroke(1.dp, CyanAccent.copy(alpha = 0.5f))
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = null,
+                        tint = CyanAccent,
+                        modifier = Modifier.padding(12.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.width(16.dp))
+                Column {
+                    Text(
+                        text = "Defina sua meta semanal",
+                        style = Typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                    Text(
+                        text = "Quantos treinos você fará esta semana?",
+                        style = Typography.bodySmall,
+                        color = Color.White.copy(alpha = 0.7f)
+                    )
+                }
             }
         }
     }
@@ -454,6 +488,7 @@ fun WeeklyProgressCard(
     onEditGoal: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val isDark = isSystemInDarkTheme()
     val progress = if (goalWorkouts > 0) {
         (currentWorkouts.toFloat() / goalWorkouts.toFloat()).coerceIn(0f, 1f)
     } else {
@@ -462,102 +497,91 @@ fun WeeklyProgressCard(
 
     Card(
         modifier = modifier
-            .fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
+            .fillMaxWidth()
+            .height(160.dp),
+        shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(
-            // 2. Deixa o fundo padrão transparente
             containerColor = Color.Transparent
         ),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
-        Column(
-            modifier = Modifier.padding(20.dp)
-        ) {
-            // Linha superior: Título e Fração de Progresso
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+        Box(modifier = Modifier.fillMaxSize()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(20.dp),
+                verticalArrangement = Arrangement.SpaceBetween
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = "My Progress",
-                        color = MaterialTheme.colorScheme.onSurface,
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Icon(
-                        imageVector = Icons.Default.Edit,
-                        contentDescription = "Editar meta",
-                        modifier = Modifier
-                            .size(16.dp)
-                            .clickable { onEditGoal() },
-                        tint = CyanAccent
-                    )
-                }
-
-                Column(horizontalAlignment = Alignment.End) {
-                    Row(verticalAlignment = Alignment.Bottom) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Top
+                ) {
+                    Column {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = "Weekly Progress",
+                                color = MaterialTheme.colorScheme.onSurface,
+                                style = Typography.titleMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Icon(
+                                imageVector = Icons.Default.Edit,
+                                contentDescription = "Editar meta",
+                                modifier = Modifier
+                                    .size(14.dp)
+                                    .clickable { onEditGoal() },
+                                tint = CyanAccent
+                            )
+                        }
                         Text(
-                            text = "$currentWorkouts",
-                            color = MaterialTheme.colorScheme.onSurface,
-                            fontSize = 22.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Text(
-                            text = " / $goalWorkouts",
-                            color = Color.LightGray,
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Medium,
-                            modifier = Modifier.padding(bottom = 2.dp)
+                            text = "Consistency is key",
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            style = Typography.labelSmall
                         )
                     }
+
+                    Surface(
+                        color = CyanAccent.copy(alpha = 0.1f),
+                        shape = CircleShape,
+                        border = BorderStroke(1.dp, CyanAccent.copy(alpha = 0.3f))
+                    ) {
+                        Text(
+                            text = "$currentWorkouts / $goalWorkouts",
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                            color = CyanAccent,
+                            style = Typography.labelMedium,
+                            fontWeight = FontWeight.ExtraBold
+                        )
+                    }
+                }
+
+                Column {
+                    // Barra de Progresso Customizada (Estilo Groffit)
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(8.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f))
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth(fraction = progress)
+                                .fillMaxHeight()
+                                .background(CyanGradient)
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "workouts/goal",
-                        color = Color.Gray,
-                        fontSize = 12.sp
+                        text = if (progress >= 1f) "Goal Reached! 🔥" else "${(progress * 100).toInt()}% completed",
+                        color = if (progress >= 1f) Color.Green else MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = Typography.labelSmall,
+                        fontWeight = FontWeight.Bold
                     )
                 }
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Barra de Progresso Customizada
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(10.dp)
-                    .clip(RoundedCornerShape(percent = 50))
-                    .background(Color(0xFF333333)) // Cor do fundo da barra (trilha)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize(fraction = progress)
-                        .clip(RoundedCornerShape(percent = 50))
-                        .background(CyanAccent) // Cor do preenchimento
-                )
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Linha inferior: Detalhes da meta
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Weekly Goal Progress",
-                    color = MaterialTheme.colorScheme.onSurface,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium
-                )
-                Text(
-                    text = "Goal: $goalWorkouts sessions/week",
-                    color = Color.Gray,
-                    fontSize = 12.sp
-                )
             }
         }
     }
@@ -571,48 +595,69 @@ fun WorkoutsSummaryCard(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .height(72.dp),
+            .height(100.dp),
+        shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(
-            // 2. Deixa o fundo padrão transparente
             containerColor = Color.Transparent
         ),
-        shape = RoundedCornerShape(20.dp),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 20.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Start
-        ) {
-            Surface(
-                modifier = Modifier.size(40.dp),
-                shape = CircleShape,
-                color = CyanAccent.copy(alpha = 0.15f)
+        Box(modifier = Modifier.fillMaxSize()) {
+            Row(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 24.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Icon(
-                    imageVector = Icons.Default.CheckCircle,
-                    contentDescription = null,
-                    tint = CyanAccent,
-                    modifier = Modifier.padding(8.dp)
-                )
-            }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Surface(
+                        modifier = Modifier.size(52.dp),
+                        shape = RoundedCornerShape(16.dp),
+                        color = CyanAccent.copy(alpha = 0.1f),
+                        border = BorderStroke(1.dp, CyanAccent.copy(alpha = 0.2f))
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Star,
+                            contentDescription = null,
+                            tint = Color(0xFFFFD700), // Cor Dourada para o troféu
+                            modifier = Modifier.padding(12.dp)
+                        )
+                    }
 
-            Spacer(modifier = Modifier.width(16.dp))
+                    Spacer(modifier = Modifier.width(16.dp))
 
-            Column(verticalArrangement = Arrangement.Center) {
-                Text(
-                    text = stringResource(R.string.home_total_workouts_completed),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Text(
-                    text = "$count",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
+                    Column {
+                        Text(
+                            text = "Lifetime Stats",
+                            style = Typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            letterSpacing = 1.sp
+                        )
+                        Text(
+                            text = "Total Workouts",
+                            style = Typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                }
+
+                Column(horizontalAlignment = Alignment.End) {
+                    Text(
+                        text = "$count",
+                        style = Typography.headlineMedium,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = CyanAccent,
+                    )
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.TrendingUp,
+                        contentDescription = null,
+                        tint = Color.Green.copy(alpha = 0.7f),
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
             }
         }
     }
@@ -805,6 +850,32 @@ fun WorkoutCard(modifier: Modifier = Modifier, workout: Workout?, onClick: () ->
 
                     Spacer(modifier = Modifier.height(8.dp))
 
+                    if (workout?.isOnGoing == true && !isCompleted) {
+                        Column {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth(0.6f)
+                                    .height(4.dp)
+                                    .clip(CircleShape)
+                                    .background(Color.White.copy(alpha = 0.2f))
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth(workout.progress)
+                                        .fillMaxHeight()
+                                        .background(CyanGradient)
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "${(workout.progress * 100).toInt()}% completed",
+                                color = Color.White.copy(alpha = 0.7f),
+                                style = Typography.labelSmall
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(8.dp))
+                    }
+
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
                             imageVector = Icons.Default.FitnessCenter,
@@ -830,7 +901,7 @@ fun WorkoutCard(modifier: Modifier = Modifier, workout: Workout?, onClick: () ->
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
-                            text = "45 min", // Mocking duration for UI
+                            text = "${workout?.estimatedTime ?: 0} min",
                             color = Color.White.copy(alpha = 0.7f),
                             style = Typography.bodySmall
                         )

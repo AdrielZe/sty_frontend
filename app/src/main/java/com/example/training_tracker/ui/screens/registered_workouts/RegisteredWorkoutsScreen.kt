@@ -124,8 +124,7 @@ fun DragAndDropContainer(
                     ActiveWorkoutCard(
                         title = state.draggedItem!!.name,
                         exercises = state.draggedItem!!.exercises.size,
-                        duration = "55 min",
-                        consistency = 0.78f,
+                        duration = "${state.draggedItem!!.estimatedTime} min",
                         onWorkoutClick = {},
                         workout = state.draggedItem!!
                     )
@@ -225,8 +224,7 @@ fun RegisteredWorkoutsScreen(
                                             ActiveWorkoutCard(
                                                 title = workout.name,
                                                 exercises = workout.exercises.size,
-                                                duration = "55 min",
-                                                consistency = 0.78f,
+                                                duration = "${workout.estimatedTime} min",
                                                 onWorkoutClick = onWorkoutClick,
                                                 onDeleteClick = { viewModel.deleteWorkout(workout) },
                                                 workout = workout
@@ -391,7 +389,6 @@ fun ActiveWorkoutCard(
     title: String,
     exercises: Int,
     duration: String,
-    consistency: Float,
     onWorkoutClick: (String) -> Unit,
     onDeleteClick: () -> Unit = {},
     workout: Workout
@@ -466,7 +463,7 @@ fun ActiveWorkoutCard(
             ) {
                 Box(
                     modifier = Modifier
-                        .fillMaxWidth(consistency)
+                        .fillMaxWidth(workout.progress)
                         .fillMaxHeight()
                         .background(CyanGradient)
                 )
@@ -476,8 +473,8 @@ fun ActiveWorkoutCard(
                 modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text("CONSISTENCY", fontSize = 10.sp, color = TextGray, fontWeight = FontWeight.Bold)
-                Text("${(consistency * 100).toInt()}% MATCH", fontSize = 10.sp, color = CyanAccent, fontWeight = FontWeight.Bold)
+                Text("PROGRESS", fontSize = 10.sp, color = TextGray, fontWeight = FontWeight.Bold)
+                Text("${(workout.progress * 100).toInt()}% COMPLETE", fontSize = 10.sp, color = CyanAccent, fontWeight = FontWeight.Bold)
             }
         }
     }

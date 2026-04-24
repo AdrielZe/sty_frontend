@@ -44,6 +44,10 @@ class WorkoutReportViewModel(
             val totalSets = countTotalSets(workout?.exercises ?: emptyList())
             val totalReps = countTotalReps(workout?.exercises ?: emptyList())
 
+            val durationMinutes = if (workout != null) {
+                (workout.durationMillis / 60000).toInt()
+            } else 0
+
             println("Received Records: ${workout?.records}")
 
             WorkoutReportUiState(
@@ -53,7 +57,7 @@ class WorkoutReportViewModel(
                 totalWeightLiftedInfo = totalWeightLiftedInfo,
                 totalSets = totalSets,
                 totalReps = totalReps,
-                totalMinutes = 80,
+                totalMinutes = durationMinutes,
                 exercises = workout?.exercises ?: emptyList(),
                 records = workout?.records
             )

@@ -74,6 +74,35 @@ class WorkoutViewModel(
         initialValue = WorkoutUiState()
     )
 
+    private fun calculateProgress(workout: Workout): Float {
+        val totalSets = workout.exercises.sumOf { it.exerciseSets.size }
+        if (totalSets == 0) return 0f
+        val completedSets = workout.exercises.sumOf { it.exerciseSets.count { set -> set.isCompleted } }
+        return completedSets.toFloat() / totalSets
+    }
+
+    fun togglePauseWorkout() {
+        val currentWorkout = uiState.value.workout ?: return
+        val now = System.currentTimeMillis()
+
+        val updatedWorkout = if (currentWorkout.isPaused) {
+            // Unpausing: set new startTime to now
+            currentWorkout.copy(isPaused = false, startTime = now)
+        } else {
+            // Pausing: add elapsed time to accumulatedTime and clear startTime
+            val elapsedSinceStart = if (currentWorkout.startTime != null) now - currentWorkout.startTime else 0L
+            currentWorkout.copy(
+                isPaused = true,
+                accumulatedTime = currentWorkout.accumulatedTime + elapsedSinceStart,
+                startTime = null
+            )
+        }
+
+        viewModelScope.launch {
+            workoutRepository.updateWorkout(updatedWorkout)
+        }
+    }
+
     fun addNewSetLine(exerciseId: String) {
         val currentWorkout = uiState.value.workout ?: return
 
@@ -90,8 +119,9 @@ class WorkoutViewModel(
         }
 
         val updatedWorkout = currentWorkout.copy(exercises = updatedExerciseSetLine)
+        val workoutWithProgress = updatedWorkout.copy(progress = calculateProgress(updatedWorkout))
         viewModelScope.launch {
-            workoutRepository.updateWorkout(updatedWorkout)
+            workoutRepository.updateWorkout(workoutWithProgress)
         }
     }
 
@@ -108,8 +138,9 @@ class WorkoutViewModel(
         }
 
         val updatedWorkout = currentWorkout.copy(exercises = updatedExercises)
+        val workoutWithProgress = updatedWorkout.copy(progress = calculateProgress(updatedWorkout))
         viewModelScope.launch {
-            workoutRepository.updateWorkout(updatedWorkout)
+            workoutRepository.updateWorkout(workoutWithProgress)
         }
     }
 
@@ -132,8 +163,9 @@ class WorkoutViewModel(
         }
 
         val updatedWorkout = currentWorkout.copy(exercises = updatedExercises)
+        val workoutWithProgress = updatedWorkout.copy(progress = calculateProgress(updatedWorkout))
         viewModelScope.launch {
-            workoutRepository.updateWorkout(updatedWorkout)
+            workoutRepository.updateWorkout(workoutWithProgress)
         }
     }
 
@@ -153,6 +185,7 @@ class WorkoutViewModel(
         }
 
         val updatedWorkout = currentWorkout.copy(exercises = updatedExerciseList)
+        val workoutWithProgress = updatedWorkout.copy(progress = calculateProgress(updatedWorkout))
 
         viewModelScope.launch {
             workoutRepository.updateWorkout(updatedWorkout)
@@ -174,8 +207,9 @@ class WorkoutViewModel(
         }
 
         val updatedWorkout = currentWorkout.copy(exercises = updatedExerciseList)
+        val workoutWithProgress = updatedWorkout.copy(progress = calculateProgress(updatedWorkout))
         viewModelScope.launch {
-            workoutRepository.updateWorkout(updatedWorkout)
+            workoutRepository.updateWorkout(workoutWithProgress)
         }
     }
 
@@ -290,12 +324,20 @@ class WorkoutViewModel(
             )
         }
 
+        val now = System.currentTimeMillis()
+        val duration = currentWorkout.accumulatedTime + if (currentWorkout.startTime != null) {
+             now - currentWorkout.startTime
+        } else {
+            0L
+        }
+
         val newHistoryEntry = WorkoutHistory(
             name = currentWorkout.name,
             completionDate = java.time.LocalDate.now(),
             exercises = completedExercises,
             workoutId = currentWorkout.id,
             difficulty = WorkoutDifficulty.MEDIUM,
+            durationMillis = duration
         )
 
         val historyId = newHistoryEntry.id
@@ -303,7 +345,8 @@ class WorkoutViewModel(
         val completedWorkout = currentWorkout.copy(
             exercises = completedExercises,
             isCompleted = true,
-            completionDate = java.time.LocalDate.now()
+            completionDate = java.time.LocalDate.now(),
+            progress = 1f
         )
 
         _finishedWorkoutSession.value = completedWorkout
@@ -335,7 +378,15 @@ class WorkoutViewModel(
             }
 
             val resetWorkout = currentWorkout.copy(
-                exercises = resetExercises, isCompleted = false, historyId = historyId, isOnGoing = false, completionDate = null
+                exercises = resetExercises,
+                isCompleted = false,
+                historyId = historyId,
+                isOnGoing = false,
+                isPaused = false,
+                accumulatedTime = 0L,
+                completionDate = null,
+                startTime = null,
+                progress = 0f
             )
 
             workoutRepository.updateWorkout(resetWorkout)
