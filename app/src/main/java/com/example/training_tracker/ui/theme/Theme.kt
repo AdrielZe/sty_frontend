@@ -26,7 +26,8 @@ private val LightColorScheme = lightColorScheme(
     onBackground = LightText,
     onSurface = LightText,
     tertiary = GrayDarkText,
-    outline = DarkOutlineText
+    outline = DarkOutlineText,
+    surfaceTint = FadeCardBackgroundLight
 )
 
 private val DarkColorScheme = darkColorScheme(

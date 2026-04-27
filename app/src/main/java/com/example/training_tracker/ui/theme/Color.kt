@@ -58,3 +58,6 @@ val GrayDarkText = Color(0xFF323332)
 val LightOutlineText = Color(0xFF94A3B8)
 
 val DarkOutlineText = Color(0xFF94A3B8 )
+
+
+val FadeCardBackgroundLight = Color(0xFFF0F4F8)

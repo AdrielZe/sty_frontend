@@ -5,8 +5,6 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -17,7 +15,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -26,7 +23,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
@@ -36,7 +32,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Done
@@ -85,12 +80,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.modifier.modifierLocalConsumer
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextRange
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
@@ -98,6 +91,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.example.training_tracker.R
 import com.example.training_tracker.data.models.Exercise
 import com.example.training_tracker.data.models.MuscleGroups
@@ -637,14 +632,17 @@ fun ExerciseCard(
                 AnimatedVisibility(visible = isExpanded) {
                     Spacer(Modifier.height(16.dp))
                     Column(modifier = Modifier.fillMaxWidth()) {
-                        Image(
+                        AsyncImage(
                             modifier = Modifier
                                 .size(150.dp)
                                 .clip(CircleShape)
                                 .align(Alignment.CenterHorizontally)
                                 .background(color = Color.White)
                                 .border(width = 2.dp, color = CyanAccent),
-                            painter = painterResource(id = cardImage),
+                            model = ImageRequest.Builder(LocalContext.current)
+                                .data(cardImage)
+                                .crossfade(true)
+                                .build(),
                             contentScale = ContentScale.Fit,
                             contentDescription = null
                         )
@@ -798,7 +796,7 @@ fun ExerciseCard(
 
                         Spacer(Modifier.width(12.dp))
 
-                        Image(
+                        AsyncImage(
                             modifier = Modifier
                                 .height(150.dp)
                                 .width(300.dp)
@@ -806,7 +804,10 @@ fun ExerciseCard(
                                 .weight(1f)
                                 .border(width = 1.dp, color = CyanAccent)
                                 .background(color = Color.White),
-                            painter = painterResource(id = cardImage),
+                            model = ImageRequest.Builder(LocalContext.current)
+                                .data(cardImage)
+                                .crossfade(true)
+                                .build(),
                             contentScale = ContentScale.Fit,
                             contentDescription = null
                         )

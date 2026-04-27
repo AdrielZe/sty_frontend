@@ -61,15 +61,20 @@ fun MainTabsScreen(
                 val homeUiState by homeViewModel.uiState.collectAsState()
                 HomeScreen(
                     homeUiState = homeUiState,
-                    // Rotas de TELA CHEIA usam o rootNavController!
                     onClickWorkoutCard = { workoutId ->
-                        // ... sua lógica de checagem de estado ...
-                        rootNavController.navigate("${Routes.WorkoutDetails.name}/$workoutId/true")
+                        val clickedWorkout = homeUiState.todayWorkouts.find { it.id == workoutId }
+                        if (clickedWorkout?.isCompleted == false && !clickedWorkout.isOnGoing) {
+                            rootNavController.navigate("${Routes.WorkoutDetails.name}/$workoutId/true")
+                        } else if(clickedWorkout?.isOnGoing == true) {
+                            rootNavController.navigate("${Routes.Workout.name}/$workoutId")
+                        }
+                        else {
+                            rootNavController.navigate("${Routes.WorkoutReport.name}/${clickedWorkout?.historyId}")
+                        }
                     },
                     onNavigateToCreateWorkout = {
                         rootNavController.navigate(Routes.CreateWorkout.name)
                     },
-                    // Rotas de ABAS usam o tabsNavController!
                     onNavigateToRegisteredWorkouts = {
                         navigateToTab(Routes.RegisteredWorkouts.name)
                     },

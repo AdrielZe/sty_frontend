@@ -1,12 +1,12 @@
 package com.example.training_tracker.ui.screens.workout_history
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.Image
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -17,18 +17,21 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.example.training_tracker.R
+import com.example.training_tracker.data.models.MuscleGroups
 import com.example.training_tracker.data.models.WorkoutHistory
+import com.example.training_tracker.ui.screens.home.MuscleBadge
 import com.example.training_tracker.ui.screens.registered_workouts.TextGray
 import com.example.training_tracker.ui.theme.CyanAccent
 import java.time.LocalDate
@@ -84,7 +87,6 @@ fun WorkoutHistoryScreen(
             verticalArrangement = Arrangement.spacedBy(20.dp),
             contentPadding = PaddingValues(top = 16.dp, bottom = 32.dp)
         ) {
-            // Seção do Calendário
             item {
                 HistoryCalendarCard(
                     savedWorkouts = uiState.savedWorkouts,
@@ -95,12 +97,10 @@ fun WorkoutHistoryScreen(
                 )
             }
 
-            // Filtros Rápidos
             item {
                 HistoryFilterRow(uiState.sortOrder, onSortOrderChange)
             }
 
-            // Título Atividades Recentes
             item {
                 Text(
                     "RECENT ACTIVITIES",
@@ -112,17 +112,11 @@ fun WorkoutHistoryScreen(
                 )
             }
 
-            // Lista de Treinos Dinâmica
             items(uiState.savedWorkouts, key = { it.id }) { workout ->
                 HistoryWorkoutCard(
                     workout = workout,
                     onClick = { onClickHistory(workout.id) }
                 )
-            }
-            
-            // Card de Progresso/Incentivo
-            item {
-                MomentumCard(uiState.savedWorkouts.size)
             }
         }
     }
@@ -169,7 +163,6 @@ fun HistoryCalendarCard(
             
             Spacer(Modifier.height(12.dp))
             
-            // Grid de dias dinâmica
             var currentDay = 1
             for (week in 0..5) {
                 if (currentDay > daysInMonth) break
@@ -208,6 +201,35 @@ fun HistoryCalendarCard(
                     }
                 }
                 Spacer(Modifier.height(8.dp))
+            }
+
+            AnimatedVisibility(visible = selectedDate != null) {
+                val workoutsOnSelectedDate = savedWorkouts.filter { it.completionDate == selectedDate }
+                if (workoutsOnSelectedDate.isNotEmpty()) {
+                    val musclesForDay = workoutsOnSelectedDate
+                        .flatMap { it.exercises }
+                        .mapNotNull { it.muscleGroup }
+                        .distinct()
+                    
+                    if (musclesForDay.isNotEmpty()) {
+                        Column(modifier = Modifier.padding(top = 16.dp)) {
+                            HorizontalDivider(modifier = Modifier.padding(bottom = 16.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                            Text(
+                                "TARGETED MUSCLES",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = TextGray,
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = 1.sp
+                            )
+                            Spacer(Modifier.height(8.dp))
+                            LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                items(musclesForDay) { muscle ->
+                                    MuscleBadgeHistory(muscle = muscle)
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     }
@@ -259,47 +281,113 @@ fun HistoryWorkoutCard(workout: WorkoutHistory, onClick: () -> Unit) {
         (workout.durationMillis / 60000).toInt()
     }
 
+    val muscleGroups = remember(workout.exercises) {
+        workout.exercises.mapNotNull { it.muscleGroup }.distinct()
+    }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
+            .height(160.dp)
             .clickable { onClick() },
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        shape = RoundedCornerShape(24.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(getHistoryWorkoutImage(workout))
+                    .crossfade(true)
+                    .build(),
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop,
+                alpha = 0.6f
+            )
+
             Box(
                 modifier = Modifier
-                    .size(48.dp)
-                    .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f), RoundedCornerShape(12.dp)),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    Icons.Default.FitnessCenter,
-                    contentDescription = null,
-                    tint = TextGray
-                )
-            }
+                    .fillMaxSize()
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(
+                                Color.Transparent,
+                                Color.Black.copy(alpha = 0.9f)
+                            )
+                        )
+                    )
+            )
 
-            Spacer(Modifier.width(16.dp))
-            
-            Column(modifier = Modifier.weight(1f)) {
-                Text(workout.name, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface, fontSize = 16.sp)
-                Text(dateText, fontSize = 12.sp, color = TextGray)
-            }
-            
-            Column(horizontalAlignment = Alignment.End) {
-                Text(
-                    volume,
-                    fontWeight = FontWeight.Black,
-                    color = CyanAccent,
-                    fontSize = 16.sp
-                )
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.Timer, null, tint = TextGray, modifier = Modifier.size(12.dp))
-                    Text(" ${durationMinutes}M", fontSize = 11.sp, color = TextGray)
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(20.dp),
+                verticalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Top
+                ) {
+                    Column {
+                        Text(
+                            text = workout.name.uppercase(),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Black,
+                            color = Color.White
+                        )
+                        Text(
+                            text = dateText,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Color.LightGray
+                        )
+                    }
+
+                    Surface(
+                        color = CyanAccent.copy(alpha = 0.2f),
+                        shape = CircleShape,
+                        border = BorderStroke(1.dp, CyanAccent.copy(alpha = 0.5f))
+                    ) {
+                        Text(
+                            text = volume,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                            color = CyanAccent,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 12.sp
+                        )
+                    }
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Bottom
+                ) {
+                    if (muscleGroups.isNotEmpty()) {
+                        LazyRow(
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            items(muscleGroups) { muscle ->
+                                MuscleBadge(muscle = muscle)
+                            }
+                        }
+                    }
+                    
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            Icons.Default.Timer, 
+                            null, 
+                            tint = Color.White.copy(alpha = 0.7f), 
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Text(
+                            text = " ${durationMinutes} min", 
+                            color = Color.White.copy(alpha = 0.7f),
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
             }
         }
@@ -307,37 +395,40 @@ fun HistoryWorkoutCard(workout: WorkoutHistory, onClick: () -> Unit) {
 }
 
 @Composable
-fun MomentumCard(count: Int) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(140.dp)
-            .clip(RoundedCornerShape(24.dp))
-            .background(MaterialTheme.colorScheme.surfaceVariant)
+fun MuscleBadgeHistory(muscle: MuscleGroups) {
+    Surface(
+        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f),
+        shape = RoundedCornerShape(4.dp),
+        border = BorderStroke(0.5.dp,  MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f))
     ) {
-        Image(
-            painter = painterResource(id = R.drawable.strong_6k),
-            contentDescription = null,
-            modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Crop,
-            alpha = 0.4f
+        Text(
+            text = muscle.name,
+            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+            color = MaterialTheme.colorScheme.onSurface,
+            fontSize = 8.sp,
+            fontWeight = FontWeight.Bold,
+            letterSpacing = 0.5.sp
         )
+    }
+}
 
-        Column(modifier = Modifier.padding(24.dp).align(Alignment.CenterStart)) {
-            Text(
-                "KEEP THE\nMOMENTUM.",
-                style = MaterialTheme.typography.headlineSmall.copy(
-                    fontWeight = FontWeight.Black,
-                    color = CyanAccent,
-                    lineHeight = 24.sp
-                )
-            )
-            Spacer(Modifier.height(8.dp))
-            Text(
-                "You've completed $count workouts in total. Consistency is the path to greatness.",
-                fontSize = 12.sp,
-                color = TextGray
-            )
-        }
+private fun getHistoryWorkoutImage(workout: WorkoutHistory): Int {
+    if (workout.exercises.isEmpty()) return R.drawable.workout
+
+    val mostFrequentMuscleGroup = workout.exercises
+        .mapNotNull { it.muscleGroup }
+        .groupingBy { it }
+        .eachCount()
+        .maxByOrNull { it.value }?.key
+
+    return when (mostFrequentMuscleGroup) {
+        MuscleGroups.CHEST -> R.drawable.chest_workout
+        MuscleGroups.BACK -> R.drawable.back_workout
+        MuscleGroups.LEGS -> R.drawable.leg_workout
+        MuscleGroups.SHOULDERS -> R.drawable.shoulder_workout
+        MuscleGroups.BICEPS -> R.drawable.biceps_workout
+        MuscleGroups.TRICEPS -> R.drawable.triceps_workout
+        MuscleGroups.ABS -> R.drawable.abs_workout
+        else -> R.drawable.biceps_workout
     }
 }

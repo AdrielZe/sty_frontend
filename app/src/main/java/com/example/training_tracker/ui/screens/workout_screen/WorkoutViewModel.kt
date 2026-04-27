@@ -188,7 +188,7 @@ class WorkoutViewModel(
         val workoutWithProgress = updatedWorkout.copy(progress = calculateProgress(updatedWorkout))
 
         viewModelScope.launch {
-            workoutRepository.updateWorkout(updatedWorkout)
+            workoutRepository.updateWorkout(workoutWithProgress)
         }
     }
 
