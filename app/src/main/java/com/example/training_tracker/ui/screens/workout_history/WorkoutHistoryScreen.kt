@@ -24,6 +24,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
@@ -329,12 +330,14 @@ fun HistoryWorkoutCard(workout: WorkoutHistory, onClick: () -> Unit) {
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.Top
                 ) {
-                    Column {
+                    Column(modifier = Modifier.weight(1f)) {
                         Text(
                             text = workout.name.uppercase(),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Black,
-                            color = Color.White
+                            color = Color.White,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                         Text(
                             text = dateText,
@@ -342,6 +345,8 @@ fun HistoryWorkoutCard(workout: WorkoutHistory, onClick: () -> Unit) {
                             color = Color.LightGray
                         )
                     }
+
+                    Spacer(modifier = Modifier.width(8.dp))
 
                     Surface(
                         color = CyanAccent.copy(alpha = 0.2f),

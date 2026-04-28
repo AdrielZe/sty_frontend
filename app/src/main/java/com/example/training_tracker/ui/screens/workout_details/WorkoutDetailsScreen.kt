@@ -63,6 +63,7 @@ fun WorkoutDetailsScreen(
     val uiState by viewModel.uiState.collectAsState()
     var showAddExerciseDialog by remember { mutableStateOf(false) }
     var showEditWorkoutNameDialog by remember { mutableStateOf(false) }
+    var exerciseToDelete by remember { mutableStateOf<Exercise?>(null) }
 
     val scrollState = rememberScrollState()
 
@@ -138,12 +139,14 @@ fun WorkoutDetailsScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
 
-                            Column {
+                            Column(modifier = Modifier.weight(1f)) {
                                 Text(
                                     text = workout.name.uppercase(),
                                     style = MaterialTheme.typography.headlineMedium,
                                     fontWeight = FontWeight.ExtraBold,
-                                    color = MaterialTheme.colorScheme.onBackground
+                                    color = MaterialTheme.colorScheme.onBackground,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
                                 )
 
                                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -271,7 +274,7 @@ fun WorkoutDetailsScreen(
                                     number = index + 1,
                                     exercise = exercise,
                                     isEditMode = uiState.isEditMode,
-                                    onRemove = { viewModel.removeExercise(exercise.id) }
+                                    onRemove = { exerciseToDelete = exercise }
                                 )
                             }
                             Spacer(modifier = Modifier.height(Dimens.paddingSmall))
@@ -341,6 +344,31 @@ fun WorkoutDetailsScreen(
                 workout = uiState.workout
             )
         }
+
+        exerciseToDelete?.let { exercise ->
+            AlertDialog(
+                onDismissRequest = { exerciseToDelete = null },
+                title = { Text(stringResource(R.string.workout_details_remove_exercise_confirm_title)) },
+                text = { 
+                    Text(stringResource(R.string.workout_details_remove_exercise_confirm_message, exercise.name)) 
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            viewModel.removeExercise(exercise.id)
+                            exerciseToDelete = null
+                        }
+                    ) {
+                        Text(stringResource(R.string.workout_details_remove_button), color = MaterialTheme.colorScheme.error)
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { exerciseToDelete = null }) {
+                        Text(stringResource(R.string.workout_details_cancel_button))
+                    }
+                }
+            )
+        }
     }
 }
 
@@ -383,8 +411,6 @@ fun ExerciseDetailItem(
     onRemove: () -> Unit,
     elevation: androidx.compose.ui.unit.Dp = 2.dp
 ) {
-    var expanded by remember { mutableStateOf(false) }
-
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
@@ -416,7 +442,7 @@ fun ExerciseDetailItem(
 
             Row(
                 modifier = Modifier
-                    .fillMaxWidth(),
+                    .weight(1f),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
@@ -424,17 +450,19 @@ fun ExerciseDetailItem(
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Medium,
                     color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
 
                 Surface(
-                    modifier = Modifier.padding(4.dp),
+                    modifier = Modifier.padding(horizontal = 8.dp),
                     color = CyanAccent,
                     shape = RoundedCornerShape(4.dp)
                 ) {
                     Text(
                         modifier = Modifier
-                            .padding(4.dp).weight(1f),
+                            .padding(horizontal = 6.dp, vertical = 2.dp),
                         text = exercise.muscleGroup.toString(),
                         style = MaterialTheme.typography.labelSmall,
                         maxLines = 1,
@@ -445,38 +473,13 @@ fun ExerciseDetailItem(
             }
 
             if (isEditMode) {
-                Box {
-                    IconButton(onClick = { expanded = true }) {
-                        Icon(
-                            imageVector = Icons.Default.MoreVert,
-                            contentDescription = stringResource(id = R.string.content_description_options),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                    DropdownMenu(
-                        expanded = expanded,
-                        onDismissRequest = { expanded = false }
-                    ) {
-                        DropdownMenuItem(
-                            text = {
-                                Text(
-                                    stringResource(id = R.string.workout_details_remove_exercise),
-                                    color = MaterialTheme.colorScheme.error
-                                )
-                            },
-                            leadingIcon = {
-                                Icon(
-                                    Icons.Default.Delete,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.error
-                                )
-                            },
-                            onClick = {
-                                onRemove()
-                                expanded = false
-                            }
-                        )
-                    }
+                IconButton(onClick = onRemove) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = stringResource(id = R.string.content_description_remove),
+                        tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f),
+                        modifier = Modifier.size(20.dp)
+                    )
                 }
             }
         }

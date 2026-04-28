@@ -72,6 +72,9 @@
     <string name="workout_details_select_exercise_dialog_title">Selecionar Exercício</string>
     <string name="workout_details_search_exercise_placeholder">Buscar exercício...</string>
     <string name="workout_details_cancel_button">Cancelar</string>
+    <string name="workout_details_remove_exercise_confirm_title">Remover Exercício</string>
+    <string name="workout_details_remove_exercise_confirm_message">Tem certeza que deseja remover o exercício %1$s do treino?</string>
+    <string name="workout_details_remove_button">Remover</string>
 
     <!-- WorkoutHistoryScreen -->
     <string name="workout_history_title">HISTÓRICO DE TREINOS</string>

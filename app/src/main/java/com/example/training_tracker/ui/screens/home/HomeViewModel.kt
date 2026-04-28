@@ -10,7 +10,10 @@ import com.example.training_tracker.data.repository.UserRepository
 import com.example.training_tracker.data.repository.WorkoutHistoryRepository
 import com.example.training_tracker.data.repository.WorkoutRepository
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.map
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -31,7 +34,6 @@ class HomeViewModel(
         workoutHistoryRepository.getHistoryByDate(LocalDate.now()),
         workoutHistoryRepository.workoutHistories
     ) { user, workouts, todayHistory, workoutHistories ->
-
         // Mapeia os treinos do template para ver se foram feitos hoje
         val workoutsWithStatus = workouts.map { workout ->
             val isCompletedToday = todayHistory.any { history -> history.workoutId == workout.id }
@@ -42,10 +44,10 @@ class HomeViewModel(
         val today = LocalDate.now()
         val startOfWeek = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
         val endOfWeek = today.with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY))
-        
+
         val workoutsThisWeek = workoutHistories.count { history ->
             val historyDate = history.completionDate
-            (historyDate.isEqual(startOfWeek) || historyDate.isAfter(startOfWeek)) && 
+            (historyDate.isEqual(startOfWeek) || historyDate.isAfter(startOfWeek)) &&
             (historyDate.isEqual(endOfWeek) || historyDate.isBefore(endOfWeek))
         }
 
@@ -56,9 +58,10 @@ class HomeViewModel(
             totalWorkoutsCompleted = workoutHistories.size,
             workoutsCompletedThisWeek = workoutsThisWeek
         )
-    }.stateIn(
+    }
+    .stateIn(
         scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(500),
+        started = SharingStarted.WhileSubscribed(5000),
         initialValue = HomeUiState()
     )
 
