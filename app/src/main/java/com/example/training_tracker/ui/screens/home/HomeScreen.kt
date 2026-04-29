@@ -37,6 +37,9 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Timer
+import androidx.compose.material.icons.filled.Bolt
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -45,9 +48,12 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
@@ -77,6 +83,7 @@ import coil.request.ImageRequest
 import com.example.training_tracker.R
 import com.example.training_tracker.data.models.MuscleGroups
 import com.example.training_tracker.data.models.Workout
+import com.example.training_tracker.data.models.extensions.isValidToComplete
 import com.example.training_tracker.ui.theme.CyanAccent
 import com.example.training_tracker.ui.theme.CyanGradient
 import com.example.training_tracker.ui.theme.GreenGradient
@@ -92,6 +99,7 @@ fun HomeScreen(
     onNavigateToRegisteredWorkouts: () -> Unit,
     onNavigateToWorkoutsHistory: () -> Unit,
     onClickBrowseWorkouts: () -> Unit,
+    onNavigateToFreestyleWorkout: () -> Unit = {},
     homeUiState: HomeUiState,
     homeViewModel: HomeViewModel = viewModel(factory = HomeViewModel.Factory)
 ) {
@@ -99,9 +107,11 @@ fun HomeScreen(
         is HomeUiState.Loading -> {
             HomeLoadingScreen()
         }
+
         is HomeUiState.Error -> {
             HomeErrorScreen(message = homeUiState.message)
         }
+
         is HomeUiState.Success -> {
             HomeContent(
                 modifier = modifier,
@@ -110,6 +120,7 @@ fun HomeScreen(
                 onNavigateToRegisteredWorkouts = onNavigateToRegisteredWorkouts,
                 onNavigateToWorkoutsHistory = onNavigateToWorkoutsHistory,
                 onClickBrowseWorkouts = onClickBrowseWorkouts,
+                onNavigateToFreestyleWorkout = onNavigateToFreestyleWorkout,
                 homeUiState = homeUiState,
                 homeViewModel = homeViewModel
             )
@@ -151,11 +162,13 @@ fun HomeContent(
     onNavigateToRegisteredWorkouts: () -> Unit,
     onNavigateToWorkoutsHistory: () -> Unit,
     onClickBrowseWorkouts: () -> Unit,
+    onNavigateToFreestyleWorkout: () -> Unit,
     homeUiState: HomeUiState.Success,
     homeViewModel: HomeViewModel
 ) {
     var isProfileExpanded by remember { mutableStateOf(false) }
     var showGoalDialog by remember { mutableStateOf(false) }
+    var showFreestyleNameDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         modifier = Modifier
@@ -263,8 +276,17 @@ fun HomeContent(
                 style = Typography.labelLarge
             )
 
-
             Spacer(modifier = Modifier.height(32.dp))
+
+            FreestyleWorkoutCard(
+                activeWorkout = homeUiState.activeFreestyleWorkout,
+                onClick = {
+                    showFreestyleNameDialog = true
+                },
+                viewModel = homeViewModel
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
 
             if (homeUiState.totalWorkoutsCompleted > 0) MomentumCard(count = homeUiState.totalWorkoutsCompleted) else EmptyMomentumCard()
 
@@ -316,6 +338,220 @@ fun HomeContent(
             }
         )
     }
+
+    if (showFreestyleNameDialog) {
+        FreestyleWorkoutNameDialog(
+            onDismiss = { showFreestyleNameDialog = false },
+            onConfirm = { name ->
+                homeViewModel.startFreestyleWorkout(name) {
+                    onNavigateToFreestyleWorkout()
+                }
+                showFreestyleNameDialog = false
+            }
+        )
+    }
+}
+
+@Composable
+fun FreestyleWorkoutNameDialog(
+    onDismiss: () -> Unit,
+    onConfirm: (String) -> Unit
+) {
+    var workoutName by remember { mutableStateOf("") }
+
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            shape = RoundedCornerShape(24.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        ) {
+            Column(
+                modifier = Modifier.padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "Nome do Treino",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = CyanAccent
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+
+                OutlinedTextField(
+                    value = workoutName,
+                    onValueChange = { workoutName = it },
+                    label = { Text(text = "Como quer chamar o seu treino?", color = Color.Gray) },
+                    placeholder = { Text(text = "Ex: Treino de Sexta", color = Color.Gray) },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    singleLine = true,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = CyanAccent,
+                        focusedLabelColor = CyanAccent,
+                        cursorColor = CyanAccent
+                    )
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    Text(
+                        text = "CANCELAR",
+                        modifier = Modifier
+                            .clickable { onDismiss() }
+                            .padding(12.dp),
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Button(
+                        onClick = { if (workoutName.isNotBlank()) onConfirm(workoutName) },
+                        enabled = workoutName.isNotBlank(),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = CyanAccent,
+                            disabledContainerColor = CyanAccent.copy(alpha = 0.5f)
+                        ),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Text("INICIAR", color = Color.Black, fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun FreestyleWorkoutCard(
+    activeWorkout: Workout? = null,
+    viewModel: HomeViewModel,
+    onClick: () -> Unit
+) {
+    val isLocked = activeWorkout != null
+    var showCancelDialog by remember { mutableStateOf(false) }
+
+    if (showCancelDialog){
+        AlertDialog(
+            onDismissRequest = { showCancelDialog = false },
+            title = {
+                Text(
+                    text = "Cancelar treino",
+                    style = Typography.titleMedium
+                )
+            },
+            text = {
+                Text(
+                    text = "Tem certeza que deseja cancelar e remover o treino${activeWorkout?.name}?",
+                    style = Typography.bodyLarge
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        viewModel.removeFreestyleWorkout()
+                        showCancelDialog = false
+                    }
+                ) {
+                    Text(
+                        text = "Confirmar",
+                        color = MaterialTheme.colorScheme.secondary,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showCancelDialog = false }
+                ) {
+                    Text(
+                        text = "Cancelar",
+                        color = Color.Gray
+                    )
+                }
+            }
+        )
+    }
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(120.dp)
+            .clickable(enabled = !isLocked) { onClick() },
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isLocked)
+                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+            else
+                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+        ),
+        border = BorderStroke(
+            1.dp,
+            if (isLocked) Color.Gray.copy(alpha = 0.3f) else CyanAccent.copy(alpha = 0.3f)
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .background(
+                        if (isLocked) Color.Gray.copy(alpha = 0.1f) else CyanAccent.copy(
+                            alpha = 0.1f
+                        ), CircleShape
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = if (isLocked) Icons.Default.Lock else Icons.Default.Bolt,
+                    contentDescription = null,
+                    tint = if (isLocked) Color.Gray else CyanAccent,
+                    modifier = Modifier.size(28.dp)
+                )
+            }
+            Spacer(modifier = Modifier.width(16.dp))
+            Column(modifier = Modifier.weight(1f),) {
+                Text(
+                    text = "Freestyle Workout",
+                    style = Typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = if (isLocked) Color.Gray else CyanAccent
+                )
+                Text(
+                    text = if (isLocked)
+                        "Freestyle workout em andamento: ${activeWorkout?.name} - finalize ou cancele esse treino antes de iniciar outro"
+                    else
+                        "Prefere registrar os seus exercícios enquanto treina? Clique aqui e comece",
+                    style = Typography.labelSmall,
+                    color = if (isLocked) Color.Gray else MaterialTheme.colorScheme.onSurfaceVariant,
+                    lineHeight = 14.sp
+                )
+                if (isLocked) {
+                    TextButton(
+                        onClick = {showCancelDialog = !showCancelDialog},
+                        contentPadding = PaddingValues(0.dp)
+                    ) {
+                        Text("Cancelar treino")
+                    }
+                }
+            }
+            if (!isLocked) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                    contentDescription = null,
+                    tint = CyanAccent
+                )
+            }
+        }
+    }
 }
 
 private fun getWorkoutImageRes(workout: Workout?): Int {
@@ -341,7 +577,7 @@ private fun getWorkoutImageRes(workout: Workout?): Int {
 
 @Composable
 fun SetWeeklyGoalCard(onClick: () -> Unit) {
-    val isDark = isSystemInDarkTheme()
+    val isSystemDark = isSystemInDarkTheme()
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -349,7 +585,7 @@ fun SetWeeklyGoalCard(onClick: () -> Unit) {
             .clickable { onClick() },
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (isDark) MaterialTheme.colorScheme.surfaceVariant else Color.Black
+            containerColor = if (isSystemDark) MaterialTheme.colorScheme.surfaceVariant else Color.Black
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
@@ -362,7 +598,7 @@ fun SetWeeklyGoalCard(onClick: () -> Unit) {
                 contentDescription = null,
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop,
-                alpha = if (isDark) 0.2f else 0.4f
+                alpha = if (isSystemDark) 0.2f else 0.4f
             )
 
             Box(
@@ -554,7 +790,6 @@ fun WeeklyProgressCard(
     onEditGoal: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val isDark = isSystemInDarkTheme()
     val progress = if (goalWorkouts > 0) {
         (currentWorkouts.toFloat() / goalWorkouts.toFloat()).coerceIn(0f, 1f)
     } else {
@@ -670,7 +905,6 @@ fun WeeklyProgressCard(
 }
 
 
-
 @Composable
 fun CustomTopBar(
     onMenuClick: () -> Unit,
@@ -762,7 +996,7 @@ fun MainGradientButton(
 @Composable
 fun WorkoutCard(modifier: Modifier = Modifier, workout: Workout?, onClick: () -> Unit) {
     val isCompleted = workout?.isCompleted == true
-    val isDark = isSystemInDarkTheme()
+    val isSystemDark = isSystemInDarkTheme()
 
     val muscleGroups = remember(workout) {
         workout?.exercises?.mapNotNull { it.muscleGroup }?.distinct() ?: emptyList()
@@ -776,7 +1010,9 @@ fun WorkoutCard(modifier: Modifier = Modifier, workout: Workout?, onClick: () ->
             .padding(vertical = 8.dp),
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (isDark) MaterialTheme.colorScheme.surface else Color(0XFF0D0D0D)
+            containerColor = if (isSystemDark) MaterialTheme.colorScheme.surface else Color(
+                0XFF0D0D0D
+            )
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
@@ -789,7 +1025,7 @@ fun WorkoutCard(modifier: Modifier = Modifier, workout: Workout?, onClick: () ->
                 contentDescription = null,
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop,
-                alpha = if (isCompleted) 0.2f else if (isDark) 0.5f else 0.7f
+                alpha = if (isCompleted) 0.2f else if (isSystemDark) 0.5f else 0.7f
             )
 
             Box(
@@ -800,7 +1036,7 @@ fun WorkoutCard(modifier: Modifier = Modifier, workout: Workout?, onClick: () ->
                             colors = listOf(
                                 Color.Transparent,
                                 if (isCompleted) Color.Black.copy(alpha = 0.4f) else Color.Black.copy(
-                                    alpha = if (isDark) 0.8f else 0.9f
+                                    alpha = if (isSystemDark) 0.8f else 0.9f
                                 )
                             )
                         )
@@ -815,7 +1051,6 @@ fun WorkoutCard(modifier: Modifier = Modifier, workout: Workout?, onClick: () ->
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Box(
@@ -826,16 +1061,38 @@ fun WorkoutCard(modifier: Modifier = Modifier, workout: Workout?, onClick: () ->
                                 alpha = 0.9f
                             )
                     ) {
-                        Text(
-                            text = if (isCompleted) "COMPLETED" else "TODAY",
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                            color = Color.White,
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.ExtraBold,
-                            letterSpacing = 1.sp
-                        )
+                        Row {
+                            Text(
+                                text = if (isCompleted) "COMPLETED" else "TODAY",
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                color = Color.White,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.ExtraBold,
+                                letterSpacing = 1.sp
+                            )
+                        }
                     }
 
+                    if (workout?.id == "freestyle_workout_id") {
+                        Spacer(Modifier.width(5.dp))
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(
+                                    brush = if (isCompleted) GreenGradient else CyanGradient,
+                                    alpha = 0.9f
+                                )
+                        ) {
+                            Text(
+                                text = "FREESTYLE",
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                color = Color.White,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.ExtraBold,
+                                letterSpacing = 1.sp
+                            )
+                        }
+                    }
                     if (isCompleted) {
                         Icon(
                             imageVector = Icons.Default.CheckCircle,
@@ -848,7 +1105,8 @@ fun WorkoutCard(modifier: Modifier = Modifier, workout: Workout?, onClick: () ->
 
                 Column {
                     Text(
-                        text = workout?.name ?: stringResource(id = R.string.home_default_workout_name),
+                        text = workout?.name
+                            ?: stringResource(id = R.string.home_default_workout_name),
                         style = Typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                         color = Color.White
@@ -891,7 +1149,10 @@ fun WorkoutCard(modifier: Modifier = Modifier, workout: Workout?, onClick: () ->
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
-                            text = stringResource(id = R.string.home_workout_exercise_count, workout?.exercises?.size ?: 0),
+                            text = stringResource(
+                                id = R.string.home_workout_exercise_count,
+                                workout?.exercises?.size ?: 0
+                            ),
                             color = Color.White.copy(alpha = 0.7f),
                             style = Typography.bodySmall
                         )
@@ -964,14 +1225,14 @@ fun MuscleBadge(muscle: MuscleGroups) {
 
 @Composable
 fun EmptyWorkoutCard(modifier: Modifier = Modifier) {
-    val isDark = isSystemInDarkTheme()
+    val isSystemDark = isSystemInDarkTheme()
     Card(
         modifier = modifier
             .fillMaxWidth()
             .height(200.dp),
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (isDark) MaterialTheme.colorScheme.surfaceVariant else Color.Black
+            containerColor = if (isSystemDark) MaterialTheme.colorScheme.surfaceVariant else Color.Black
         )
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
@@ -983,7 +1244,7 @@ fun EmptyWorkoutCard(modifier: Modifier = Modifier) {
                 contentDescription = null,
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop,
-                alpha = if (isDark) 0.3f else 0.55f
+                alpha = if (isSystemDark) 0.3f else 0.55f
             )
 
             Box(
@@ -993,7 +1254,7 @@ fun EmptyWorkoutCard(modifier: Modifier = Modifier) {
                         Brush.verticalGradient(
                             colors = listOf(
                                 Color.Transparent,
-                                Color.Black.copy(alpha = if (isDark) 0.7f else 0.85f)
+                                Color.Black.copy(alpha = if (isSystemDark) 0.7f else 0.85f)
                             )
                         )
                     )
@@ -1044,14 +1305,14 @@ fun EmptyWorkoutCard(modifier: Modifier = Modifier) {
 
 @Composable
 fun MomentumCard(count: Int) {
-    val isDark = isSystemInDarkTheme()
+    val isSystemDark = isSystemInDarkTheme()
 
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .height(150.dp)
             .clip(RoundedCornerShape(24.dp))
-            .background(if (isDark) MaterialTheme.colorScheme.surface else Color(0XFF262525))
+            .background(if (isSystemDark) MaterialTheme.colorScheme.surface else Color(0XFF262525))
     ) {
         AsyncImage(
             model = ImageRequest.Builder(LocalContext.current)
@@ -1064,9 +1325,11 @@ fun MomentumCard(count: Int) {
             alpha = 0.4f
         )
 
-        Column(modifier = Modifier
-            .padding(24.dp)
-            .align(Alignment.CenterStart)) {
+        Column(
+            modifier = Modifier
+                .padding(24.dp)
+                .align(Alignment.CenterStart)
+        ) {
             Text(
                 "KEEP THE\nMOMENTUM.",
                 style = MaterialTheme.typography.headlineSmall.copy(
@@ -1076,11 +1339,11 @@ fun MomentumCard(count: Int) {
                 )
             )
             Spacer(Modifier.height(8.dp))
-            Row (
+            Row(
                 modifier = Modifier.fillMaxSize(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
-            ){
+            ) {
                 Text(
                     text = "Total Workouts",
                     style = Typography.titleMedium,
@@ -1103,13 +1366,13 @@ fun MomentumCard(count: Int) {
 
 @Composable
 fun EmptyMomentumCard() {
-    val isDark = isSystemInDarkTheme()
+    val isSystemDark = isSystemInDarkTheme()
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .height(160.dp)
             .clip(RoundedCornerShape(24.dp))
-            .background(if (isDark) MaterialTheme.colorScheme.surface else Color.Black),
+            .background(if (isSystemDark) MaterialTheme.colorScheme.surface else Color.Black),
     ) {
         AsyncImage(
             model = ImageRequest.Builder(LocalContext.current)
@@ -1122,9 +1385,11 @@ fun EmptyMomentumCard() {
             alpha = 0.4f
         )
 
-        Column(modifier = Modifier
-            .padding(24.dp)
-            .align(Alignment.CenterStart)) {
+        Column(
+            modifier = Modifier
+                .padding(24.dp)
+                .align(Alignment.CenterStart)
+        ) {
             Text(
                 "START\nTODAY.",
                 style = MaterialTheme.typography.headlineSmall.copy(
@@ -1133,16 +1398,16 @@ fun EmptyMomentumCard() {
                     lineHeight = 24.sp
                 )
             )
-            Spacer(Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(8.dp))
             Text(
                 "You haven't completed any workout yet.",
                 fontSize = 14.sp,
-                color = if (isDark) MaterialTheme.colorScheme.onSurface else Color.White
+                color = if (isSystemDark) MaterialTheme.colorScheme.onSurface else Color.White
             )
             Text(
                 "Start today to check your progress.",
                 fontSize = 14.sp,
-                color = if (isDark) MaterialTheme.colorScheme.onSurface else Color.White
+                color = if (isSystemDark) MaterialTheme.colorScheme.onSurface else Color.White
             )
         }
     }

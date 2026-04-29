@@ -71,7 +71,12 @@ fun MainTabsScreen(
                             if (clickedWorkout.isCompleted == false && !clickedWorkout.isOnGoing) {
                                 rootNavController.navigate("${Routes.WorkoutDetails.name}/$workoutId/true")
                             } else if(clickedWorkout.isOnGoing == true) {
-                                rootNavController.navigate("${Routes.Workout.name}/$workoutId")
+                                // Redireciona corretamente se for o treino freestyle
+                                if (workoutId == "freestyle_workout_id" || clickedWorkout.id == "freestyle_workout_id") {
+                                    rootNavController.navigate(Routes.FreestyleWorkout.name)
+                                } else {
+                                    rootNavController.navigate("${Routes.Workout.name}/$workoutId")
+                                }
                             }
                             else {
                                 rootNavController.navigate("${Routes.WorkoutReport.name}/${clickedWorkout.historyId}")
@@ -89,6 +94,9 @@ fun MainTabsScreen(
                     },
                     onClickBrowseWorkouts = {
                         navigateToTab(Routes.RegisteredWorkouts.name)
+                    },
+                    onNavigateToFreestyleWorkout = {
+                        rootNavController.navigate(Routes.FreestyleWorkout.name)
                     }
                 )
             }

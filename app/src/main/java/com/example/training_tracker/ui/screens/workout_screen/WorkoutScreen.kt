@@ -143,7 +143,7 @@ fun WorkoutScreen(
     var currentTime by remember { mutableLongStateOf(System.currentTimeMillis()) }
 
     LaunchedEffect(workout?.isOnGoing, workout?.isCompleted, workout?.isPaused) {
-        if (workout?.isOnGoing == true && workout.isCompleted == false && workout.isPaused == false) {
+        if (workout?.isOnGoing == true && !workout.isCompleted && !workout.isPaused) {
             currentTime = System.currentTimeMillis() // Sync immediately
             while (true) {
                 delay(1000)
@@ -282,7 +282,7 @@ fun WorkoutScreen(
                         onCompleteSet = currentOnCompleteSet,
                         onCompleteExercise = onCompleteExerciseLambda,
                         onReopenExercise = onReopenExerciseLambda,
-                        onExpandedChange = onExpandedChangeLambda
+                        onExpandedChange = onExpandedChangeLambda,
                     )
                 }
 

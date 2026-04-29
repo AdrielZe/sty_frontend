@@ -34,6 +34,7 @@ import com.example.training_tracker.ui.screens.workout_report.WorkoutReportScree
 import com.example.training_tracker.ui.screens.workout_report.WorkoutReportViewModel
 import com.example.training_tracker.ui.screens.workout_screen.WorkoutScreen
 import com.example.training_tracker.ui.screens.workout_screen.WorkoutViewModel
+import com.example.training_tracker.ui.screens.freestyle_workout.FreestyleWorkoutScreen
 import com.example.training_tracker.ui.theme.CyanAccent
 import java.time.DayOfWeek
 
@@ -69,6 +70,18 @@ fun GymTrackerNavHost() {
             MainTabsScreen(
                 rootNavController = navController,
                 homeViewModel = homeViewModel
+            )
+        }
+
+        // Freestyle Workout
+        composable(route = Routes.FreestyleWorkout.name) {
+            FreestyleWorkoutScreen(
+                onBackClick = { navController.popBackStack() },
+                onNavigateToReport = { historyId ->
+                    navController.navigate("${Routes.WorkoutReport.name}/$historyId") {
+                        popUpTo("MAIN_TABS") { inclusive = false }
+                    }
+                }
             )
         }
 
@@ -150,7 +163,7 @@ fun GymTrackerNavHost() {
                 onReopenExercise = { exerciseId -> workoutViewModel.reopenExercise(exerciseId) },
                 onBackClick = { navController.popBackStack() },
                 onCompleteWorkout = { workoutViewModel.completeWorkout() },
-                onTogglePause = { workoutViewModel.togglePauseWorkout() }
+                onTogglePause = { workoutViewModel.togglePauseWorkout() },
             )
         }
 

@@ -1,11 +1,13 @@
 package com.example.training_tracker.ui.screens.home
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.training_tracker.GymTrackerApplication
+import com.example.training_tracker.data.models.Workout
 import com.example.training_tracker.data.repository.UserRepository
 import com.example.training_tracker.data.repository.WorkoutHistoryRepository
 import com.example.training_tracker.data.repository.WorkoutRepository
@@ -13,6 +15,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -22,22 +25,37 @@ import kotlinx.coroutines.launch
 import java.time.temporal.TemporalAdjusters
 import java.time.DayOfWeek
 
+private const val TAG = "HomeViewModel"
 class HomeViewModel(
     private val userRepository: UserRepository,
     private val workoutRepository: WorkoutRepository,
     private val workoutHistoryRepository: WorkoutHistoryRepository
 ) : ViewModel() {
 
+    private val FREESTYLE_WORKOUT_ID = "freestyle_workout_id"
+
     val uiState: StateFlow<HomeUiState> = combine(
         userRepository.getUser(),
         workoutRepository.getWorkoutsByDay(LocalDate.now().dayOfWeek),
         workoutHistoryRepository.getHistoryByDate(LocalDate.now()),
-        workoutHistoryRepository.workoutHistories
-    ) { user, workouts, todayHistory, workoutHistories ->
+        workoutHistoryRepository.workoutHistories,
+        workoutRepository.getWorkoutById(FREESTYLE_WORKOUT_ID)
+    ) { user, workouts, todayHistory, workoutHistories, freestyleWorkout ->
         // Mapeia os treinos do template para ver se foram feitos hoje
         val workoutsWithStatus = workouts.map { workout ->
             val isCompletedToday = todayHistory.any { history -> history.workoutId == workout.id }
             workout.copy(isCompleted = isCompletedToday)
+        }.toMutableList()
+
+        // Adiciona o Freestyle Workout se ele estiver em andamento (isOnGoing == true)
+        val activeFreestyle = if (freestyleWorkout != null && freestyleWorkout.isOnGoing) {
+            freestyleWorkout
+        } else {
+            null
+        }
+
+        if (activeFreestyle != null) {
+            workoutsWithStatus.add(activeFreestyle)
         }
 
         // Calcula treinos feitos na semana atual (Segunda a Domingo)
@@ -56,7 +74,8 @@ class HomeViewModel(
             currentDate = getCurrentDate(),
             todayWorkouts = workoutsWithStatus,
             totalWorkoutsCompleted = workoutHistories.size,
-            workoutsCompletedThisWeek = workoutsThisWeek
+            workoutsCompletedThisWeek = workoutsThisWeek,
+            activeFreestyleWorkout = activeFreestyle
         ) as HomeUiState
     }
     .catch { e ->
@@ -71,6 +90,38 @@ class HomeViewModel(
     fun updateWeeklyGoal(goal: Int) {
         viewModelScope.launch {
             userRepository.updateWeeklyGoal(goal)
+        }
+    }
+
+    fun startFreestyleWorkout(name: String, onConfirm: () -> Unit) {
+        viewModelScope.launch {
+            val existing = workoutRepository.getWorkoutById(FREESTYLE_WORKOUT_ID).first()
+            if (existing != null) {
+                workoutRepository.updateWorkout(existing.copy(name = name, isOnGoing = true, startTime = System.currentTimeMillis()))
+            } else {
+                workoutRepository.addWorkout(
+                    Workout(
+                        id = FREESTYLE_WORKOUT_ID,
+                        name = name,
+                        isOnGoing = true,
+                        startTime = System.currentTimeMillis()
+                    )
+                )
+            }
+            onConfirm()
+        }
+    }
+
+    fun removeFreestyleWorkout(){
+        viewModelScope.launch {
+            try {
+                val existing = workoutRepository.getWorkoutById(FREESTYLE_WORKOUT_ID).first()
+                existing?.let {
+                    workoutRepository.deleteWorkout(existing)
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Erro ao remover treino", e)
+            }
         }
     }
 
