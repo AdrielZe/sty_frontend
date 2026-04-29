@@ -29,6 +29,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.training_tracker.R
 import com.example.training_tracker.data.models.Exercise
 import com.example.training_tracker.data.models.mocks.availableExercises
+import com.example.training_tracker.ui.components.MuscleGroupPickerDialog
 import com.example.training_tracker.ui.screens.home.MainGradientButton
 import com.example.training_tracker.ui.screens.workout_details.AddExerciseSelectionDialog
 import com.example.training_tracker.ui.screens.workout_screen.ErrorDialog
@@ -80,6 +81,18 @@ fun CreateWorkoutScreen(
         )
 
     }
+
+    val pendingName = uiState.pendingExerciseName
+    if (uiState.showMuscleGroupPicker && pendingName != null) {
+        MuscleGroupPickerDialog(
+            exerciseName = pendingName,
+            onDismiss = { viewModel.dismissMuscleGroupPicker() },
+            onMuscleGroupSelected = { muscleGroup ->
+                viewModel.onMuscleGroupSelected(muscleGroup)
+            }
+        )
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(

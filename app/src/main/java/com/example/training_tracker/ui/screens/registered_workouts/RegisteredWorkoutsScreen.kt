@@ -358,47 +358,9 @@ fun ActiveWorkoutCard(
                 }
             }
 
-            Spacer(Modifier.height(20.dp))
+            Spacer(Modifier.height(5.dp))
 
-            // Seção de Progresso Melhorada
-            Column {
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(bottom = 6.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.Bottom
-                ) {
-                    Text(
-                        "PROGRESSO",
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            fontWeight = FontWeight.ExtraBold,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
-                            letterSpacing = 1.sp
-                        )
-                    )
-                    Text(
-                        "${(workout.progress * 100).toInt()}%",
-                        style = MaterialTheme.typography.titleSmall.copy(
-                            fontWeight = FontWeight.Black,
-                            color = CyanAccent
-                        )
-                    )
-                }
 
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(8.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth(workout.progress)
-                            .fillMaxHeight()
-                            .background(CyanGradient)
-                    )
-                }
-            }
         }
     }
 }

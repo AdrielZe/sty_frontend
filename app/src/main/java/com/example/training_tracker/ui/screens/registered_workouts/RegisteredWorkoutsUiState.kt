@@ -4,6 +4,6 @@ import com.example.training_tracker.data.models.Workout
 import java.time.DayOfWeek
 
 data class RegisteredWorkoutsUiState(
-    val workoutsByDay: Map<DayOfWeek, List<Workout>> = emptyMap(),
+    val workoutsByDay: Map<DayOfWeek?, List<Workout>> = emptyMap(),
     val isLoading: Boolean = false
 )

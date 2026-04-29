@@ -54,8 +54,12 @@ class WorkoutHistoryViewModel(
         }
 
         val sortedList = when (sort) {
-            SortOrder.DATE_ASC -> filteredList.sortedBy { it.completionDate }
-            SortOrder.DATE_DESC -> filteredList.sortedByDescending { it.completionDate }
+            SortOrder.DATE_ASC -> filteredList.sortedWith(
+                compareBy<WorkoutHistory> { it.completionDate }.thenBy { it.completionTime }
+            )
+            SortOrder.DATE_DESC -> filteredList.sortedWith(
+                compareByDescending<WorkoutHistory> { it.completionDate }.thenByDescending { it.completionTime }
+            )
             SortOrder.NAME_ASC -> filteredList.sortedBy { it.name.lowercase() }
             SortOrder.NAME_DESC -> filteredList.sortedByDescending { it.name.lowercase() }
         }

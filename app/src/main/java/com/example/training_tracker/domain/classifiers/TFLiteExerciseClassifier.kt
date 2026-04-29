@@ -32,15 +32,14 @@ class TFLiteExerciseClassifier(private val context: Context) : ExerciseClassifie
         }
     }
 
-    override fun classify(exerciseName: String): String? {
-        if (interpreter == null || labels.isEmpty()) return null
+     override fun classify(exerciseName: String): ClassificationResult {
+        if (interpreter == null || labels.isEmpty()) return ClassificationResult(null, 0f)
 
-        // 1. Prepara o input
         // 1. Prepara o input
         val words = exerciseName.lowercase().trim().split("\\s+".toRegex())
         val inputArray = Array(1) { FloatArray(MAX_LEN) } // Inicia tudo com Zeros (PAD)
 
-        // 2. Coleta APENAS os IDs que a IA conhece, pulando gírias/erros ("baxida")
+        // 2. Coleta APENAS os IDs que a IA conhece
         var validIndex = 0
         for (word in words) {
             val wordId = vocab[word]
@@ -52,7 +51,7 @@ class TFLiteExerciseClassifier(private val context: Context) : ExerciseClassifie
 
         val outputArray = Array(1) { FloatArray(labels.size) }
 
-        // 3. Roda a inferência! Agora os tipos batem perfeitamente.
+        // 3. Roda a inferência
         interpreter?.run(inputArray, outputArray)
 
         // 4. Analisa o resultado
@@ -66,29 +65,10 @@ class TFLiteExerciseClassifier(private val context: Context) : ExerciseClassifie
                 maxIndex = i
             }
         }
-// ==========================================
-        // CÓDIGO DE DIAGNÓSTICO (DEBUG)
-        // ==========================================
-        val debugIds = inputArray[0].map { it.toInt() }.joinToString()
-        android.util.Log.d("IA_DEBUG", "--- NOVO EXERCÍCIO ---")
-        android.util.Log.d("IA_DEBUG", "Texto recebido: $exerciseName")
-        android.util.Log.d("IA_DEBUG", "IDs das palavras: $debugIds")
-        android.util.Log.d("IA_DEBUG", "Confiança Máxima: ${maxConfidence * 100}%")
 
-        if (labels.isNotEmpty() && maxIndex != -1) {
-            android.util.Log.d("IA_DEBUG", "Musculo que a IA acha que é: ${labels[maxIndex]}")
-        } else {
-            android.util.Log.d("IA_DEBUG", "ERRO: Lista de Labels está vazia!")
-        }
-        // ==========================================
-
-        // Temporariamente baixando a régua para 1% (0.01f) só para forçar o retorno
-        // e colocamos um .trim() para limpar possíveis espaços em branco do TXT
-        return if (maxConfidence > 0.01f && maxIndex != -1) {
-            labels[maxIndex].trim()
-        } else {
-            null
-        }
+        val label = if (maxIndex != -1) labels[maxIndex].trim() else null
+        
+        return ClassificationResult(label, maxConfidence)
     }
 
     // Função auxiliar para converter o arquivo .tflite do disco para a memória RAM (ByteBuffer)

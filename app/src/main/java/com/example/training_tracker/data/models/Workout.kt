@@ -5,6 +5,7 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import java.time.DayOfWeek
 import java.time.LocalDate
+import java.time.LocalTime
 
 @Entity(tableName = "workouts")
 data class Workout(
@@ -16,6 +17,7 @@ data class Workout(
     @ColumnInfo(name = "isPaused") val isPaused: Boolean = false,
     @ColumnInfo(name = "dayOfWeek") val dayOfWeek: DayOfWeek? = null,
     @ColumnInfo(name = "completionDate") val completionDate: LocalDate? = null,
+    @ColumnInfo(name = "completionTime") val completionTime: LocalTime? = null,
     @ColumnInfo(name = "startTime") val startTime: Long? = null,
     @ColumnInfo(name = "accumulatedTime") val accumulatedTime: Long = 0L,
     @ColumnInfo(name = "historyId") val historyId: String? = null,

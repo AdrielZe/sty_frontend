@@ -53,7 +53,6 @@ fun MainTabsScreen(
             )
         }
     ) { innerPadding ->
-        // O NavHost FILHO fica aqui dentro, recebendo o padding perfeitamente
         NavHost(
             navController = tabsNavController,
             startDestination = Routes.Home.name,
@@ -97,7 +96,7 @@ fun MainTabsScreen(
                     },
                     onNavigateToFreestyleWorkout = {
                         rootNavController.navigate(Routes.FreestyleWorkout.name)
-                    }
+                    },
                 )
             }
 

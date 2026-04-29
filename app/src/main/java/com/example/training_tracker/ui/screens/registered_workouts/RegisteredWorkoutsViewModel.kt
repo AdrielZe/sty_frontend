@@ -23,7 +23,7 @@ class RegisteredWorkoutsViewModel(
 
     val uiState: StateFlow<RegisteredWorkoutsUiState> = workoutRepository.workouts
         .map { workouts ->
-            val grouped = workouts.groupBy { it.dayOfWeek ?: DayOfWeek.MONDAY }
+            val grouped = workouts.groupBy { it.dayOfWeek  }
             RegisteredWorkoutsUiState(workoutsByDay = grouped)
         }
         .stateIn(

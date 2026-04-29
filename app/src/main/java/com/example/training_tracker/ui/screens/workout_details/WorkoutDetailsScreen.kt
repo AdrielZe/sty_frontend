@@ -44,12 +44,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.training_tracker.R
 import com.example.training_tracker.data.models.Exercise
 import com.example.training_tracker.data.models.Workout
-import com.example.training_tracker.data.models.mocks.availableExercises
+import com.example.training_tracker.ui.components.MuscleGroupPickerDialog
 import com.example.training_tracker.ui.screens.home.MainGradientButton
 import com.example.training_tracker.ui.theme.CyanAccent
-import com.example.training_tracker.ui.theme.CyanGradient
 import com.example.training_tracker.ui.theme.Dimens
-import kotlin.math.max
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -335,6 +333,18 @@ fun WorkoutDetailsScreen(
                 },
                 availableExercises = uiState.availableExercises
             )
+        }
+
+        uiState.pendingExerciseName?.let { pendingName ->
+            if (uiState.showMuscleGroupPicker) {
+                MuscleGroupPickerDialog(
+                    exerciseName = pendingName,
+                    onDismiss = { viewModel.dismissMuscleGroupPicker() },
+                    onMuscleGroupSelected = { muscleGroup ->
+                        viewModel.onMuscleGroupSelected(muscleGroup)
+                    }
+                )
+            }
         }
 
         if (showEditWorkoutNameDialog) {

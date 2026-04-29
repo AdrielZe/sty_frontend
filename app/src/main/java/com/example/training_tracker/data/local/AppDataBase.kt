@@ -20,7 +20,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-@Database(entities = [Workout::class, Exercise::class, WorkoutHistory::class, Records::class, User::class], version = 30)
+@Database(entities = [Workout::class, Exercise::class, WorkoutHistory::class, Records::class, User::class], version = 31)
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
 

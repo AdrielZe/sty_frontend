@@ -16,6 +16,7 @@ import com.example.training_tracker.data.repository.WorkoutRepository
 import com.example.training_tracker.domain.classifiers.ExerciseClassifier
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -36,16 +37,23 @@ class WorkoutDetailsViewModel(
 
     val uiEvent = _uiEvent.receiveAsFlow()
 
+    private val _pendingExerciseName = MutableStateFlow<String?>(null)
+    private val _showMuscleGroupPicker = MutableStateFlow(false)
+
     val uiState: StateFlow<WorkoutDetailsUiState> = combine(
         workoutRepository.getWorkoutById(workoutId),
-        exerciseRepository.exercises
-    ) { workout, exercisesList ->
+        exerciseRepository.exercises,
+        _pendingExerciseName,
+        _showMuscleGroupPicker
+    ) { workout, exercisesList, pendingName, showMusclePicker ->
         WorkoutDetailsUiState(
             isLoading = false,
             workout = workout,
             canStartWorkout = canStart,
             isEditMode = !canStart,
-            availableExercises = exercisesList
+            availableExercises = exercisesList,
+            pendingExerciseName = pendingName,
+            showMuscleGroupPicker = showMusclePicker
         )
     }.stateIn(
         scope = viewModelScope,
@@ -97,8 +105,15 @@ class WorkoutDetailsViewModel(
         if (existingExercise == null) {
             viewModelScope.launch(Dispatchers.Default) {
                 try {
-                    val predictedMuscleKey = classifier.classify(nameFormatted)
-                    val predictedMuscleGroup = when (predictedMuscleKey) {
+                    val result = classifier.classify(nameFormatted)
+                    
+                    if (result.confidence < 0.85f) {
+                        _pendingExerciseName.value = nameFormatted
+                        _showMuscleGroupPicker.value = true
+                        return@launch
+                    }
+
+                    val predictedMuscleGroup = when (result.label) {
                         "peito" -> MuscleGroups.CHEST
                         "costas" -> MuscleGroups.BACK
                         "perna" -> MuscleGroups.LEGS
@@ -109,20 +124,10 @@ class WorkoutDetailsViewModel(
                         else -> MuscleGroups.ABS
                     }
 
-                    val newExerciseToDB = Exercise(
-                        name = nameFormatted,
-                        muscleGroup = predictedMuscleGroup
-                    )
-                    exerciseRepository.addExercise(newExerciseToDB)
-
-                    val exerciseToAdd = newExerciseToDB.copy(id = java.util.UUID.randomUUID().toString())
-                    val updatedWorkout = currentWorkout.copy(
-                        exercises = currentWorkout.exercises + exerciseToAdd,
-                        estimatedTime = (currentWorkout.exercises.size + 1) * 10
-                    )
-                    workoutRepository.updateWorkout(updatedWorkout)
+                    saveNewExercise(nameFormatted, predictedMuscleGroup)
                 } catch (e: Exception) {
-                    _uiEvent.send("Erro ao classificar exercício: ${e.message}")
+                    _pendingExerciseName.value = nameFormatted
+                    _showMuscleGroupPicker.value = true
                 }
             }
         } else {
@@ -140,6 +145,38 @@ class WorkoutDetailsViewModel(
                 }
             }
         }
+    }
+
+    fun onMuscleGroupSelected(muscleGroup: MuscleGroups) {
+        val name = _pendingExerciseName.value ?: return
+        viewModelScope.launch(Dispatchers.Default) {
+            saveNewExercise(name, muscleGroup)
+        }
+    }
+
+    fun dismissMuscleGroupPicker() {
+        _showMuscleGroupPicker.value = false
+        _pendingExerciseName.value = null
+    }
+
+    private suspend fun saveNewExercise(name: String, muscleGroup: MuscleGroups) {
+        val currentWorkout = uiState.value.workout ?: return
+        
+        val newExerciseToDB = Exercise(
+            name = name,
+            muscleGroup = muscleGroup
+        )
+        exerciseRepository.addExercise(newExerciseToDB)
+
+        val exerciseToAdd = newExerciseToDB.copy(id = java.util.UUID.randomUUID().toString())
+        val updatedWorkout = currentWorkout.copy(
+            exercises = currentWorkout.exercises + exerciseToAdd,
+            estimatedTime = (currentWorkout.exercises.size + 1) * 10
+        )
+        workoutRepository.updateWorkout(updatedWorkout)
+        
+        _showMuscleGroupPicker.value = false
+        _pendingExerciseName.value = null
     }
 
     fun removeExercise(exerciseId: String) {

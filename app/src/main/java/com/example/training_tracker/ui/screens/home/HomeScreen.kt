@@ -3,6 +3,7 @@ package com.example.training_tracker.ui.screens.home
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -47,6 +48,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -69,7 +71,9 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.PlatformTextStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -82,6 +86,7 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.training_tracker.R
 import com.example.training_tracker.data.models.MuscleGroups
+import com.example.training_tracker.data.models.User
 import com.example.training_tracker.data.models.Workout
 import com.example.training_tracker.data.models.extensions.isValidToComplete
 import com.example.training_tracker.ui.theme.CyanAccent
@@ -122,7 +127,7 @@ fun HomeScreen(
                 onClickBrowseWorkouts = onClickBrowseWorkouts,
                 onNavigateToFreestyleWorkout = onNavigateToFreestyleWorkout,
                 homeUiState = homeUiState,
-                homeViewModel = homeViewModel
+                homeViewModel = homeViewModel,
             )
         }
     }
@@ -176,8 +181,8 @@ fun HomeContent(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             CustomTopBar(
-                onMenuClick = { /* Abrir Drawer */ },
-                onProfileClick = { isProfileExpanded = true }
+                onProfileClick = { isProfileExpanded = true },
+                user = homeUiState.user
             )
         },
         floatingActionButton = {
@@ -311,19 +316,36 @@ fun HomeContent(
         Dialog(onDismissRequest = { isProfileExpanded = false }) {
             Box(
                 modifier = Modifier
-                    .size(280.dp)
+                    .size(300.dp) // Tamanho da imagem expandida
                     .clip(CircleShape)
                     .background(MaterialTheme.colorScheme.surfaceVariant)
                     .border(BorderStroke(4.dp, CyanGradient), CircleShape)
                     .clickable { isProfileExpanded = false },
                 contentAlignment = Alignment.Center
             ) {
-                Icon(
-                    imageVector = Icons.Default.Person,
-                    contentDescription = null,
-                    modifier = Modifier.fillMaxSize(0.6f),
-                    tint = CyanAccent
-                )
+                // CORREÇÃO AQUI: Se NÃO estiver vazio, mostra a foto.
+                // Antes estava verificando se estava vazio para mostrar a foto.
+                if (!homeUiState.user?.profilePicture.isNullOrEmpty()) {
+                    AsyncImage(
+                        model = ImageRequest.Builder(LocalContext.current)
+                            .data(homeUiState.user?.profilePicture)
+                            .crossfade(true)
+                            .build(),
+                        contentDescription = "Foto de perfil expandida",
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop,
+                        error = painterResource(id = R.drawable.gym),
+                        placeholder = painterResource(id = R.drawable.gym)
+                    )
+                } else {
+                    // Imagem padrão
+                    Image(
+                        painter = painterResource(id = R.drawable.gym),
+                        contentDescription = "Foto de perfil padrão",
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
+                }
             }
         }
     }
@@ -435,7 +457,7 @@ fun FreestyleWorkoutCard(
     val isLocked = activeWorkout != null
     var showCancelDialog by remember { mutableStateOf(false) }
 
-    if (showCancelDialog){
+    if (showCancelDialog) {
         AlertDialog(
             onDismissRequest = { showCancelDialog = false },
             title = {
@@ -518,7 +540,7 @@ fun FreestyleWorkoutCard(
                 )
             }
             Spacer(modifier = Modifier.width(16.dp))
-            Column(modifier = Modifier.weight(1f),) {
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = "Freestyle Workout",
                     style = Typography.titleMedium,
@@ -536,7 +558,7 @@ fun FreestyleWorkoutCard(
                 )
                 if (isLocked) {
                     TextButton(
-                        onClick = {showCancelDialog = !showCancelDialog},
+                        onClick = { showCancelDialog = !showCancelDialog },
                         contentPadding = PaddingValues(0.dp)
                     ) {
                         Text("Cancelar treino")
@@ -907,8 +929,8 @@ fun WeeklyProgressCard(
 
 @Composable
 fun CustomTopBar(
-    onMenuClick: () -> Unit,
-    onProfileClick: () -> Unit
+    onProfileClick: () -> Unit,
+    user: User?
 ) {
     Row(
         modifier = Modifier
@@ -940,12 +962,24 @@ fun CustomTopBar(
                 .clip(CircleShape)
                 .clickable { onProfileClick() }
         ) {
-            Icon(
-                imageVector = Icons.Default.Person,
-                contentDescription = stringResource(id = R.string.content_description_profile),
-                tint = CyanAccent,
-                modifier = Modifier.padding(8.dp)
-            )
+            if (user?.profilePicture != null) {
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(user.profilePicture)
+                        .crossfade(true)
+                        .build(),
+                    contentDescription = stringResource(id = R.string.content_description_profile),
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop // Garante que a foto preencha o círculo
+                )
+            } else {
+                Icon(
+                    imageVector = Icons.Default.Person,
+                    contentDescription = stringResource(id = R.string.content_description_profile),
+                    tint = CyanAccent,
+                    modifier = Modifier.padding(8.dp)
+                )
+            }
         }
     }
 }
@@ -1093,14 +1127,6 @@ fun WorkoutCard(modifier: Modifier = Modifier, workout: Workout?, onClick: () ->
                             )
                         }
                     }
-                    if (isCompleted) {
-                        Icon(
-                            imageVector = Icons.Default.CheckCircle,
-                            contentDescription = null,
-                            tint = Color(0xFF4CAF50),
-                            modifier = Modifier.size(28.dp)
-                        )
-                    }
                 }
 
                 Column {
@@ -1212,14 +1238,25 @@ fun MuscleBadge(muscle: MuscleGroups) {
         shape = RoundedCornerShape(4.dp),
         border = BorderStroke(0.5.dp, Color.White.copy(alpha = 0.3f))
     ) {
-        Text(
-            text = muscle.name,
+        Box(
             modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-            color = Color.White,
-            fontSize = 8.sp,
-            fontWeight = FontWeight.Bold,
-            letterSpacing = 0.5.sp
-        )
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = muscle.name,
+                color = Color.White,
+                fontSize = 8.sp,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 0.5.sp,
+                textAlign = TextAlign.Center,
+                style = LocalTextStyle.current.copy(
+                    platformStyle = PlatformTextStyle(
+                        includeFontPadding = false
+                    ),
+                    lineHeight = 18.sp
+                )
+            )
+        }
     }
 }
 

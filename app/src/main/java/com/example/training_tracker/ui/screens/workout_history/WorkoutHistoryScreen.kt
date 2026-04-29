@@ -38,6 +38,7 @@ import com.example.training_tracker.ui.screens.registered_workouts.TextGray
 import com.example.training_tracker.ui.theme.CyanAccent
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
 import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -71,11 +72,6 @@ fun WorkoutHistoryScreen(
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null, tint = CyanAccent)
-                    }
-                },
-                actions = {
-                    IconButton(onClick = { }) {
-                        Icon(Icons.Default.AccountCircle, contentDescription = null, tint = CyanAccent)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
@@ -317,6 +313,13 @@ fun HistoryWorkoutCard(workout: WorkoutHistory, onClick: () -> Unit) {
     val dateText = remember(workout.completionDate) {
         workout.completionDate.format(DateTimeFormatter.ofPattern("dd MMM, yyyy", Locale.getDefault()))
     }
+
+    val timeText = remember(workout.completionTime) {
+        val locale = Locale.getDefault()
+        val pattern = if (locale.language == "pt") "HH:mm" else "h:mm a"
+        workout.completionTime?.format(DateTimeFormatter.ofPattern(pattern, locale)) ?: ""
+    }
+
     val volume = remember(workout.exercises) {
         val total = workout.exercises.sumOf { ex -> 
             ex.exerciseSets.sumOf { set -> 
@@ -390,11 +393,23 @@ fun HistoryWorkoutCard(workout: WorkoutHistory, onClick: () -> Unit) {
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
-                        Text(
-                            text = dateText,
-                            style = MaterialTheme.typography.labelSmall,
-                            color = Color.LightGray
-                        )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = dateText,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = Color.LightGray
+                            )
+                            if (timeText.isNotEmpty()) {
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Box(modifier = Modifier.size(2.dp).background(Color.LightGray, CircleShape))
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = timeText,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = Color.LightGray.copy(alpha = 0.8f)
+                                )
+                            }
+                        }
                     }
 
                     Spacer(modifier = Modifier.width(8.dp))

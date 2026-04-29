@@ -8,5 +8,7 @@ data class WorkoutDetailsUiState(
     val isLoading: Boolean = false,
     val canStartWorkout: Boolean = true,
     val isEditMode: Boolean = false,
-    val availableExercises: List<Exercise> = emptyList()
+    val availableExercises: List<Exercise> = emptyList(),
+    val pendingExerciseName: String? = null,
+    val showMuscleGroupPicker: Boolean = false
 )

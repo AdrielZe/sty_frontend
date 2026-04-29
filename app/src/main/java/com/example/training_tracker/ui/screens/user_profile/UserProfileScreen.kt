@@ -1,5 +1,7 @@
 package com.example.training_tracker.ui.screens.user_profile
 
+import android.content.Intent
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -44,15 +46,25 @@ fun UserProfileScreen(
     viewModel: UserProfileViewModel = viewModel(factory = UserProfileViewModel.Factory)
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
 
     val photoPickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.PickVisualMedia(),
-        onResult = { uri ->
-            uri?.let {
+        contract = ActivityResultContracts.PickVisualMedia()
+    ) { uri ->
+        uri?.let {
+            try {
+                // Dá ao seu app o direito de ler essa imagem para sempre (mesmo após reiniciar)
+                val contentResolver = context.contentResolver
+                val takeFlags: Int = Intent.FLAG_GRANT_READ_URI_PERMISSION
+                contentResolver.takePersistableUriPermission(it, takeFlags)
+
+                // Agora sim, salva no banco
                 viewModel.updateProfilePicture(it.toString())
+            } catch (e: Exception) {
+                Log.e("PhotoPicker", "Erro ao obter permissão persistente", e)
             }
         }
-    )
+    }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background
@@ -119,13 +131,28 @@ fun ProfileContent(
                         .clickable { onEditPhotoClick() },
                     contentAlignment = Alignment.Center
                 ) {
-                    // Verificação robusta: se a URI for nula ou vazia, usa a imagem local
+                    if (!user.profilePicture.isNullOrEmpty()) {
+                        // Exibe a foto que o usuário escolheu
+                        AsyncImage(
+                            model = ImageRequest.Builder(LocalContext.current)
+                                .data(user.profilePicture) // A URI salva no banco
+                                .crossfade(true)
+                                .build(),
+                            contentDescription = "Foto de perfil",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop, // Importante para preencher o círculo
+                            error = painterResource(id = R.drawable.gym), // Caso a URI falhe
+                            placeholder = painterResource(id = R.drawable.gym) // Enquanto carrega
+                        )
+                    } else {
+                        // Imagem padrão caso o usuário ainda não tenha foto
                         Image(
                             painter = painterResource(id = R.drawable.gym),
                             contentDescription = "Foto de perfil padrão",
                             modifier = Modifier.fillMaxSize(),
                             contentScale = ContentScale.Crop
                         )
+                    }
 
                 }
 

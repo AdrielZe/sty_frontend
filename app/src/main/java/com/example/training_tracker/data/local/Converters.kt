@@ -8,6 +8,7 @@ import com.example.training_tracker.data.models.WorkoutHistory
 import com.google.gson.reflect.TypeToken
 import java.time.DayOfWeek
 import java.time.LocalDate
+import java.time.LocalTime
 
 class Converters {
     private val gson = com.google.gson.Gson()
@@ -65,6 +66,16 @@ class Converters {
     @TypeConverter
     fun dateToString(date: LocalDate?): String? {
         return date?.toString() // Salva como "2026-04-08"
+    }
+
+    @TypeConverter
+    fun fromLocalTime(time: LocalTime?): String? {
+        return time?.toString()
+    }
+
+    @TypeConverter
+    fun toLocalTime(timeString: String?): LocalTime? {
+        return timeString?.let { LocalTime.parse(it) }
     }
 
     @TypeConverter

@@ -104,7 +104,10 @@ import com.example.training_tracker.ui.theme.CyanAccent
 import com.example.training_tracker.ui.theme.CyanGradient
 import com.example.training_tracker.ui.theme.Dimens
 import com.example.training_tracker.ui.theme.Typography
+import com.example.training_tracker.ui.utils.ExerciseCardUtils
 import kotlinx.coroutines.delay
+import nl.dionsegijn.konfetti.compose.KonfettiView
+
 import nl.dionsegijn.konfetti.compose.KonfettiView
 import nl.dionsegijn.konfetti.core.Party
 import nl.dionsegijn.konfetti.core.Position
@@ -123,6 +126,7 @@ fun WorkoutScreen(
     onCompleteExercise: (String) -> Unit,
     onReopenExercise: (String) -> Unit,
     onCompleteWorkout: () -> Unit,
+    onRemoveExercise: (String) -> Unit = {},
     onTogglePause: () -> Unit = {}
 ) {
     val currentOnWeightChange by rememberUpdatedState(onWeightChange)
@@ -133,6 +137,7 @@ fun WorkoutScreen(
     val currentOnCompleteExercise by rememberUpdatedState(onCompleteExercise)
     val currentOnReopenExercise by rememberUpdatedState(onReopenExercise)
     val currentOnCompleteWorkout by rememberUpdatedState(onCompleteWorkout)
+    val currentOnRemoveExercise by rememberUpdatedState(onRemoveExercise)
 
     var showConfetti by remember { mutableStateOf(false) }
     val workout = workoutUiState.workout
@@ -257,6 +262,9 @@ fun WorkoutScreen(
                             }
                         }
                     }
+                    val onRemoveExerciseLambda = remember(exercise.id) {
+                        {id: String -> currentOnRemoveExercise(id)}
+                    }
                     val onReopenExerciseLambda = remember(exercise.id) {
                         { currentOnReopenExercise(exercise.id) }
                     }
@@ -270,7 +278,7 @@ fun WorkoutScreen(
                         }
                     }
 
-                    ExerciseCard(
+                    ExerciseCardUtils(
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                         exercise = exercise,
                         isExpanded = expandedExercises.contains(exercise.id),
@@ -283,6 +291,8 @@ fun WorkoutScreen(
                         onCompleteExercise = onCompleteExerciseLambda,
                         onReopenExercise = onReopenExerciseLambda,
                         onExpandedChange = onExpandedChangeLambda,
+                        onRemoveExercise = onRemoveExerciseLambda,
+                        workout = workout
                     )
                 }
 
@@ -452,7 +462,7 @@ fun WorkoutTopBar(
 }
 
 @Composable
-fun ExerciseCard(
+fun ExerciseCardbliblo(
     modifier: Modifier = Modifier,
     exercise: Exercise,
     isExpanded: Boolean = false,
@@ -465,6 +475,7 @@ fun ExerciseCard(
     onRemoveSet: (String, Int) -> Unit,
     onCompleteExercise: () -> Unit,
     onReopenExercise: () -> Unit,
+    workout: Workout?
 ) {
     var isDeleteMode by rememberSaveable(exercise.id) { mutableStateOf(false) }
     var isMenuExpanded by rememberSaveable { mutableStateOf(false) }
@@ -1048,8 +1059,10 @@ fun FinishWorkoutButton(
         Text(
             text = when {
                 workout?.isCompleted == true -> stringResource(id = R.string.workout_screen_finish_button_completed)
+                (workout?.exercises?.size
+                    ?: 0) < 1 -> "Comece adicionando um exercício"
                 (workout?.exercises?.count { it.isCompleted }
-                    ?: 0) < 3 -> "Realize pelo menos 3 exercícios"
+                    ?: 0) < 3 -> "Finalize pelo menos 3 exercícios"
 
                 !canCompleteWorkout -> stringResource(id = R.string.workout_screen_finish_button_fill_sets)
                 else -> stringResource(id = R.string.workout_screen_finish_button_hold)

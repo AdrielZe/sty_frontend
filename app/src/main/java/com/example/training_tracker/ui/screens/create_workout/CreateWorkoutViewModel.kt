@@ -17,7 +17,6 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
@@ -75,13 +74,21 @@ class CreateWorkoutViewModel(
         }
 
         if (existingExercise == null) {
-            // É um exercício novo. Vamos consultar a IA.
             viewModelScope.launch(Dispatchers.Default) {
                 try {
-                    val predictedMuscleKey = classifier.classify(nameFormatted)
+                    val result = classifier.classify(nameFormatted)
 
-                    println(" STRING DA IA EH: $predictedMuscleKey")
-                    val predictedMuscleKeyEnum = when (predictedMuscleKey) {
+                    if (result.confidence < 0.85f) {
+                        _draftState.update {
+                            it.copy(
+                                pendingExerciseName = nameFormatted,
+                                showMuscleGroupPicker = true
+                            )
+                        }
+                        return@launch
+                    }
+
+                    val predictedMuscleGroup = when (result.label) {
                         "peito" -> MuscleGroups.CHEST
                         "costas" -> MuscleGroups.BACK
                         "perna" -> MuscleGroups.LEGS
@@ -89,40 +96,58 @@ class CreateWorkoutViewModel(
                         "biceps" -> MuscleGroups.BICEPS
                         "triceps" -> MuscleGroups.TRICEPS
                         "abdomen" -> MuscleGroups.ABS
-                        else -> MuscleGroups.ABS // Fallback se o modelo retornar nulo
+                        else -> MuscleGroups.ABS
                     }
 
-                    // Prepara o exercício com a predição da IA
-                    val newExerciseToDB = Exercise(
-                        name = nameFormatted,
-                        muscleGroup = predictedMuscleKeyEnum
-                    )
+                    saveNewExercise(nameFormatted, predictedMuscleGroup)
 
-                    // Salva no banco de dados local
-                    exerciseRepository.addExercise(newExerciseToDB)
-
-                    println("IA PREVIU O MÚSCULO: $predictedMuscleKeyEnum para $nameFormatted")
-
-                    // Adiciona à lista da tela (draft)
-                    val exerciseToAdd = newExerciseToDB.copy(id = java.util.UUID.randomUUID().toString())
+                } catch (e: Exception) {
                     _draftState.update {
-                        it.copy(exercises = it.exercises + exerciseToAdd)
+                        it.copy(
+                            pendingExerciseName = nameFormatted,
+                            showMuscleGroupPicker = true
+                        )
                     }
-
-                }catch (e: Exception) {
-                    // ADICIONE ESTAS DUAS LINHAS:
-                    e.printStackTrace()
-                    android.util.Log.e("CriarTreino", "ERRO AO SALVAR EXERCICIO: ", e)
-
-                    _uiEvent.send("Erro ao salvar novo exercício: ${e.message}")
                 }
             }
         } else {
-            // O exercício já existe no banco, apenas reaproveitamos
             val exerciseToAdd = existingExercise.copy(id = java.util.UUID.randomUUID().toString())
             _draftState.update {
                 it.copy(exercises = it.exercises + exerciseToAdd)
             }
+        }
+    }
+
+    fun onMuscleGroupSelected(muscleGroup: MuscleGroups) {
+        val name = uiState.value.pendingExerciseName ?: return
+        viewModelScope.launch(Dispatchers.Default) {
+            saveNewExercise(name, muscleGroup)
+        }
+    }
+
+    fun dismissMuscleGroupPicker() {
+        _draftState.update {
+            it.copy(
+                showMuscleGroupPicker = false,
+                pendingExerciseName = null
+            )
+        }
+    }
+
+    private suspend fun saveNewExercise(name: String, muscleGroup: MuscleGroups) {
+        val newExerciseToDB = Exercise(
+            name = name,
+            muscleGroup = muscleGroup
+        )
+        exerciseRepository.addExercise(newExerciseToDB)
+
+        val exerciseToAdd = newExerciseToDB.copy(id = java.util.UUID.randomUUID().toString())
+        _draftState.update {
+            it.copy(
+                exercises = it.exercises + exerciseToAdd,
+                showMuscleGroupPicker = false,
+                pendingExerciseName = null
+            )
         }
     }
 
