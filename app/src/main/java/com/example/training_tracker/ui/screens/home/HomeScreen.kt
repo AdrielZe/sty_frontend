@@ -41,6 +41,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -93,6 +94,65 @@ fun HomeScreen(
     onClickBrowseWorkouts: () -> Unit,
     homeUiState: HomeUiState,
     homeViewModel: HomeViewModel = viewModel(factory = HomeViewModel.Factory)
+) {
+    when (homeUiState) {
+        is HomeUiState.Loading -> {
+            HomeLoadingScreen()
+        }
+        is HomeUiState.Error -> {
+            HomeErrorScreen(message = homeUiState.message)
+        }
+        is HomeUiState.Success -> {
+            HomeContent(
+                modifier = modifier,
+                onClickWorkoutCard = onClickWorkoutCard,
+                onNavigateToCreateWorkout = onNavigateToCreateWorkout,
+                onNavigateToRegisteredWorkouts = onNavigateToRegisteredWorkouts,
+                onNavigateToWorkoutsHistory = onNavigateToWorkoutsHistory,
+                onClickBrowseWorkouts = onClickBrowseWorkouts,
+                homeUiState = homeUiState,
+                homeViewModel = homeViewModel
+            )
+        }
+    }
+}
+
+@Composable
+fun HomeLoadingScreen() {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        CircularProgressIndicator(color = CyanAccent)
+    }
+}
+
+@Composable
+fun HomeErrorScreen(message: String?) {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = message ?: "Ocorreu um erro inesperado",
+            color = MaterialTheme.colorScheme.error,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(16.dp)
+        )
+    }
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+@Composable
+fun HomeContent(
+    modifier: Modifier = Modifier,
+    onClickWorkoutCard: (String?) -> Unit,
+    onNavigateToCreateWorkout: () -> Unit,
+    onNavigateToRegisteredWorkouts: () -> Unit,
+    onNavigateToWorkoutsHistory: () -> Unit,
+    onClickBrowseWorkouts: () -> Unit,
+    homeUiState: HomeUiState.Success,
+    homeViewModel: HomeViewModel
 ) {
     var isProfileExpanded by remember { mutableStateOf(false) }
     var showGoalDialog by remember { mutableStateOf(false) }
@@ -599,7 +659,7 @@ fun WeeklyProgressCard(
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
                         text = if (progress >= 1f) "Goal Reached! 🔥" else "${(progress * 100).toInt()}% completed",
-                        color = if (progress >= 1f) Color.Green else Color.LightGray,
+                        color = if (progress >= 1f) Color.White else Color.LightGray,
                         style = Typography.labelSmall,
                         fontWeight = FontWeight.Bold
                     )

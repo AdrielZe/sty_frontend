@@ -15,11 +15,13 @@ import androidx.navigation.compose.rememberNavController
 import com.example.training_tracker.data.routes.Routes
 import androidx.compose.runtime.*
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.training_tracker.ui.screens.home.HomeUiState
 import com.example.training_tracker.ui.screens.home.HomeScreen
 import com.example.training_tracker.ui.screens.home.HomeViewModel
 import com.example.training_tracker.ui.screens.records.RecordsScreen
 import com.example.training_tracker.ui.screens.records.RecordsViewModel
 import com.example.training_tracker.ui.screens.registered_workouts.RegisteredWorkoutsScreen
+import com.example.training_tracker.ui.screens.user_profile.UserProfileScreen
 import com.example.training_tracker.ui.screens.workout_history.WorkoutHistoryScreen
 import com.example.training_tracker.ui.screens.workout_history.WorkoutHistoryViewModel
 
@@ -62,14 +64,18 @@ fun MainTabsScreen(
                 HomeScreen(
                     homeUiState = homeUiState,
                     onClickWorkoutCard = { workoutId ->
-                        val clickedWorkout = homeUiState.todayWorkouts.find { it.id == workoutId }
-                        if (clickedWorkout?.isCompleted == false && !clickedWorkout.isOnGoing) {
-                            rootNavController.navigate("${Routes.WorkoutDetails.name}/$workoutId/true")
-                        } else if(clickedWorkout?.isOnGoing == true) {
-                            rootNavController.navigate("${Routes.Workout.name}/$workoutId")
-                        }
-                        else {
-                            rootNavController.navigate("${Routes.WorkoutReport.name}/${clickedWorkout?.historyId}")
+                        val successState = homeUiState as? HomeUiState.Success
+                        val clickedWorkout = successState?.todayWorkouts?.find { it.id == workoutId }
+                        
+                        if (clickedWorkout != null) {
+                            if (clickedWorkout.isCompleted == false && !clickedWorkout.isOnGoing) {
+                                rootNavController.navigate("${Routes.WorkoutDetails.name}/$workoutId/true")
+                            } else if(clickedWorkout.isOnGoing == true) {
+                                rootNavController.navigate("${Routes.Workout.name}/$workoutId")
+                            }
+                            else {
+                                rootNavController.navigate("${Routes.WorkoutReport.name}/${clickedWorkout.historyId}")
+                            }
                         }
                     },
                     onNavigateToCreateWorkout = {
@@ -112,6 +118,7 @@ fun MainTabsScreen(
                 WorkoutHistoryScreen(
                     uiState = uiState,
                     onDateSelected = viewModel::onDateSelected,
+                    onMuscleGroupSelected = viewModel::onMuscleGroupSelected,
                     onMoveMonth = viewModel::onMoveMonth,
                     onSearchQueryChange = viewModel::onSearchQueryChange,
                     onSortOrderChange = viewModel::onSortOrderChange,
@@ -128,7 +135,16 @@ fun MainTabsScreen(
 
                 RecordsScreen(
                     uiState = uiState,
-                    onNavigateBack = { tabsNavController.popBackStack() }
+                    onNavigateBack = { tabsNavController.popBackStack() },
+                    onMuscleGroupSelected = viewModel::onMuscleGroupSelected,
+                    onExerciseClick = viewModel::onExerciseSelected,
+                    onDismissHistory = viewModel::onDismissHistory
+                )
+            }
+
+            composable(route = Routes.Profile.name) {
+                UserProfileScreen(
+                    onBackClick = { tabsNavController.popBackStack() }
                 )
             }
         }

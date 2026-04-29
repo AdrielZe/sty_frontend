@@ -75,10 +75,10 @@ class WorkoutViewModel(
     )
 
     private fun calculateProgress(workout: Workout): Float {
-        val totalSets = workout.exercises.sumOf { it.exerciseSets.size }
-        if (totalSets == 0) return 0f
-        val completedSets = workout.exercises.sumOf { it.exerciseSets.count { set -> set.isCompleted } }
-        return completedSets.toFloat() / totalSets
+        val totalExercises = workout.exercises.size
+        if (totalExercises == 0) return 0f
+        val completedExercises = workout.exercises.count() {it.isCompleted }
+        return completedExercises.toFloat() / totalExercises
     }
 
     fun togglePauseWorkout() {
@@ -366,12 +366,7 @@ class WorkoutViewModel(
             workoutHistoryRepository.addWorkoutHistory(newHistoryEntryRecords)
 
             val resetExercises = currentWorkout.exercises.map { exercise ->
-                val resetSets = exercise.exerciseSets.map { set ->
-                    set.copy(
-                        isCompleted = false, reps = "",   // Apaga as reps
-                        weight = ""  // Apaga os pesos
-                    )
-                }
+                val resetSets = listOf(ExerciseSet(set = 1))
                 exercise.copy(
                     isCompleted = false, exerciseSets = resetSets
                 )

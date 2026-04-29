@@ -4,6 +4,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -44,6 +45,7 @@ import java.util.*
 fun WorkoutHistoryScreen(
     uiState: WorkoutHistoryUiState,
     onDateSelected: (LocalDate?) -> Unit,
+    onMuscleGroupSelected: (MuscleGroups?) -> Unit,
     onMoveMonth: (Long) -> Unit,
     onSearchQueryChange: (String) -> Unit,
     onSortOrderChange: (SortOrder) -> Unit,
@@ -99,7 +101,49 @@ fun WorkoutHistoryScreen(
             }
 
             item {
-                HistoryFilterRow(uiState.sortOrder, onSortOrderChange)
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text(
+                        "FILTER BY MUSCLE",
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            color = TextGray,
+                            letterSpacing = 1.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    )
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        contentPadding = PaddingValues(end = 24.dp)
+                    ) {
+                        item {
+                            FilterChip(
+                                selected = uiState.selectedMuscleGroup == null,
+                                label = "All",
+                                onClick = { onMuscleGroupSelected(null) }
+                            )
+                        }
+                        items(MuscleGroups.entries.toTypedArray()) { muscle ->
+                            FilterChip(
+                                selected = uiState.selectedMuscleGroup == muscle,
+                                label = muscle.name.capitalize(Locale.ROOT),
+                                onClick = { onMuscleGroupSelected(muscle) }
+                            )
+                        }
+                    }
+                }
+            }
+
+            item {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text(
+                        "SORT BY",
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            color = TextGray,
+                            letterSpacing = 1.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    )
+                    HistoryFilterRow(uiState.sortOrder, onSortOrderChange)
+                }
             }
 
             item {
@@ -239,8 +283,10 @@ fun HistoryCalendarCard(
 @Composable
 fun HistoryFilterRow(currentSort: SortOrder, onSortChange: (SortOrder) -> Unit) {
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        FilterChip(selected = currentSort == SortOrder.DATE_DESC, label = "All", onClick = { onSortChange(SortOrder.DATE_DESC) })
-        FilterChip(selected = currentSort == SortOrder.NAME_ASC, label = "Name", onClick = { onSortChange(SortOrder.NAME_ASC) })
+        FilterChip(selected = currentSort == SortOrder.DATE_DESC, label = "Latest", onClick = { onSortChange(SortOrder.DATE_DESC) })
+        FilterChip(selected = currentSort == SortOrder.DATE_ASC, label = "Oldest", onClick = { onSortChange(SortOrder.DATE_ASC) })
+        FilterChip(selected = currentSort == SortOrder.NAME_ASC, label = "A-Z", onClick = { onSortChange(SortOrder.NAME_ASC) })
+        FilterChip(selected = currentSort == SortOrder.NAME_DESC, label = "Z-A", onClick = { onSortChange(SortOrder.NAME_DESC) })
     }
 }
 
@@ -266,6 +312,8 @@ fun FilterChip(selected: Boolean, label: String, onClick: () -> Unit) {
 
 @Composable
 fun HistoryWorkoutCard(workout: WorkoutHistory, onClick: () -> Unit) {
+    val isDark = isSystemInDarkTheme()
+
     val dateText = remember(workout.completionDate) {
         workout.completionDate.format(DateTimeFormatter.ofPattern("dd MMM, yyyy", Locale.getDefault()))
     }
@@ -292,6 +340,9 @@ fun HistoryWorkoutCard(workout: WorkoutHistory, onClick: () -> Unit) {
             .height(160.dp)
             .clickable { onClick() },
         shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isDark) MaterialTheme.colorScheme.surface else Color(0XFF0D0D0D)
+        ),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Box(modifier = Modifier.fillMaxSize()) {

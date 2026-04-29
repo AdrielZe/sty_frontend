@@ -8,9 +8,9 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.training_tracker.GymTrackerApplication
-import com.example.training_tracker.data.models.Workout
+import com.example.training_tracker.data.models.MuscleGroups
+import com.example.training_tracker.data.models.WorkoutHistory
 import com.example.training_tracker.data.repository.WorkoutHistoryRepository
-import com.example.training_tracker.data.repository.WorkoutRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -27,6 +27,7 @@ class WorkoutHistoryViewModel(
     private val _searchQuery = MutableStateFlow("")
     private val _sortOrder = MutableStateFlow(SortOrder.DATE_DESC)
     private val _selectedDate = MutableStateFlow<LocalDate?>(null)
+    private val _selectedMuscleGroup = MutableStateFlow<MuscleGroups?>(null)
     private val _currentCalendarMonth = MutableStateFlow<LocalDate>(LocalDate.now().withDayOfMonth(1))
 
     val uiState: StateFlow<WorkoutHistoryUiState> = combine(
@@ -34,18 +35,29 @@ class WorkoutHistoryViewModel(
         _searchQuery,
         _sortOrder,
         _selectedDate,
+        _selectedMuscleGroup,
         _currentCalendarMonth
-    ) { history, query, sort, selectedDate, currentMonth ->
-        val filteredList = history.filter {
-            it.name.contains(query, ignoreCase = true) &&
-                    (selectedDate == null || it.completionDate == selectedDate)
+    ) { args: Array<Any?> ->
+        val history = args[0] as List<WorkoutHistory>
+        val query = args[1] as String
+        val sort = args[2] as SortOrder
+        val selectedDate = args[3] as LocalDate?
+        val selectedMuscle = args[4] as MuscleGroups?
+        val currentMonth = args[5] as LocalDate
+
+        val filteredList = history.filter { workout ->
+            val matchesQuery = workout.name.contains(query, ignoreCase = true)
+            val matchesDate = selectedDate == null || workout.completionDate == selectedDate
+            val matchesMuscle = selectedMuscle == null || workout.exercises.any { it.muscleGroup == selectedMuscle }
+            
+            matchesQuery && matchesDate && matchesMuscle
         }
 
         val sortedList = when (sort) {
             SortOrder.DATE_ASC -> filteredList.sortedBy { it.completionDate }
             SortOrder.DATE_DESC -> filteredList.sortedByDescending { it.completionDate }
-            SortOrder.NAME_ASC -> filteredList.sortedBy { it.name }
-            SortOrder.NAME_DESC -> filteredList.sortedByDescending { it.name }
+            SortOrder.NAME_ASC -> filteredList.sortedBy { it.name.lowercase() }
+            SortOrder.NAME_DESC -> filteredList.sortedByDescending { it.name.lowercase() }
         }
 
         WorkoutHistoryUiState(
@@ -53,6 +65,7 @@ class WorkoutHistoryViewModel(
             searchQuery = query,
             sortOrder = sort,
             selectedDate = selectedDate,
+            selectedMuscleGroup = selectedMuscle,
             currentCalendarMonth = currentMonth
         )
     }.stateIn(
@@ -71,6 +84,10 @@ class WorkoutHistoryViewModel(
 
     fun onDateSelected(date: LocalDate?) {
         _selectedDate.value = if (_selectedDate.value == date) null else date
+    }
+
+    fun onMuscleGroupSelected(muscleGroup: MuscleGroups?) {
+        _selectedMuscleGroup.value = if (_selectedMuscleGroup.value == muscleGroup) null else muscleGroup
     }
 
     fun onMoveMonth(delta: Long) {

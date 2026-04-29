@@ -8,5 +8,7 @@ data class User(
     @PrimaryKey
     val id: String = "default_user",
     val name: String,
+    val profilePicture: String? = null,
+    val nameDisplay: String? = null, // Opcional: nome completo ou apelido
     val weeklyGoal: Int? = null
 )

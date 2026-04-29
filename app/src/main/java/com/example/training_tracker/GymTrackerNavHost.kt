@@ -5,15 +5,18 @@ import androidx.annotation.RequiresApi
 import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.height
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.ListAlt
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
@@ -176,66 +179,44 @@ fun GroffitBottomNavBar(
 ) {
     NavigationBar(
         containerColor = MaterialTheme.colorScheme.surface,
-        tonalElevation = 0.dp
+        tonalElevation = 0.dp,
+        modifier = Modifier.height(85.dp)
     ) {
-        NavigationBarItem(
-            selected = currentRoute == Routes.Home.name,
-            onClick = { onNavigate(Routes.Home.name) },
-            icon = { Icon(Icons.Default.FitnessCenter, contentDescription = null) },
-            label = { Text("HOME") },
-            colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = CyanAccent,
-                selectedTextColor = CyanAccent,
-                unselectedIconColor = TextGray
-            )
+        val items = listOf(
+            Triple(Routes.Home.name, Icons.Default.Home, "Home"),
+            Triple(Routes.RegisteredWorkouts.name, Icons.Default.FitnessCenter, "Treinos"),
+            Triple(Routes.WorkoutHistory.name, Icons.Default.History, "Histórico"),
+            Triple(Routes.Records.name, Icons.Default.EmojiEvents, "Recordes"),
+            Triple(Routes.Profile.name, Icons.Default.Person, "Perfil")
         )
 
-        NavigationBarItem(
-            selected = currentRoute == Routes.RegisteredWorkouts.name,
-            onClick = { onNavigate(Routes.RegisteredWorkouts.name) },
-            icon = { Icon(Icons.Default.ListAlt, contentDescription = null) },
-            label = { Text("WORKOUTS") },
-            colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = CyanAccent,
-                selectedTextColor = CyanAccent,
-                unselectedIconColor = TextGray
+        items.forEach { (route, icon, label) ->
+            val isSelected = currentRoute == route
+            
+            NavigationBarItem(
+                selected = isSelected,
+                onClick = { if (!isSelected) onNavigate(route) },
+                icon = { 
+                    Icon(
+                        imageVector = icon, 
+                        contentDescription = label
+                    ) 
+                },
+                label = { 
+                    Text(
+                        text = label,
+                        style = MaterialTheme.typography.labelSmall
+                    ) 
+                },
+                alwaysShowLabel = true,
+                colors = NavigationBarItemDefaults.colors(
+                    selectedIconColor = CyanAccent,
+                    selectedTextColor = CyanAccent,
+                    unselectedIconColor = TextGray,
+                    unselectedTextColor = TextGray,
+                    indicatorColor = Color.Transparent
+                )
             )
-        )
-
-        NavigationBarItem(
-            selected = currentRoute == Routes.WorkoutHistory.name,
-            onClick = { onNavigate(Routes.WorkoutHistory.name) },
-            icon = { Icon(Icons.Default.History, contentDescription = null) },
-            label = { Text("HISTORY") },
-            colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = CyanAccent,
-                selectedTextColor = CyanAccent,
-                unselectedIconColor = TextGray
-            )
-        )
-
-        NavigationBarItem(
-            selected = currentRoute == Routes.Records.name,
-            onClick = { onNavigate(Routes.Records.name) },
-            icon = { Icon(Icons.Default.EmojiEvents, contentDescription = null) },
-            label = { Text("RECORDS") },
-            colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = CyanAccent,
-                selectedTextColor = CyanAccent,
-                unselectedIconColor = TextGray
-            )
-        )
-
-        NavigationBarItem(
-            selected = currentRoute == "PROFILE_ROUTE",
-            onClick = { /* onNavigate(Routes.Profile.name) */ },
-            icon = { Icon(Icons.Default.Person, contentDescription = null) },
-            label = { Text("PROFILE") },
-            colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = CyanAccent,
-                selectedTextColor = CyanAccent,
-                unselectedIconColor = TextGray
-            )
-        )
+        }
     }
 }

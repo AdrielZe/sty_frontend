@@ -163,13 +163,9 @@ fun GamificationCard(uiState: WorkoutReportUiState) {
     val weightValue = uiState.totalWeightLiftedInfo?.value ?: 0.0
     
     val image = when {
-        weightValue >= 20000.0 -> R.drawable.strong_6k
-        weightValue >= 10000.0 -> R.drawable.strong_5k
-        weightValue >= 6000.0 -> R.drawable.strong_4k
-        weightValue >= 4200.0 -> R.drawable.strong_3k
-        weightValue >= 3000.0 -> R.drawable.lifting_2kg
-        weightValue >= 1500.0 -> R.drawable.feather_1kg
-        else -> R.drawable.feather_1kg
+        weightValue >= 13000.0 -> R.drawable.weight1
+        weightValue >= 8000.0 -> R.drawable.weight2
+        else -> R.drawable.weight3
     }
 
     Card(

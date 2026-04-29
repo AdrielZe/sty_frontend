@@ -28,7 +28,7 @@ class HomeViewModel(
     private val workoutHistoryRepository: WorkoutHistoryRepository
 ) : ViewModel() {
 
-    val uiState = combine(
+    val uiState: StateFlow<HomeUiState> = combine(
         userRepository.getUser(),
         workoutRepository.getWorkoutsByDay(LocalDate.now().dayOfWeek),
         workoutHistoryRepository.getHistoryByDate(LocalDate.now()),
@@ -51,18 +51,21 @@ class HomeViewModel(
             (historyDate.isEqual(endOfWeek) || historyDate.isBefore(endOfWeek))
         }
 
-        HomeUiState(
+        HomeUiState.Success(
             user = user,
             currentDate = getCurrentDate(),
             todayWorkouts = workoutsWithStatus,
             totalWorkoutsCompleted = workoutHistories.size,
             workoutsCompletedThisWeek = workoutsThisWeek
-        )
+        ) as HomeUiState
+    }
+    .catch { e ->
+        emit(HomeUiState.Error(e.message))
     }
     .stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
-        initialValue = HomeUiState()
+        initialValue = HomeUiState.Loading
     )
 
     fun updateWeeklyGoal(goal: Int) {
