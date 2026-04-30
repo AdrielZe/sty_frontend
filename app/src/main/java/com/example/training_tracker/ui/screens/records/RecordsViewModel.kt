@@ -21,7 +21,7 @@ class RecordsViewModel(
 ) : ViewModel() {
 
     private val _selectedMuscleGroup = MutableStateFlow<MuscleGroups?>(null)
-    private val _selectedExerciseHistory = MutableStateFlow<Pair<String, List<Int>>?>(null)
+    private val _selectedExerciseHistory = MutableStateFlow<Pair<String, List<Double>>?>(null)
     private val _exercises = exerciseRepository.exercises
 
     val uiState: StateFlow<RecordsUiState> = combine(
@@ -62,7 +62,7 @@ class RecordsViewModel(
         _selectedMuscleGroup.value = muscleGroup
     }
 
-    fun onExerciseSelected(exerciseName: String, history: List<Int>) {
+    fun onExerciseSelected(exerciseName: String, history: List<Double>) {
         _selectedExerciseHistory.value = exerciseName to history
     }
 

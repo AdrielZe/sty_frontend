@@ -6,6 +6,10 @@ import com.example.training_tracker.data.models.Exercise
 import com.example.training_tracker.ui.screens.workout_report.TotalWeightLiftedInfo
 import com.example.training_tracker.ui.screens.workout_report.WorkoutDifficulty
 
+private fun String.parseToDouble(): Double {
+    return this.replace(",", ".").toDoubleOrNull() ?: 0.0
+}
+
 fun WorkoutDifficulty?.generateHeroTitle(context: Context): String {
     if (this == null) return context.getString(R.string.workout_report_default_title)
 
@@ -22,7 +26,9 @@ fun WorkoutDifficulty?.generateHeroTitle(context: Context): String {
 fun generateTotalWeightedInfo(context: Context, exercises: List<Exercise>): TotalWeightLiftedInfo {
     val totalWeight = exercises.sumOf { exercise ->
         exercise.exerciseSets.sumOf { set ->
-            (set.reps.toDouble() * set.weight.toDouble())
+            val reps = set.reps.toDoubleOrNull() ?: 0.0
+            val weight = set.weight.parseToDouble()
+            reps * weight
         }
     }
 
@@ -91,7 +97,7 @@ fun countTotalSets(exercises: List<Exercise>): Int {
 }
 
 fun countTotalReps(exercises: List<Exercise>): Int {
-    val totalReps = exercises.sumOf { exercise -> exercise.exerciseSets.sumOf { it.reps.toInt() } }
+    val totalReps = exercises.sumOf { exercise -> exercise.exerciseSets.sumOf { it.reps.toIntOrNull() ?: 0 } }
 
     return totalReps
 }

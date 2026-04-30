@@ -1,12 +1,19 @@
 package com.example.training_tracker.ui.screens.workout_screen
 
+import com.example.training_tracker.data.models.Exercise
 import com.example.training_tracker.data.models.ExerciseSet
 import com.example.training_tracker.data.models.Records
 import com.example.training_tracker.data.models.Workout
+import com.example.training_tracker.data.models.WorkoutHistory
 import com.example.training_tracker.data.repository.RecordsRepository
+import com.example.training_tracker.data.repository.WorkoutHistoryRepository
 import com.example.training_tracker.data.repository.WorkoutRepository
+import com.example.training_tracker.ui.screens.workout_report.WorkoutDifficulty
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
+import java.time.LocalDate
+import java.time.LocalTime
 
 interface WorkoutDelegate {
     fun calculateProgress(workout: Workout): Float
@@ -17,8 +24,16 @@ interface WorkoutDelegate {
     suspend fun updateExercise(workout: Workout, exerciseId: String, setNumber: Int, newReps: String? = null, newWeight: String? = null)
     suspend fun completeExercise(workout: Workout, exerciseId: String)
     suspend fun reopenExercise(workout: Workout, exerciseId: String)
-    suspend fun updateExerciseRecords(workout: Workout): MutableMap<String, MutableList<Int>>
-    suspend fun updateVolumeRecord(workout: Workout): MutableList<Int>?
+    suspend fun updateExerciseRecords(workout: Workout): MutableMap<String, MutableList<Double>>
+    suspend fun updateVolumeRecord(workout: Workout): MutableList<Double>?
+
+    suspend fun completeWorkout(
+        workout: Workout,
+        workoutHistoryRepository: WorkoutHistoryRepository,
+        onWorkoutFinished: (Workout) -> Unit,
+        onNavigateToReport: (String) -> Unit,
+        resetWorkout: suspend (historyId: String) -> Unit
+    )
 }
 
 class WorkoutDelegateImpl(
@@ -126,9 +141,13 @@ class WorkoutDelegateImpl(
         workoutRepository.updateWorkout(updatedWorkout.copy(progress = calculateProgress(updatedWorkout)))
     }
 
-    override suspend fun updateExerciseRecords(workout: Workout): MutableMap<String, MutableList<Int>> {
+    private fun String.parseToDouble(): Double {
+        return this.replace(",", ".").toDoubleOrNull() ?: 0.0
+    }
+
+    override suspend fun updateExerciseRecords(workout: Workout): MutableMap<String, MutableList<Double>> {
         return withContext(Dispatchers.IO) {
-            val mapOfRecords: MutableMap<String, MutableList<Int>> = mutableMapOf()
+            val mapOfRecords: MutableMap<String, MutableList<Double>> = mutableMapOf()
             var records = recordsRepository.getRecord()
             var isFirstTime = false
 
@@ -140,13 +159,13 @@ class WorkoutDelegateImpl(
             var recordsUpdated = false
 
             workout.exercises.forEach { exercise ->
-                val maxWeightThisWorkout = exercise.exerciseSets.maxByOrNull {
-                    it.weight.toDoubleOrNull() ?: 0.0
-                }?.weight?.toInt()
+                val maxWeightThisWorkout = exercise.exerciseSets.maxOfOrNull {
+                    it.weight.parseToDouble()
+                }
 
-                if (maxWeightThisWorkout != null) {
+                if (maxWeightThisWorkout != null && maxWeightThisWorkout > 0.0) {
                     val exerciseRecords =
-                        records!!.exercisesRecordMap.getOrPut(exercise.name) { mutableListOf() }
+                        records.exercisesRecordMap.getOrPut(exercise.name) { mutableListOf() }
                     val currentBest = exerciseRecords.firstOrNull()
 
                     if (currentBest == null || maxWeightThisWorkout > currentBest) {
@@ -160,9 +179,9 @@ class WorkoutDelegateImpl(
 
             if (recordsUpdated || isFirstTime) {
                 if (isFirstTime) {
-                    recordsRepository.addRecord(records!!)
+                    recordsRepository.addRecord(records)
                 } else {
-                    recordsRepository.updateRecord(records!!)
+                    recordsRepository.updateRecord(records)
                 }
             }
 
@@ -170,7 +189,7 @@ class WorkoutDelegateImpl(
         }
     }
 
-    override suspend fun updateVolumeRecord(workout: Workout): MutableList<Int>? {
+    override suspend fun updateVolumeRecord(workout: Workout): MutableList<Double>? {
         return withContext(Dispatchers.IO) {
             var records = recordsRepository.getRecord()
             var isFirstTime = false
@@ -182,32 +201,105 @@ class WorkoutDelegateImpl(
 
             val totalVolumeWorkout = workout.exercises.sumOf { exercise ->
                 exercise.exerciseSets.sumOf { set ->
-                    val weight = set.weight.toDoubleOrNull() ?: 0.0
+                    val weight = set.weight.parseToDouble()
                     val reps = set.reps.toIntOrNull() ?: 0
                     weight * reps
                 }
-            }.toInt()
+            }
 
-            val bestVolume = records!!.volumeRecords?.firstOrNull() ?: 0
+            val bestVolume = records.volumeRecords?.firstOrNull() ?: 0.0
 
             if (totalVolumeWorkout > bestVolume) {
-                if (records!!.volumeRecords == null) records!!.volumeRecords = mutableListOf()
-                records!!.volumeRecords?.add(0, totalVolumeWorkout)
+                if (records.volumeRecords == null) records.volumeRecords = mutableListOf()
+                records.volumeRecords?.add(0, totalVolumeWorkout)
 
                 if (isFirstTime) {
-                    recordsRepository.addRecord(records!!)
+                    recordsRepository.addRecord(records)
                 } else {
-                    recordsRepository.updateRecord(records!!)
+                    recordsRepository.updateRecord(records)
                 }
 
-                return@withContext records!!.volumeRecords
+                return@withContext records.volumeRecords
             }
 
             if (isFirstTime) {
-                recordsRepository.addRecord(records!!)
+                recordsRepository.addRecord(records)
             }
 
             null
         }
+    }
+
+    override suspend fun completeWorkout(
+        workout: Workout,
+        workoutHistoryRepository: WorkoutHistoryRepository,
+        onWorkoutFinished: (Workout) -> Unit,
+        onNavigateToReport: (String) -> Unit,
+        resetWorkout: suspend (String) -> Unit
+    ) {
+        val completedExercises = workout.exercises.map { exercise ->
+            val completedSets = exercise.exerciseSets.map { set ->
+                set.copy(isCompleted = true)
+            }
+            exercise.copy(
+                isCompleted = true, exerciseSets = completedSets
+            )
+        }
+
+        val now = System.currentTimeMillis()
+        val duration = workout.accumulatedTime + if (workout.startTime != null) {
+            now - workout.startTime
+        } else {
+            0L
+        }
+
+        val completionDate = LocalDate.now()
+        val completionTime = LocalTime.now()
+
+        val completedWorkout = workout.copy(
+            exercises = completedExercises,
+            isCompleted = true,
+            completionDate = completionDate,
+            completionTime = completionTime,
+            progress = 1f
+        )
+
+        val newHistoryEntry = generateHistoryEntry(workout, completionDate, completionTime, completedExercises, duration)
+        val historyId = newHistoryEntry.id
+
+        onWorkoutFinished(completedWorkout)
+
+        withContext(Dispatchers.IO) {
+            val exerciseRecords = updateExerciseRecords(completedWorkout)
+            val volumeRecords = updateVolumeRecord(completedWorkout)
+
+            val newHistoryEntryRecords = newHistoryEntry.copy(
+                records = Records(
+                    exercisesRecordMap = exerciseRecords,
+                    volumeRecords = volumeRecords
+                )
+            )
+
+            workoutHistoryRepository.addWorkoutHistory(newHistoryEntryRecords)
+
+            resetWorkout(historyId)
+
+            delay(1000)
+            onNavigateToReport(historyId)
+        }
+    }
+
+    private fun generateHistoryEntry(workout: Workout, completionDate: LocalDate, completionTime: LocalTime, completedExercises: List<Exercise>, duration: Long) : WorkoutHistory {
+        val workoutId = if (workout.id == "freestyle_workout_id") "freestyle_workout_id" else workout.id
+
+        return WorkoutHistory(
+            name = workout.name,
+            completionDate = completionDate,
+            completionTime = completionTime,
+            exercises = completedExercises,
+            workoutId = workoutId,
+            difficulty = WorkoutDifficulty.MEDIUM,
+            durationMillis = duration
+        )
     }
 }

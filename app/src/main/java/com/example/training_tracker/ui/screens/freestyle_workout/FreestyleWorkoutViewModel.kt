@@ -10,19 +10,14 @@ import com.example.training_tracker.GymTrackerApplication
 import com.example.training_tracker.data.models.Exercise
 import com.example.training_tracker.data.models.ExerciseSet
 import com.example.training_tracker.data.models.MuscleGroups
-import com.example.training_tracker.data.models.Records
 import com.example.training_tracker.data.models.Workout
-import com.example.training_tracker.data.models.WorkoutHistory
 import com.example.training_tracker.data.repository.ExerciseRepository
-import com.example.training_tracker.data.repository.RecordsRepository
 import com.example.training_tracker.data.repository.WorkoutHistoryRepository
 import com.example.training_tracker.data.repository.WorkoutRepository
 import com.example.training_tracker.domain.classifiers.ExerciseClassifier
-import com.example.training_tracker.ui.screens.workout_report.WorkoutDifficulty
 import com.example.training_tracker.ui.screens.workout_screen.WorkoutDelegate
 import com.example.training_tracker.ui.screens.workout_screen.WorkoutDelegateImpl
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -31,8 +26,6 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import java.time.LocalDate
-import java.time.LocalTime
 import java.util.UUID
 
 private const val TAG = "FreestyleWorkoutViewModel"
@@ -112,7 +105,7 @@ class FreestyleWorkoutViewModel(
 
     fun togglePauseWorkout() {
         viewModelScope.launch {
-            togglePauseWorkout(uiState.value.workout)
+            uiState.value.workout?.let { togglePauseWorkout(it) }
         }
     }
 
@@ -268,77 +261,32 @@ class FreestyleWorkoutViewModel(
     }
 
     fun completeWorkout() {
-        val currentWorkout = uiState.value.workout
-
-        val completedExercises = currentWorkout.exercises.map { exercise ->
-            val completedSets = exercise.exerciseSets.map { set ->
-                set.copy(isCompleted = true)
-            }
-            exercise.copy(
-                isCompleted = true, exerciseSets = completedSets
+        viewModelScope.launch {
+            delegate.completeWorkout(
+                workout = uiState.value.workout,
+                workoutHistoryRepository = workoutHistoryRepository,
+                onWorkoutFinished = { completedWorkout ->
+                    _finishedWorkoutSession.value = completedWorkout
+                },
+                onNavigateToReport = { historyId ->
+                    _navigateToReport.value = historyId
+                },
+                resetWorkout = {
+                    workoutRepository.updateWorkout(
+                        Workout(
+                            id = FREESTYLE_WORKOUT_ID,
+                            name = "Freestyle Workout",
+                            isOnGoing = false,
+                            startTime = null,
+                            exercises = emptyList(),
+                            accumulatedTime = 0L,
+                            isPaused = false,
+                            completionDate = null,
+                            completionTime = null
+                        )
+                    )
+                }
             )
-        }
-
-        val now = System.currentTimeMillis()
-        val duration = currentWorkout.accumulatedTime + if (currentWorkout.startTime != null) {
-            now - currentWorkout.startTime
-        } else {
-            0L
-        }
-
-        val completionDate = LocalDate.now()
-        val completionTime = LocalTime.now()
-
-        val completedWorkout = currentWorkout.copy(
-            exercises = completedExercises,
-            isCompleted = true,
-            completionDate = completionDate,
-            completionTime = completionTime,
-            progress = 1f
-        )
-
-        val newHistoryEntry = WorkoutHistory(
-            name = currentWorkout.name,
-            completionDate = completionDate,
-            completionTime = completionTime,
-            exercises = completedExercises,
-            workoutId = FREESTYLE_WORKOUT_ID,
-            difficulty = WorkoutDifficulty.MEDIUM,
-            durationMillis = duration
-        )
-
-        _finishedWorkoutSession.value = completedWorkout
-        val historyId = newHistoryEntry.id
-
-        viewModelScope.launch(Dispatchers.IO) {
-            val exerciseRecords = updateExerciseRecords(completedWorkout)
-            val volumeRecords = updateVolumeRecord(completedWorkout)
-
-            val newHistoryEntryRecords = newHistoryEntry.copy(
-                records = Records(
-                    exercisesRecordMap = exerciseRecords,
-                    volumeRecords = volumeRecords
-                )
-            )
-
-            workoutHistoryRepository.addWorkoutHistory(newHistoryEntryRecords)
-
-            workoutRepository.updateWorkout(
-                Workout(
-                    id = FREESTYLE_WORKOUT_ID,
-                    name = "Freestyle Workout",
-                    isOnGoing = false,
-                    startTime = null,
-                    exercises = emptyList(),
-                    accumulatedTime = 0L,
-                    isPaused = false,
-                    completionDate = null,
-                    completionTime = null
-                )
-            )
-
-            delay(1000)
-            _navigateToReport.value = historyId
         }
     }
 

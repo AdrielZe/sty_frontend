@@ -1,57 +1,41 @@
 package com.example.training_tracker.ui.screens.freestyle_workout
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Done
-import androidx.compose.material.icons.filled.FitnessCenter
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowUp
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import coil.compose.AsyncImage
-import coil.request.ImageRequest
-import com.example.training_tracker.R
-import com.example.training_tracker.data.models.Exercise
-import com.example.training_tracker.data.models.MuscleGroups
-import com.example.training_tracker.data.models.extensions.isValidToComplete
 import com.example.training_tracker.ui.components.MuscleGroupPickerDialog
-import com.example.training_tracker.ui.screens.registered_workouts.TextGray
 import com.example.training_tracker.ui.screens.workout_details.AddExerciseSelectionDialog
-import com.example.training_tracker.ui.screens.workout_screen.ErrorDialog
-import com.example.training_tracker.ui.screens.workout_screen.FinishWorkoutButton
-import com.example.training_tracker.ui.screens.workout_screen.SetLine
-import com.example.training_tracker.ui.screens.workout_screen.WorkoutTopBar
-import com.example.training_tracker.ui.theme.AppTheme
 import com.example.training_tracker.ui.theme.CyanAccent
-import com.example.training_tracker.ui.theme.Typography
 import com.example.training_tracker.ui.utils.ExerciseCardUtils
+import com.example.training_tracker.ui.utils.FinishWorkoutButton
+import com.example.training_tracker.ui.utils.WorkoutTopBar
 import kotlinx.coroutines.delay
 import nl.dionsegijn.konfetti.compose.KonfettiView
 import nl.dionsegijn.konfetti.core.Party
@@ -110,7 +94,8 @@ fun FreestyleWorkoutScreen(
             val workout = uiState.workout
             val exercisesFinished = workout.exercises.count { it.isCompleted }
             val totalCount = workout.exercises.size
-            val percentage = if (totalCount > 0) (exercisesFinished.toFloat() / totalCount.toFloat()) * 100 else 0f
+            val percentage =
+                if (totalCount > 0) (exercisesFinished.toFloat() / totalCount.toFloat()) * 100 else 0f
 
             WorkoutTopBar(
                 workoutName = workout.name,
@@ -134,7 +119,9 @@ fun FreestyleWorkoutScreen(
             )
         }
     ) { innerPadding ->
-        Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
+        Box(modifier = Modifier
+            .fillMaxSize()
+            .padding(innerPadding)) {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -149,16 +136,28 @@ fun FreestyleWorkoutScreen(
                         exercise = exercise,
                         isExpanded = expandedExercises.contains(exercise.id),
                         onExpandedChange = { isExpanded ->
-                            expandedExercises = if (isExpanded) expandedExercises + exercise.id else expandedExercises - exercise.id
+                            expandedExercises =
+                                if (isExpanded) expandedExercises + exercise.id else expandedExercises - exercise.id
                         },
-                        onRepsChange = { setNum, reps -> viewModel.updateExercise(exercise.id, setNum, newReps = reps) },
-                        onWeightChange = { setNum, weight -> viewModel.updateExercise(exercise.id, setNum, newWeight = weight) },
+                        onRepsChange = { setNum, reps ->
+                            viewModel.updateExercise(
+                                exercise.id,
+                                setNum,
+                                newReps = reps
+                            )
+                        },
+                        onWeightChange = { setNum, weight ->
+                            viewModel.updateExercise(
+                                exercise.id,
+                                setNum,
+                                newWeight = weight
+                            )
+                        },
                         onAddSetClick = { viewModel.addNewSetLine(exercise.id) },
                         onRemoveSet = { _, setNum -> viewModel.removeSetLine(exercise.id, setNum) },
-                        onCompleteSet = { _, setNum -> viewModel.completeSet(exercise.id, setNum) },
                         onCompleteExercise = { viewModel.completeExercise(exercise.id) },
                         onReopenExercise = { viewModel.reopenExercise(exercise.id) },
-                        onRemoveExercise = { viewModel.removeExercise(exercise.id)},
+                        onRemoveExercise = { viewModel.removeExercise(exercise.id) },
                         workout = uiState.workout
                     )
                 }

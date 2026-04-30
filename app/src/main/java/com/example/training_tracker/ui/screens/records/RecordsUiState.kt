@@ -7,5 +7,5 @@ data class RecordsUiState(
     val records: Records? = null,
     val isLoading: Boolean = true,
     val selectedMuscleGroup: MuscleGroups? = null,
-    val selectedExerciseHistory: Pair<String, List<Int>>? = null
+    val selectedExerciseHistory: Pair<String, List<Double>>? = null
 )

@@ -32,10 +32,10 @@ import com.example.training_tracker.data.models.mocks.availableExercises
 import com.example.training_tracker.ui.components.MuscleGroupPickerDialog
 import com.example.training_tracker.ui.screens.home.MainGradientButton
 import com.example.training_tracker.ui.screens.workout_details.AddExerciseSelectionDialog
-import com.example.training_tracker.ui.screens.workout_screen.ErrorDialog
 import com.example.training_tracker.ui.theme.AppTheme
 import com.example.training_tracker.ui.theme.CyanAccent
 import com.example.training_tracker.ui.theme.Dimens
+import com.example.training_tracker.ui.utils.ErrorDialog
 import java.time.DayOfWeek
 import java.time.format.TextStyle
 import java.util.Locale

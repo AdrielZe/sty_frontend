@@ -10,5 +10,6 @@ enum class Routes {
     WorkoutReport,
     Records,
     Profile,
-    FreestyleWorkout
+    FreestyleWorkout,
+    Welcome
 }

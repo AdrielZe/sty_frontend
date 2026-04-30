@@ -41,7 +41,7 @@ fun RecordsScreen(
     uiState: RecordsUiState,
     onNavigateBack: () -> Unit,
     onMuscleGroupSelected: (MuscleGroups?) -> Unit,
-    onExerciseClick: (String, List<Int>) -> Unit,
+    onExerciseClick: (String, List<Double>) -> Unit,
     onDismissHistory: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -79,7 +79,7 @@ fun RecordsScreen(
         } else {
             val exerciseRecordsMap = uiState.records?.exercisesRecordMap ?: emptyMap()
             val sortedRecords = exerciseRecordsMap.toList()
-                .sortedByDescending { it.second.maxOrNull() ?: 0 }
+                .sortedByDescending { it.second.maxOrNull() ?: 0.0 }
 
             LazyColumn(
                 modifier = Modifier
@@ -103,7 +103,7 @@ fun RecordsScreen(
                         RecordOverviewCard(
                             modifier = Modifier.fillMaxWidth(),
                             title = "BEST VOLUME",
-                            value = "${uiState.records?.volumeRecords?.maxOrNull() ?: 0} kg",
+                            value = "${uiState.records?.volumeRecords?.maxOrNull() ?: 0.0} kg",
                             icon = Icons.AutoMirrored.Filled.ShowChart
                         )
                     }
@@ -164,7 +164,7 @@ fun RecordsScreen(
                         Box(modifier = Modifier.padding(horizontal = 24.dp)) {
                             ExerciseRecordCard(
                                 exerciseName = exerciseName,
-                                bestWeight = weights.maxOrNull() ?: 0,
+                                bestWeight = weights.maxOrNull() ?: 0.0,
                                 history = weights,
                                 onClick = { onExerciseClick(exerciseName, weights) }
                             )
@@ -194,7 +194,7 @@ fun RecordsScreen(
 @Composable
 fun ExerciseHistoryContent(
     exerciseName: String,
-    history: List<Int>
+    history: List<Double>
 ) {
     Column(
         modifier = Modifier
@@ -263,7 +263,7 @@ fun ExerciseHistoryContent(
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            history.reversed().forEachIndexed { index, weight ->
+            history.forEachIndexed { index, weight ->
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -296,7 +296,7 @@ fun ExerciseHistoryContent(
 }
 
 @Composable
-fun EvolutionChart(history: List<Int>) {
+fun EvolutionChart(history: List<Double>) {
     val maxWeight = history.maxOrNull()?.toFloat() ?: 1f
     val minWeight = history.minOrNull()?.toFloat() ?: 0f
     val range = if (maxWeight == minWeight) 1f else maxWeight - minWeight
@@ -308,7 +308,7 @@ fun EvolutionChart(history: List<Int>) {
 
         val points = history.mapIndexed { index, weight ->
             val x = index * spacing
-            val y = height - ((weight - minWeight) / range) * height * 0.8f - (height * 0.1f)
+            val y = height - ((weight.toFloat() - minWeight) / range) * height * 0.8f - (height * 0.1f)
             Offset(x, y)
         }
 
@@ -374,7 +374,7 @@ fun MuscleGroupChip(
 @Composable
 fun RecordsPodium(
     modifier: Modifier = Modifier,
-    topExercises: List<Pair<String, List<Int>>>
+    topExercises: List<Pair<String, List<Double>>>
 ) {
     Card(
         modifier = modifier
@@ -410,7 +410,7 @@ fun RecordsPodium(
             ) {
                 // 2nd Place
                 PodiumPillar(
-                    weight = topExercises.getOrNull(1)?.second?.maxOrNull() ?: 0,
+                    weight = topExercises.getOrNull(1)?.second?.maxOrNull() ?: 0.0,
                     label = "2nd",
                     heightFraction = 0.65f,
                     exerciseName = topExercises.getOrNull(1)?.first ?: "-",
@@ -418,7 +418,7 @@ fun RecordsPodium(
                 )
                 // 1st Place
                 PodiumPillar(
-                    weight = topExercises.getOrNull(0)?.second?.maxOrNull() ?: 0,
+                    weight = topExercises.getOrNull(0)?.second?.maxOrNull() ?: 0.0,
                     label = "1st",
                     heightFraction = 0.95f,
                     exerciseName = topExercises.getOrNull(0)?.first ?: "-",
@@ -427,7 +427,7 @@ fun RecordsPodium(
                 )
                 // 3rd Place
                 PodiumPillar(
-                    weight = topExercises.getOrNull(2)?.second?.maxOrNull() ?: 0,
+                    weight = topExercises.getOrNull(2)?.second?.maxOrNull() ?: 0.0,
                     label = "3rd",
                     heightFraction = 0.5f,
                     exerciseName = topExercises.getOrNull(2)?.first ?: "-",
@@ -440,7 +440,7 @@ fun RecordsPodium(
 
 @Composable
 fun PodiumPillar(
-    weight: Int,
+    weight: Double,
     label: String,
     heightFraction: Float,
     exerciseName: String,
@@ -466,7 +466,7 @@ fun PodiumPillar(
             modifier = Modifier.width(72.dp)
         )
         Text(
-            if (weight > 0) "$weight kg" else "-",
+            if (weight > 0.0) "$weight kg" else "-",
             style = MaterialTheme.typography.labelMedium.copy(
                 fontWeight = FontWeight.Black,
                 fontSize = 12.sp
@@ -555,8 +555,8 @@ fun RecordOverviewCard(
 @Composable
 fun ExerciseRecordCard(
     exerciseName: String,
-    bestWeight: Int,
-    history: List<Int>,
+    bestWeight: Double,
+    history: List<Double>,
     onClick: () -> Unit
 ) {
     Card(

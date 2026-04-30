@@ -20,7 +20,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-@Database(entities = [Workout::class, Exercise::class, WorkoutHistory::class, Records::class, User::class], version = 31)
+@Database(entities = [Workout::class, Exercise::class, WorkoutHistory::class, Records::class, User::class], version = 32)
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
 
@@ -41,13 +41,6 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "app_database"
                 )
-                    .addCallback(object : Callback() {
-                        override fun onCreate(db: SupportSQLiteDatabase) {
-                            super.onCreate(db)
-                            // Insere um usuário inicial usando SQL puro para garantir execução imediata
-                            db.execSQL("INSERT OR IGNORE INTO users (id, name, weeklyGoal) VALUES ('default_user', 'Adriel', NULL)")
-                        }
-                    })
                     .fallbackToDestructiveMigration()
                     .build()
 

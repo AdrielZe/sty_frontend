@@ -15,16 +15,28 @@ class Converters {
 
     // Converte o Mapa com histórico de listas para String (JSON)
     @TypeConverter
-    fun fromRecordsMap(map: MutableMap<String, MutableList<Int>>?): String {
-        return gson.toJson(map ?: mutableMapOf<String, MutableList<Int>>())
+    fun fromRecordsMap(map: MutableMap<String, MutableList<Double>>?): String {
+        return gson.toJson(map ?: mutableMapOf<String, MutableList<Double>>())
     }
 
     // Converte a String (JSON) de volta para o Mapa com as listas
     @TypeConverter
-    fun toRecordsMap(jsonString: String?): MutableMap<String, MutableList<Int>> {
+    fun toRecordsMap(jsonString: String?): MutableMap<String, MutableList<Double>> {
         if (jsonString.isNullOrEmpty()) return mutableMapOf()
-        val mapType = object : TypeToken<MutableMap<String, MutableList<Int>>>() {}.type
+        val mapType = object : TypeToken<MutableMap<String, MutableList<Double>>>() {}.type
         return gson.fromJson(jsonString, mapType) ?: mutableMapOf()
+    }
+
+    @TypeConverter
+    fun fromDoubleList(value: MutableList<Double>?): String {
+        return gson.toJson(value ?: mutableListOf<Double>())
+    }
+
+    @TypeConverter
+    fun toDoubleList(value: String?): MutableList<Double> {
+        if (value.isNullOrEmpty()) return mutableListOf()
+        val listType = object : TypeToken<MutableList<Double>>() {}.type
+        return gson.fromJson(value, listType) ?: mutableListOf()
     }
 
     @TypeConverter

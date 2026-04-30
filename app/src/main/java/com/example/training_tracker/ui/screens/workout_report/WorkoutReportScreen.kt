@@ -506,7 +506,7 @@ fun RecordsSection(records: com.example.training_tracker.data.models.Records?) {
     // Ordenar os recordes por peso decrescente
     val sortedRecords = remember(records) {
         records.exercisesRecordMap.entries
-            .map { it.key to (it.value.firstOrNull() ?: 0) }
+            .map { it.key to (it.value.firstOrNull() ?: 0.0) }
             .sortedByDescending { it.second }
     }
 
@@ -539,7 +539,7 @@ fun RecordsSection(records: com.example.training_tracker.data.models.Records?) {
         sortedRecords.forEach { (exerciseName, maxWeight) ->
             NewRecordCard(
                 title = "PERSONAL BEST",
-                value = "${maxWeight}kg",
+                value = String.format(Locale.getDefault(), "%.1fkg", maxWeight).replace(".0kg", "kg"),
                 subValue = exerciseName,
                 icon = Icons.Default.EmojiEvents,
                 color = CyanAccent
