@@ -76,7 +76,7 @@ fun CreateWorkoutScreen(
 
     if (showErrorMessage) {
         ErrorDialog(
-            text = "Adicione pelo menos 3 exercícios para poder salver seu treino",
+            text = stringResource(R.string.adicione_pelo_menos_3_exercicios_para_salvar_seu_treino),
             onDismissRequest = { showErrorMessage = false }
         )
 
@@ -363,7 +363,9 @@ fun SaveWorkoutButton(
             )
             .clip(RoundedCornerShape(32.dp))
             .background(
-                brush = if (isEnabled) AppTheme.brushes.primaryGradient else Brush.horizontalGradient(listOf(Color.Gray, Color.DarkGray))
+                brush = if (isEnabled) AppTheme.brushes.primaryGradient else Brush.horizontalGradient(
+                    listOf(Color.Gray, Color.DarkGray)
+                )
             )
             .clickable { onClick() },
         contentAlignment = Alignment.Center
@@ -380,7 +382,7 @@ fun SaveWorkoutButton(
             )
             Spacer(modifier = Modifier.width(12.dp))
             Text(
-                text = if (isEnabled) text else "Adicione pelo menos 3 exercícios",
+                text = if (isEnabled) text else stringResource(R.string.adicione_pelo_menos_3_exercicios),
                 color = Color.White,
                 fontWeight = FontWeight.Bold,
                 fontSize = 16.sp,

@@ -42,7 +42,7 @@
     <string name="home_bottom_bar_workouts">Workouts</string>
     <string name="content_description_history">History</string>
     <string name="home_bottom_bar_history">History</string>
-    <string name="home_browse_workouts">Browse all workouts</string>
+    <string name="home_browse_workouts">Browse your workouts</string>
     <string name="enter_app">Enter app</string>
     <string name="registered_workouts_title">REGISTERED WORKOUTS</string>
     <string name="registered_workouts_drag_empty_state">Drag an workout here</string>

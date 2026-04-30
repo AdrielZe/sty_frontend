@@ -594,7 +594,9 @@ fun AddExerciseSelectionDialog(
                             ) {
                                 Text(
                                     text = exercise.name,
-                                    modifier = Modifier.padding(12.dp).weight(1f),
+                                    modifier = Modifier
+                                        .padding(12.dp)
+                                        .weight(1f),
                                     style = MaterialTheme.typography.bodyLarge
                                 )
                                 Surface(
@@ -604,7 +606,8 @@ fun AddExerciseSelectionDialog(
                                 ) {
                                     Text(
                                         modifier = Modifier
-                                            .padding(4.dp).weight(1f),
+                                            .padding(4.dp)
+                                            .weight(1f),
                                         text = exercise.muscleGroup.toString(),
                                         style = MaterialTheme.typography.labelSmall,
                                         maxLines = 1,
@@ -655,7 +658,7 @@ fun EditWorkoutNameDialog(
             OutlinedTextField(
                 value = nameText ?: "",
                 onValueChange = { nameText = it },
-                placeholder = { Text(text = workout?.name ?: "Treino") },
+                placeholder = { Text(text = workout?.name ?: stringResource(R.string.treino_min)) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
@@ -674,12 +677,12 @@ fun EditWorkoutNameDialog(
                     }
                 }
             ) {
-                Text("Confirmar", color = CyanAccent, fontWeight = FontWeight.Bold)
+                Text(stringResource(R.string.confirmar), color = CyanAccent, fontWeight = FontWeight.Bold)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancelar", color = Color.Gray)
+                Text(stringResource(R.string.cancelar), color = Color.Gray)
             }
         }
     )

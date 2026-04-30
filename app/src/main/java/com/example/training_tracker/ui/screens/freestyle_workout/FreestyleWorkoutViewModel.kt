@@ -1,6 +1,5 @@
 package com.example.training_tracker.ui.screens.freestyle_workout
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
 import androidx.lifecycle.viewModelScope
@@ -27,8 +26,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.util.UUID
-
-private const val TAG = "FreestyleWorkoutViewModel"
 
 class FreestyleWorkoutViewModel(
     private val exerciseRepository: ExerciseRepository,
@@ -105,7 +102,7 @@ class FreestyleWorkoutViewModel(
 
     fun togglePauseWorkout() {
         viewModelScope.launch {
-            uiState.value.workout?.let { togglePauseWorkout(it) }
+            togglePauseWorkout(uiState.value.workout)
         }
     }
 
@@ -166,8 +163,9 @@ class FreestyleWorkoutViewModel(
             val updatedWorkout = uiState.value.workout.copy(
                 exercises = uiState.value.workout.exercises + exerciseToAdd
             )
+            val workoutWithProgress = updatedWorkout.copy(progress = calculateProgress(updatedWorkout))
             viewModelScope.launch {
-                workoutRepository.updateWorkout(updatedWorkout)
+                workoutRepository.updateWorkout(workoutWithProgress)
             }
             _showExercisePicker.value = false
         }
@@ -201,7 +199,8 @@ class FreestyleWorkoutViewModel(
         val updatedWorkout = uiState.value.workout.copy(
             exercises = uiState.value.workout.exercises + exerciseToAdd
         )
-        workoutRepository.updateWorkout(updatedWorkout)
+        val workoutWithProgress = updatedWorkout.copy(progress = calculateProgress(updatedWorkout))
+        workoutRepository.updateWorkout(workoutWithProgress)
         
         _showExercisePicker.value = false
         _showMuscleGroupPicker.value = false
@@ -282,7 +281,8 @@ class FreestyleWorkoutViewModel(
                             accumulatedTime = 0L,
                             isPaused = false,
                             completionDate = null,
-                            completionTime = null
+                            completionTime = null,
+                            progress = 0f
                         )
                     )
                 }

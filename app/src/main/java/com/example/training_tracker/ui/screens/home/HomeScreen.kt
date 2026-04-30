@@ -150,7 +150,7 @@ fun HomeErrorScreen(message: String?) {
         contentAlignment = Alignment.Center
     ) {
         Text(
-            text = message ?: "Ocorreu um erro inesperado",
+            text = message ?: stringResource(R.string.error),
             color = MaterialTheme.colorScheme.error,
             textAlign = TextAlign.Center,
             modifier = Modifier.padding(16.dp)
@@ -331,7 +331,7 @@ fun HomeContent(
                             .data(homeUiState.user?.profilePicture)
                             .crossfade(true)
                             .build(),
-                        contentDescription = "Foto de perfil expandida",
+                        contentDescription = stringResource(R.string.foto_de_perfil_expandida),
                         modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Crop,
                         error = painterResource(id = R.drawable.gym),
@@ -341,7 +341,7 @@ fun HomeContent(
                     // Imagem padrão
                     Image(
                         painter = painterResource(id = R.drawable.gym),
-                        contentDescription = "Foto de perfil padrão",
+                        contentDescription = stringResource(R.string.foto_de_perfil_padrao),
                         modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Crop
                     )
@@ -394,7 +394,7 @@ fun FreestyleWorkoutNameDialog(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = "Nome do Treino",
+                    text = stringResource(R.string.nome_do_treino),
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
                     color = CyanAccent
@@ -404,8 +404,8 @@ fun FreestyleWorkoutNameDialog(
                 OutlinedTextField(
                     value = workoutName,
                     onValueChange = { workoutName = it },
-                    label = { Text(text = "Como quer chamar o seu treino?", color = Color.Gray) },
-                    placeholder = { Text(text = "Ex: Treino de Sexta", color = Color.Gray) },
+                    label = { Text(text = stringResource(R.string.como_quer_chamar_o_seu_treino), color = Color.Gray) },
+                    placeholder = { Text(text = stringResource(R.string.ex_treino_de_sexta), color = Color.Gray) },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
                     singleLine = true,
@@ -423,7 +423,7 @@ fun FreestyleWorkoutNameDialog(
                     horizontalArrangement = Arrangement.End
                 ) {
                     Text(
-                        text = "CANCELAR",
+                        text = stringResource(R.string.cancelar),
                         modifier = Modifier
                             .clickable { onDismiss() }
                             .padding(12.dp),
@@ -440,7 +440,7 @@ fun FreestyleWorkoutNameDialog(
                         ),
                         shape = RoundedCornerShape(12.dp)
                     ) {
-                        Text("INICIAR", color = Color.Black, fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.iniciar), color = Color.Black, fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -462,13 +462,16 @@ fun FreestyleWorkoutCard(
             onDismissRequest = { showCancelDialog = false },
             title = {
                 Text(
-                    text = "Cancelar treino",
+                    text = stringResource(R.string.cancelar_treino),
                     style = Typography.titleMedium
                 )
             },
             text = {
                 Text(
-                    text = "Tem certeza que deseja cancelar e remover o treino${activeWorkout?.name}?",
+                    text = stringResource(
+                        R.string.tem_certeza_que_deseja_cancelar_e_remover_o_treino,
+                        activeWorkout?.name ?: "this"
+                    ),
                     style = Typography.bodyLarge
                 )
             },
@@ -480,7 +483,7 @@ fun FreestyleWorkoutCard(
                     }
                 ) {
                     Text(
-                        text = "Confirmar",
+                        text = stringResource(R.string.confirmar),
                         color = MaterialTheme.colorScheme.secondary,
                         fontWeight = FontWeight.Bold
                     )
@@ -491,7 +494,7 @@ fun FreestyleWorkoutCard(
                     onClick = { showCancelDialog = false }
                 ) {
                     Text(
-                        text = "Cancelar",
+                        text = stringResource(R.string.cancelar),
                         color = Color.Gray
                     )
                 }
@@ -542,16 +545,19 @@ fun FreestyleWorkoutCard(
             Spacer(modifier = Modifier.width(16.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "Freestyle Workout",
+                    text = stringResource(R.string.treino_livre),
                     style = Typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = if (isLocked) Color.Gray else CyanAccent
                 )
                 Text(
                     text = if (isLocked)
-                        "Freestyle workout em andamento: ${activeWorkout?.name} - finalize ou cancele esse treino antes de iniciar outro"
+                        stringResource(
+                            R.string.treino_livre_em_andamento_finalize_ou_cancele_esse_treino_antes_de_iniciar_outro,
+                            activeWorkout.name
+                        )
                     else
-                        "Prefere registrar os seus exercícios enquanto treina? Clique aqui e comece",
+                        stringResource(R.string.nao_planejou_seu_treino_inicie_um_treino_livre_e_adicione_os_exercicios_na_hora),
                     style = Typography.labelSmall,
                     color = if (isLocked) Color.Gray else MaterialTheme.colorScheme.onSurfaceVariant,
                     lineHeight = 14.sp
@@ -561,7 +567,7 @@ fun FreestyleWorkoutCard(
                         onClick = { showCancelDialog = !showCancelDialog },
                         contentPadding = PaddingValues(0.dp)
                     ) {
-                        Text("Cancelar treino")
+                        Text(stringResource(R.string.cancelar_treino))
                     }
                 }
             }
@@ -658,13 +664,13 @@ fun SetWeeklyGoalCard(onClick: () -> Unit) {
                 Spacer(modifier = Modifier.width(16.dp))
                 Column {
                     Text(
-                        text = "Defina sua meta semanal",
+                        text = stringResource(R.string.defina_sua_meta_semanal),
                         style = Typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = Color.White
                     )
                     Text(
-                        text = "Quantos treinos você fará esta semana?",
+                        text = stringResource(R.string.quantos_treinos_voce_fara_esta_semana),
                         style = Typography.bodySmall,
                         color = Color.White.copy(alpha = 0.7f)
                     )
@@ -716,14 +722,14 @@ fun WeeklyGoalPickerDialog(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = "Meta Semanal",
+                    text = stringResource(R.string.meta_semanal),
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
                     color = CyanAccent
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "Escolha seu objetivo de treinos por semana",
+                    text = stringResource(R.string.escolha_seu_objetivo_de_treinos_por_semana),
                     style = MaterialTheme.typography.bodyMedium,
                     textAlign = TextAlign.Center,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -760,7 +766,9 @@ fun WeeklyGoalPickerDialog(
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
-                                    text = "$num ${if (num == 1) "treino" else "treinos"}",
+                                    text = "$num ${if (num == 1) stringResource(R.string.treino) else stringResource(
+                                        R.string.treinos
+                                    )}",
                                     style = if (isSelected) {
                                         MaterialTheme.typography.headlineMedium.copy(
                                             fontWeight = FontWeight.Bold,
@@ -784,7 +792,7 @@ fun WeeklyGoalPickerDialog(
                     horizontalArrangement = Arrangement.End
                 ) {
                     Text(
-                        text = "CANCELAR",
+                        text = stringResource(R.string.cancelar),
                         modifier = Modifier
                             .clickable { onDismiss() }
                             .padding(12.dp),
@@ -836,7 +844,7 @@ fun WeeklyProgressCard(
                     .data(R.drawable.count_backround)
                     .crossfade(true)
                     .build(),
-                contentDescription = "Fundo do card",
+                contentDescription = stringResource(R.string.fundo_do_card),
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize()
             )
@@ -861,7 +869,7 @@ fun WeeklyProgressCard(
                     Column {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
-                                text = "Weekly Progress",
+                                text = stringResource(R.string.progresso_semanal),
                                 color = Color.White,
                                 style = Typography.titleMedium,
                                 fontWeight = FontWeight.Bold
@@ -869,7 +877,7 @@ fun WeeklyProgressCard(
                             Spacer(modifier = Modifier.width(8.dp))
                             Icon(
                                 imageVector = Icons.Default.Edit,
-                                contentDescription = "Editar meta",
+                                contentDescription = stringResource(R.string.editar_meta),
                                 modifier = Modifier
                                     .size(14.dp)
                                     .clickable { onEditGoal() },
@@ -877,7 +885,7 @@ fun WeeklyProgressCard(
                             )
                         }
                         Text(
-                            text = "Consistency is key",
+                            text = stringResource(R.string.consistencia_e_a_chave),
                             color = Color.LightGray,
                             style = Typography.labelSmall
                         )
@@ -915,7 +923,9 @@ fun WeeklyProgressCard(
                     }
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = if (progress >= 1f) "Goal Reached! 🔥" else "${(progress * 100).toInt()}% completed",
+                        text = if (progress >= 1f) stringResource(R.string.objetivo_atingido) else stringResource(
+                            R.string.completo, (progress * 100).toInt()
+                        ),
                         color = if (progress >= 1f) Color.White else Color.LightGray,
                         style = Typography.labelSmall,
                         fontWeight = FontWeight.Bold
@@ -1097,7 +1107,9 @@ fun WorkoutCard(modifier: Modifier = Modifier, workout: Workout?, onClick: () ->
                     ) {
                         Row {
                             Text(
-                                text = if (isCompleted) "COMPLETED" else "TODAY",
+                                text = if (isCompleted) stringResource(R.string.completed) else stringResource(
+                                    R.string.today
+                                ),
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                                 color = Color.White,
                                 fontSize = 10.sp,
@@ -1118,7 +1130,7 @@ fun WorkoutCard(modifier: Modifier = Modifier, workout: Workout?, onClick: () ->
                                 )
                         ) {
                             Text(
-                                text = "FREESTYLE",
+                                text = stringResource(R.string.livre),
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                                 color = Color.White,
                                 fontSize = 10.sp,
@@ -1158,7 +1170,7 @@ fun WorkoutCard(modifier: Modifier = Modifier, workout: Workout?, onClick: () ->
                             }
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                text = "${(workout.progress * 100).toInt()}% completed",
+                                text = "${(workout.progress * 100).toInt()}% ${stringResource(R.string.completed)}",
                                 color = Color.White.copy(alpha = 0.7f),
                                 style = Typography.labelSmall
                             )
@@ -1328,7 +1340,7 @@ fun EmptyWorkoutCard(modifier: Modifier = Modifier) {
                     )
                     Spacer(modifier = Modifier.width(12.dp))
                     Text(
-                        text = "Dica: faça um leve agachamento ou uma caminhada de 15 minutos",
+                        text = stringResource(R.string.dica_faca_um_leve_agachamento_ou_uma_caminhada_de_15_minutos),
                         color = Color.White,
                         style = Typography.bodySmall,
                         fontWeight = FontWeight.Medium,
@@ -1368,7 +1380,7 @@ fun MomentumCard(count: Int) {
                 .align(Alignment.CenterStart)
         ) {
             Text(
-                "KEEP THE\nMOMENTUM.",
+                stringResource(R.string.mantenha_o_foco),
                 style = MaterialTheme.typography.headlineSmall.copy(
                     fontWeight = FontWeight.Black,
                     color = CyanAccent,
@@ -1382,7 +1394,7 @@ fun MomentumCard(count: Int) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Total Workouts",
+                    text = stringResource(R.string.treinos_totais),
                     style = Typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = Color.White
@@ -1428,7 +1440,7 @@ fun EmptyMomentumCard() {
                 .align(Alignment.CenterStart)
         ) {
             Text(
-                "START\nTODAY.",
+                stringResource(R.string.comece_hoje),
                 style = MaterialTheme.typography.headlineSmall.copy(
                     fontWeight = FontWeight.Black,
                     color = CyanAccent,
@@ -1437,12 +1449,12 @@ fun EmptyMomentumCard() {
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                "You haven't completed any workout yet.",
+                stringResource(R.string.voce_nao_completou_nenhum_treino_ainda),
                 fontSize = 14.sp,
                 color = if (isSystemDark) MaterialTheme.colorScheme.onSurface else Color.White
             )
             Text(
-                "Start today to check your progress.",
+                stringResource(R.string.comece_hoje_para_acompanhar_seu_progresso),
                 fontSize = 14.sp,
                 color = if (isSystemDark) MaterialTheme.colorScheme.onSurface else Color.White
             )

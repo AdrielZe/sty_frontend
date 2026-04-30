@@ -27,9 +27,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.training_tracker.R
 import com.example.training_tracker.ui.components.MuscleGroupPickerDialog
 import com.example.training_tracker.ui.screens.workout_details.AddExerciseSelectionDialog
 import com.example.training_tracker.ui.theme.CyanAccent
@@ -114,7 +116,7 @@ fun FreestyleWorkoutScreen(
                 containerColor = CyanAccent,
                 contentColor = Color.Black,
                 icon = { Icon(Icons.Default.Add, contentDescription = null) },
-                text = { Text("ADD EXERCISE", fontWeight = FontWeight.Bold) },
+                text = { Text(stringResource(R.string.adicionar_exercicio), fontWeight = FontWeight.Bold) },
                 shape = RoundedCornerShape(16.dp)
             )
         }

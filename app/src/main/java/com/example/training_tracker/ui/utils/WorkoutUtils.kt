@@ -144,13 +144,16 @@ fun ExerciseCardUtils(
             onDismissRequest = { showCompleteDialog = false },
             title = {
                 Text(
-                    text = "Finalizar Exercício",
+                    text = stringResource(R.string.finalizar_exercicio),
                     style = Typography.titleMedium
                 )
             },
             text = {
                 Text(
-                    text = "Tem certeza que deseja finalizar o exercício ${exercise.name}? Ele será marcado como concluído e não poderá mais ser editado.",
+                    text = stringResource(
+                        R.string.tem_certeza_que_deseja_finalizar_o_exercicio_ele_sera_marcado_como_concluido_e_nao_podera_mais_ser_editado,
+                        exercise.name
+                    ),
                     style = Typography.bodyLarge
                 )
             },
@@ -169,7 +172,7 @@ fun ExerciseCardUtils(
                     }
                 ) {
                     Text(
-                        text = "Confirmar",
+                        text = stringResource(R.string.confirmar),
                         color = MaterialTheme.colorScheme.secondary,
                         fontWeight = FontWeight.Bold
                     )
@@ -180,7 +183,7 @@ fun ExerciseCardUtils(
                     onClick = { showCompleteDialog = false }
                 ) {
                     Text(
-                        text = "Cancelar",
+                        text = stringResource(R.string.cancelar),
                         color = Color.Gray
                     )
                 }
@@ -225,7 +228,10 @@ fun ExerciseCardUtils(
                             fontSize = 16.sp
                         )
                         Text(
-                            "${exercise.exerciseSets.size} Sets",
+                            text = stringResource(
+                                R.string.number_series,
+                                exercise.exerciseSets.size
+                            ),
                             color = TextGray,
                             fontSize = 12.sp
                         )
@@ -392,7 +398,7 @@ fun ExerciseCardUtils(
                                     DropdownMenuItem(
                                         text = {
                                             Text(
-                                                "Done",
+                                                stringResource(R.string.pronto),
                                                 color = MaterialTheme.colorScheme.onSurface
                                             )
                                         },
@@ -443,7 +449,7 @@ fun ExerciseCardUtils(
                             val activeSet =
                                 exercise.exerciseSets.firstOrNull { !it.isCompleted }?.set ?: 1
                             Text(
-                                "CURRENT SET: $activeSet",
+                                stringResource(R.string.serie_atual, activeSet),
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                                 color = CyanAccent,
                                 fontSize = 10.sp,
@@ -509,7 +515,7 @@ fun ExerciseCardUtils(
                             Icon(Icons.Default.Add, null, tint = Color.Black)
                             Spacer(Modifier.width(8.dp))
                             Text(
-                                "ADD SET",
+                                stringResource(R.string.adicionar_serie),
                                 fontWeight = FontWeight.ExtraBold,
                                 color = Color.Black
                             )
@@ -522,7 +528,7 @@ fun ExerciseCardUtils(
                                 .padding(top = 8.dp)
                         ) {
                             Text(
-                                "FINALIZE EXERCISE",
+                                stringResource(R.string.finalizar_exercicio_max),
                                 color = TextGray,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 12.sp
@@ -555,7 +561,11 @@ fun ExerciseCardUtils(
                         fontSize = 16.sp
                     )
                     Text(
-                        "${exercise.exerciseSets.size} Sets • ${exercise.exerciseSets.firstOrNull()?.reps ?: 0} Reps",
+                        stringResource(
+                            R.string.series_reps,
+                            exercise.exerciseSets.size,
+                            exercise.exerciseSets.firstOrNull()?.reps ?: 0
+                        ),
                         color = TextGray,
                         fontSize = 12.sp
                     )
@@ -743,7 +753,7 @@ fun SetLine(
             verticalAlignment = Alignment.Bottom
         ) {
             InputTextBox(
-                label = "SET",
+                label = stringResource(R.string.serie_upper),
                 modifier = Modifier.weight(1f),
                 isLocked = true,
                 inputValue = setNumber.toString(),
@@ -751,7 +761,7 @@ fun SetLine(
             )
 
             InputTextBox(
-                label = "WEIGHT (KG)",
+                label = stringResource(R.string.peso_kg),
                 modifier = Modifier.weight(2f),
                 maxLength = 4,
                 isLocked = isCompleted,
@@ -780,7 +790,7 @@ fun SetLine(
                 },
                 modifier = Modifier.align(Alignment.End)
             ) {
-                Text("Delete Set", color = MaterialTheme.colorScheme.error, fontSize = 12.sp)
+                Text(stringResource(R.string.deletar_serie), color = MaterialTheme.colorScheme.error, fontSize = 12.sp)
             }
         }
     }
@@ -880,10 +890,10 @@ fun FinishWorkoutButton(
             text = when {
                 workout?.isCompleted == true -> stringResource(id = R.string.workout_screen_finish_button_completed)
                 (workout?.exercises?.size
-                    ?: 0) < 1 -> "Comece adicionando um exercício"
+                    ?: 0) < 1 -> stringResource(R.string.comece_adicionando_um_exerc_cio)
 
                 (workout?.exercises?.count { it.isCompleted }
-                    ?: 0) < 3 -> "Finalize pelo menos 3 exercícios"
+                    ?: 0) < 3 -> stringResource(R.string.finalize_pelo_menos_3_exerc_cios)
 
                 !canCompleteWorkout -> stringResource(id = R.string.workout_screen_finish_button_fill_sets)
                 else -> stringResource(id = R.string.workout_screen_finish_button_hold)
@@ -957,7 +967,11 @@ fun WorkoutTopBar(
                     )
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
-                            text = "$finishedCount of $totalCount exercises completed",
+                            text = stringResource(
+                                R.string.de_exercicios_completos,
+                                finishedCount,
+                                totalCount
+                            ),
                             style = MaterialTheme.typography.labelSmall,
                             color = TextGray
                         )
@@ -989,7 +1003,9 @@ fun WorkoutTopBar(
                             ) {
                                 Icon(
                                     imageVector = if (isPaused) Icons.Default.PlayArrow else Icons.Default.Pause,
-                                    contentDescription = if (isPaused) "Resume" else "Pause",
+                                    contentDescription = if (isPaused) stringResource(R.string.resume) else stringResource(
+                                        R.string.pause
+                                    ),
                                     tint = CyanAccent,
                                     modifier = Modifier.size(16.dp)
                                 )

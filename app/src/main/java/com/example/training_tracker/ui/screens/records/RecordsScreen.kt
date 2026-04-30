@@ -26,11 +26,13 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.training_tracker.R
 import com.example.training_tracker.data.models.MuscleGroups
 import com.example.training_tracker.ui.theme.CyanAccent
 import com.example.training_tracker.ui.theme.CyanGradient
@@ -594,7 +596,7 @@ fun ExerciseRecordCard(
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    "All time personal record",
+                    stringResource(R.string.maior_recorde_pessoal),
                     style = MaterialTheme.typography.labelSmall.copy(
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
                     )
@@ -636,14 +638,14 @@ fun EmptyRecordsPlaceholder() {
         )
         Spacer(modifier = Modifier.height(16.dp))
         Text(
-            "No records yet",
+            stringResource(R.string.nenhum_recorde_registrado),
             style = MaterialTheme.typography.titleMedium.copy(
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
                 fontWeight = FontWeight.Bold
             )
         )
         Text(
-            "Complete workouts to see your progress",
+            stringResource(R.string.complete_treinos_para_ver_seu_progresso),
             style = MaterialTheme.typography.labelSmall.copy(
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
             )

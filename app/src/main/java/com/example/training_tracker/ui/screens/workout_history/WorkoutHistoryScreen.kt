@@ -23,6 +23,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -99,7 +100,7 @@ fun WorkoutHistoryScreen(
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Text(
-                        "FILTER BY MUSCLE",
+                        stringResource(R.string.filtrar_por_musculo),
                         style = MaterialTheme.typography.labelSmall.copy(
                             color = TextGray,
                             letterSpacing = 1.sp,
@@ -113,7 +114,7 @@ fun WorkoutHistoryScreen(
                         item {
                             FilterChip(
                                 selected = uiState.selectedMuscleGroup == null,
-                                label = "All",
+                                label = stringResource(R.string.todos),
                                 onClick = { onMuscleGroupSelected(null) }
                             )
                         }
@@ -131,7 +132,7 @@ fun WorkoutHistoryScreen(
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Text(
-                        "SORT BY",
+                        stringResource(R.string.ordenar_por),
                         style = MaterialTheme.typography.labelSmall.copy(
                             color = TextGray,
                             letterSpacing = 1.sp,
@@ -144,7 +145,7 @@ fun WorkoutHistoryScreen(
 
             item {
                 Text(
-                    "RECENT ACTIVITIES",
+                    stringResource(R.string.atividades_recentes),
                     style = MaterialTheme.typography.labelSmall.copy(
                         color = TextGray,
                         letterSpacing = 1.sp,
@@ -195,7 +196,11 @@ fun HistoryCalendarCard(
 
             Spacer(Modifier.height(16.dp))
             
-            val days = listOf("S", "M", "T", "W", "T", "F", "S")
+            val days = listOf(stringResource(R.string.D),
+                stringResource(R.string.S), stringResource(R.string.T),
+                stringResource(R.string.Q), stringResource(R.string.Tquinta),
+                stringResource(R.string.Ssexta), stringResource(R.string.Ssabado)
+            )
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 days.forEach { day ->
                     Text(day, color = TextGray, fontSize = 12.sp, modifier = Modifier.width(32.dp), textAlign = TextAlign.Center)
@@ -222,9 +227,9 @@ fun HistoryCalendarCard(
                                     .size(32.dp)
                                     .clip(CircleShape)
                                     .background(
-                                        if (isSelected) CyanAccent 
+                                        if (isSelected) CyanAccent
                                         else if (isWorkoutDay) CyanAccent.copy(alpha = 0.3f)
-                                        else if (isToday) CyanAccent.copy(alpha = 0.1f) 
+                                        else if (isToday) CyanAccent.copy(alpha = 0.1f)
                                         else Color.Transparent
                                     )
                                     .clickable { onDateSelected(date) },
@@ -256,7 +261,7 @@ fun HistoryCalendarCard(
                         Column(modifier = Modifier.padding(top = 16.dp)) {
                             HorizontalDivider(modifier = Modifier.padding(bottom = 16.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                             Text(
-                                "TARGETED MUSCLES",
+                                stringResource(R.string.musculos_trabalhados),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = TextGray,
                                 fontWeight = FontWeight.Bold,
@@ -279,8 +284,8 @@ fun HistoryCalendarCard(
 @Composable
 fun HistoryFilterRow(currentSort: SortOrder, onSortChange: (SortOrder) -> Unit) {
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        FilterChip(selected = currentSort == SortOrder.DATE_DESC, label = "Latest", onClick = { onSortChange(SortOrder.DATE_DESC) })
-        FilterChip(selected = currentSort == SortOrder.DATE_ASC, label = "Oldest", onClick = { onSortChange(SortOrder.DATE_ASC) })
+        FilterChip(selected = currentSort == SortOrder.DATE_DESC, label = stringResource(R.string.mais_recentes), onClick = { onSortChange(SortOrder.DATE_DESC) })
+        FilterChip(selected = currentSort == SortOrder.DATE_ASC, label = stringResource(R.string.mais_antigos), onClick = { onSortChange(SortOrder.DATE_ASC) })
         FilterChip(selected = currentSort == SortOrder.NAME_ASC, label = "A-Z", onClick = { onSortChange(SortOrder.NAME_ASC) })
         FilterChip(selected = currentSort == SortOrder.NAME_DESC, label = "Z-A", onClick = { onSortChange(SortOrder.NAME_DESC) })
     }
@@ -401,7 +406,9 @@ fun HistoryWorkoutCard(workout: WorkoutHistory, onClick: () -> Unit) {
                             )
                             if (timeText.isNotEmpty()) {
                                 Spacer(modifier = Modifier.width(8.dp))
-                                Box(modifier = Modifier.size(2.dp).background(Color.LightGray, CircleShape))
+                                Box(modifier = Modifier
+                                    .size(2.dp)
+                                    .background(Color.LightGray, CircleShape))
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
                                     text = timeText,

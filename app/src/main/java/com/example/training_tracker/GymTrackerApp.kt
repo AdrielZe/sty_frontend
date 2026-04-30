@@ -14,6 +14,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -53,7 +54,7 @@ fun GymTrackerApp(
             }
             is HomeUiState.Error -> {
                 AppErrorScreen(
-                    message = (uiState as HomeUiState.Error).message ?: "Erro ao carregar dados",
+                    message = (uiState as HomeUiState.Error).message ?: stringResource(R.string.erro_ao_carregar_dados),
                     onRetry = { /* O StateFlow do Room deve tentar se reconectar automaticamente */ }
                 )
             }
@@ -109,7 +110,7 @@ fun AppErrorScreen(message: String, onRetry: () -> Unit) {
             )
             Spacer(modifier = Modifier.height(16.dp))
             Text(
-                text = "Ops! Algo deu errado",
+                text = stringResource(R.string.ops_algo_deu_errado),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onBackground
@@ -127,7 +128,7 @@ fun AppErrorScreen(message: String, onRetry: () -> Unit) {
                 colors = ButtonDefaults.buttonColors(containerColor = CyanAccent),
                 shape = RoundedCornerShape(16.dp)
             ) {
-                Text("TENTAR NOVAMENTE", color = Color.Black, fontWeight = FontWeight.Bold)
+                Text(text = stringResource(R.string.tentar_novamente), color = Color.Black, fontWeight = FontWeight.Bold)
             }
         }
     }

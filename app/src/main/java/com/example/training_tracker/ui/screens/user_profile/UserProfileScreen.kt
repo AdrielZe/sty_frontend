@@ -29,6 +29,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -127,7 +128,11 @@ fun ProfileContent(
                         .align(Alignment.Center)
                         .clip(CircleShape)
                         .background(MaterialTheme.colorScheme.surfaceVariant)
-                        .border(2.dp, Brush.linearGradient(listOf(CyanAccent, Color.Transparent)), CircleShape)
+                        .border(
+                            2.dp,
+                            Brush.linearGradient(listOf(CyanAccent, Color.Transparent)),
+                            CircleShape
+                        )
                         .clickable { onEditPhotoClick() },
                     contentAlignment = Alignment.Center
                 ) {
@@ -138,7 +143,7 @@ fun ProfileContent(
                                 .data(user.profilePicture) // A URI salva no banco
                                 .crossfade(true)
                                 .build(),
-                            contentDescription = "Foto de perfil",
+                            contentDescription = stringResource(R.string.foto_de_perfil),
                             modifier = Modifier.fillMaxSize(),
                             contentScale = ContentScale.Crop, // Importante para preencher o círculo
                             error = painterResource(id = R.drawable.gym), // Caso a URI falhe
@@ -148,7 +153,7 @@ fun ProfileContent(
                         // Imagem padrão caso o usuário ainda não tenha foto
                         Image(
                             painter = painterResource(id = R.drawable.gym),
-                            contentDescription = "Foto de perfil padrão",
+                            contentDescription = stringResource(R.string.foto_de_perfil_padr_o),
                             modifier = Modifier.fillMaxSize(),
                             contentScale = ContentScale.Crop
                         )
@@ -161,7 +166,9 @@ fun ProfileContent(
                     containerColor = CyanAccent,
                     contentColor = Color.Black,
                     shape = CircleShape,
-                    modifier = Modifier.size(36.dp).offset(x = (-8).dp, y = (-8).dp)
+                    modifier = Modifier
+                        .size(36.dp)
+                        .offset(x = (-8).dp, y = (-8).dp)
                 ) {
                     Icon(imageVector = Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(18.dp))
                 }
@@ -189,13 +196,13 @@ fun ProfileContent(
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                 StatCard(
                     modifier = Modifier.weight(1f),
-                    title = "Treinos",
+                    title = stringResource(R.string.treinos_min),
                     value = stats.totalWorkouts.toString(),
                     icon = Icons.Default.FitnessCenter
                 )
                 StatCard(
                     modifier = Modifier.weight(1f),
-                    title = "Séries",
+                    title = stringResource(R.string.series),
                     value = stats.totalSets.toString(),
                     icon = Icons.Default.Reorder
                 )
@@ -208,13 +215,13 @@ fun ProfileContent(
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                 StatCard(
                     modifier = Modifier.weight(1f),
-                    title = "Vol. Máx",
+                    title = stringResource(R.string.vol_max),
                     value = "${String.format(Locale.US, "%.0f", stats.maxVolume)} kg",
                     icon = Icons.AutoMirrored.Filled.TrendingUp
                 )
                 StatCard(
                     modifier = Modifier.weight(1f),
-                    title = "Foco",
+                    title = stringResource(R.string.foco),
                     value = stats.mostTrainedMuscleGroup?.name ?: "-",
                     icon = Icons.Default.MyLocation
                 )
@@ -244,12 +251,12 @@ fun ProfileContent(
                     Spacer(modifier = Modifier.width(16.dp))
                     Column {
                         Text(
-                            text = "Maior Carga",
+                            text = stringResource(R.string.maior_carga),
                             style = MaterialTheme.typography.labelMedium,
                             color = CyanAccent
                         )
                         Text(
-                            text = stats.heaviestExerciseName ?: "Nenhum registro",
+                            text = stats.heaviestExerciseName ?: stringResource(R.string.nenhum_registro),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold
                         )

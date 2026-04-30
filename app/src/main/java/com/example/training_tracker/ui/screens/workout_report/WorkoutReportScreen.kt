@@ -32,6 +32,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontWeight
@@ -64,7 +65,7 @@ fun WorkoutReportScreen(
             CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        "WORKOUT REPORT",
+                        stringResource(R.string.relatorio_do_treino),
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.ExtraBold,
                             color = CyanAccent,
@@ -76,7 +77,7 @@ fun WorkoutReportScreen(
                     IconButton(onClick = onNavigateBack) {
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Voltar",
+                            contentDescription = stringResource(R.string.voltar),
                             tint = CyanAccent
                         )
                     }
@@ -142,7 +143,7 @@ fun WorkoutReportScreen(
                             Icon(Icons.Default.Share, contentDescription = null, tint = Color.White)
                             Spacer(Modifier.width(12.dp))
                             Text(
-                                "SHARE YOUR PROGRESS",
+                                stringResource(R.string.compartilhe_seu_progresso),
                                 style = MaterialTheme.typography.labelLarge.copy(
                                     fontWeight = FontWeight.ExtraBold,
                                     color = Color.White,
@@ -215,7 +216,7 @@ fun GamificationCard(uiState: WorkoutReportUiState) {
                     )
                     Spacer(Modifier.width(8.dp))
                     Text(
-                        "TOTAL WEIGHT LIFTED",
+                        stringResource(R.string.total_de_peso_levantado),
                         style = MaterialTheme.typography.labelMedium.copy(
                             fontWeight = FontWeight.ExtraBold,
                             color = CyanAccent,
@@ -246,7 +247,7 @@ fun GamificationCard(uiState: WorkoutReportUiState) {
                 }
 
                 Text(
-                    text = uiState.totalWeightLiftedInfo?.comparisonText ?: "Great work today!",
+                    text = uiState.totalWeightLiftedInfo?.comparisonText ?: stringResource(R.string.belo_trabalho_hoje),
                     style = MaterialTheme.typography.bodySmall.copy(
                         color = Color.White.copy(alpha = 0.8f),
                         fontWeight = FontWeight.Medium
@@ -266,21 +267,21 @@ fun MetricsGrid(uiState: WorkoutReportUiState) {
         MetricCard(
             Modifier.weight(1f),
             uiState.totalSets.toString(),
-            "SETS",
+            stringResource(R.string.serie_upper),
             Icons.Default.FitnessCenter,
             CyanAccent
         )
         MetricCard(
             Modifier.weight(1f),
             uiState.totalReps.toString(),
-            "REPS",
+            stringResource(R.string.reps),
             Icons.Default.Repeat,
             Color(0xFF4CAF50)
         )
         MetricCard(
             Modifier.weight(1f),
             uiState.totalMinutes.toString(),
-            "MINS",
+            stringResource(R.string.mins),
             Icons.Default.Timer,
             Color(0xFFFF9800)
         )
@@ -298,7 +299,9 @@ fun MetricCard(modifier: Modifier, value: String, label: String, icon: ImageVect
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f))
     ) {
         Column(
-            modifier = Modifier.fillMaxSize().padding(12.dp),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(12.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
@@ -343,7 +346,7 @@ fun MuscleIntensitySection(exercises: List<Exercise>) {
 
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
         Text(
-            "MUSCLE INTENSITY 📈",
+            text = stringResource(R.string.intensidade_muscular),
             style = MaterialTheme.typography.labelMedium.copy(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 letterSpacing = 2.sp,
@@ -358,7 +361,9 @@ fun MuscleIntensitySection(exercises: List<Exercise>) {
             border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f))
         ) {
             Column(modifier = Modifier.padding(24.dp)) {
-                Box(modifier = Modifier.fillMaxWidth().height(160.dp)) {
+                Box(modifier = Modifier
+                    .fillMaxWidth()
+                    .height(160.dp)) {
                     MuscleLineChart(
                         data = muscleGroupsData,
                         modifier = Modifier.fillMaxSize()
@@ -384,14 +389,16 @@ fun MuscleIntensitySection(exercises: List<Exercise>) {
                             ) {}
                             Spacer(Modifier.width(12.dp))
                             Text(
-                                text = muscle?.name ?: "OTHER",
+                                text = muscle?.name ?: stringResource(R.string.outro),
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurface
                             )
                         }
                         Text(
-                            text = "$count ${if (count == 1) "set" else "sets"}",
+                            text = "$count ${if (count == 1) stringResource(R.string.serie) else stringResource(
+                                R.string.series_min
+                            )}",
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.ExtraBold,
                             color = CyanAccent
@@ -513,7 +520,7 @@ fun RecordsSection(records: com.example.training_tracker.data.models.Records?) {
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
-                "NEW ACHIEVEMENTS 🔥",
+                stringResource(R.string.new_achievements),
                 style = MaterialTheme.typography.labelMedium.copy(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     letterSpacing = 2.sp,
@@ -598,7 +605,7 @@ fun NewRecordCard(title: String, value: String, subValue: String, icon: ImageVec
                     style = TextStyle(shadow = androidx.compose.ui.graphics.Shadow(color.copy(alpha = 0.3f), blurRadius = 8f))
                 )
                 Text(
-                    text = "NEW RECORD", 
+                    text = stringResource(R.string.novo_recorde),
                     fontSize = 8.sp, 
                     color = color.copy(alpha = 0.6f), 
                     fontWeight = FontWeight.Bold
@@ -612,7 +619,7 @@ fun NewRecordCard(title: String, value: String, subValue: String, icon: ImageVec
 fun ExercisesSummarySection(uiState: WorkoutReportUiState) {
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
         Text(
-            "EXERCISE BREAKDOWN",
+            stringResource(R.string.resumo_dos_exercicios),
             style = MaterialTheme.typography.labelMedium.copy(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 letterSpacing = 2.sp,
@@ -669,7 +676,7 @@ fun ExerciseSummaryCard(exercise: Exercise) {
                         }
                         Spacer(Modifier.width(12.dp))
                         Text(
-                            "Set ${index + 1}",
+                            stringResource(R.string.serie_num, index + 1),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurface
                         )

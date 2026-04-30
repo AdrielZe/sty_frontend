@@ -34,6 +34,7 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
@@ -71,14 +72,17 @@ fun DragAndDropContainer(
                     detectDragGesturesAfterLongPress(
                         onDragStart = { offset ->
                             val windowOffset = containerPositionInWindow + offset
-                            val entry = state.itemBounds.entries.firstOrNull { it.value.contains(windowOffset) }
+                            val entry = state.itemBounds.entries.firstOrNull {
+                                it.value.contains(windowOffset)
+                            }
                             if (entry != null) {
                                 val workout = state.itemData[entry.key]
                                 state.draggedItem = workout
                                 state.isDragging = true
                                 state.dragPosition = entry.value.topLeft
                                 state.dragOffset = Offset.Zero
-                                state.draggableItemSize = IntSize(entry.value.width.toInt(), entry.value.height.toInt())
+                                state.draggableItemSize =
+                                    IntSize(entry.value.width.toInt(), entry.value.height.toInt())
                             }
                         },
                         onDrag = { change, dragAmount ->
@@ -170,7 +174,7 @@ fun RegisteredWorkoutsScreen(
                 TopAppBar(
                     title = {
                         Text(
-                            "WORKOUT SCHEDULE",
+                            stringResource(R.string.agenda_de_treinos),
                             style = MaterialTheme.typography.titleMedium.copy(
                                 fontWeight = FontWeight.Bold,
                                 color = CyanAccent,
@@ -253,7 +257,12 @@ fun ActiveWorkoutCard(
             .clip(RoundedCornerShape(24.dp))
             .border(
                 width = 1.dp,
-                brush = Brush.linearGradient(listOf(CyanAccent.copy(alpha = 0.3f), Color.Transparent)),
+                brush = Brush.linearGradient(
+                    listOf(
+                        CyanAccent.copy(alpha = 0.3f),
+                        Color.Transparent
+                    )
+                ),
                 shape = RoundedCornerShape(24.dp)
             ),
         colors = CardDefaults.cardColors(
@@ -308,7 +317,7 @@ fun ActiveWorkoutCard(
                             modifier = Modifier.size(14.dp)
                         )
                         Text(
-                            text = " $exercises EXERCÍCIOS",
+                            text = stringResource(R.string.exercicios, exercises),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.outline,
                             fontWeight = FontWeight.Bold

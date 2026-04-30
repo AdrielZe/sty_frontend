@@ -33,7 +33,7 @@ fun MuscleGroupPickerDialog(
         text = {
             Column(modifier = Modifier.fillMaxWidth().heightIn(max = 400.dp)) {
                 Text(
-                    text = "A IA não tem certeza sobre este exercício. Por favor, ajude-nos a categorizá-lo.",
+                    text = "Não temos certeza do grupamento muscular desse exercício. Por favor, ajude-nos a categorizá-lo.",
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
