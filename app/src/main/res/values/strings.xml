@@ -345,7 +345,7 @@
     <string name="editar_meta">Editar meta</string>
     <string name="consistencia_e_a_chave">Consistência é a chave</string>
     <string name="objetivo_atingido">Objetivo atingido! 🔥</string>
-    <string name="completo">%1$d% completed</string>
+    <string name="completo">%1$d%% completo</string>
     <string name="completed">COMPLETED</string>
     <string name="today">TODAY</string>
     <string name="livre">LIVRE</string>
