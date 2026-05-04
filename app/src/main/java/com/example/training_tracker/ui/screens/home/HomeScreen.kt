@@ -983,11 +983,11 @@ fun CustomTopBar(
                     contentScale = ContentScale.Crop // Garante que a foto preencha o círculo
                 )
             } else {
-                Icon(
-                    imageVector = Icons.Default.Person,
-                    contentDescription = stringResource(id = R.string.content_description_profile),
-                    tint = CyanAccent,
-                    modifier = Modifier.padding(8.dp)
+                Image(
+                    painter = painterResource(id = R.drawable.gym),
+                    contentDescription = stringResource(R.string.foto_de_perfil_padr_o),
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
                 )
             }
         }
@@ -1419,7 +1419,7 @@ fun EmptyMomentumCard() {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(160.dp)
+            .height(180.dp)
             .clip(RoundedCornerShape(24.dp))
             .background(if (isSystemDark) MaterialTheme.colorScheme.surface else Color.Black),
     ) {
