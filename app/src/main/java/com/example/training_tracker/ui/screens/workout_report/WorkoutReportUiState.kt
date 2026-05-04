@@ -29,6 +29,7 @@ enum class WorkoutDifficulty{
 }
 data class WorkoutReportUiState(
     val isLoading: Boolean = false,
+    val workoutName: String = "",
     val workoutDifficulty: WorkoutDifficulty? = null,
     val heroSectionTitle: String? = "",
     val completionDate: LocalDate? = LocalDate.now(),

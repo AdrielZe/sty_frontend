@@ -1,5 +1,6 @@
 package com.example.training_tracker.ui.screens.workout_report
 
+import android.content.ClipData
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
@@ -75,6 +76,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.FileProvider
@@ -101,7 +103,7 @@ fun WorkoutReportScreen(
     val coroutineScope = rememberCoroutineScope()
     val graphicsLayer = rememberGraphicsLayer()
 
-                 val configuration = LocalConfiguration.current
+    val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
     val targetMinHeight = screenWidth * (16f / 9f)
 
@@ -162,9 +164,39 @@ fun WorkoutReportScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         // Padding farto para a imagem gerada ter um respiro nas laterais
-                        .padding(horizontal = 32.dp, vertical = 40.dp),
+                        .padding(horizontal = 32.dp, vertical = 20.dp),
                     verticalArrangement = Arrangement.spacedBy(24.dp)
                 ) {
+
+                    Column() {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.Start,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = stringResource(id = R.string.home_app_title),
+                                style = TextStyle(
+                                    brush = CyanGradient
+                                ),
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.ExtraBold,
+                                letterSpacing = 2.sp
+                            )
+                            Spacer(modifier = Modifier.height(24.dp))
+                        }
+                    }
+
+                    Text(
+                        text = uiState.workoutName.ifEmpty { stringResource(R.string.relatorio_do_treino) },
+                        modifier = Modifier.fillMaxWidth(),
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Black,
+                        letterSpacing = 1.sp,
+                        textAlign = TextAlign.Center
+                    )
+
                     // 1. Gamification Card
                     GamificationCard(uiState = uiState)
 
@@ -251,13 +283,27 @@ private fun shareWorkoutBitmap(context: Context, bitmap: Bitmap) {
         )
 
         if (contentUri != null) {
-            val shareIntent = Intent().apply {
-                action = Intent.ACTION_SEND
-                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                putExtra(Intent.EXTRA_STREAM, contentUri)
+            val shareIntent = Intent(Intent.ACTION_SEND).apply {
                 type = "image/png"
+                putExtra(Intent.EXTRA_STREAM, contentUri)
+
+                // Configuração para exibir o preview no Share Sheet (Android 10+)
+                putExtra(Intent.EXTRA_TITLE, "Relatório do Treino")
+
+                // O ClipData é EXTREMAMENTE importante para:
+                // 1. Mostrar o preview da imagem na tela de compartilhamento nativa
+                // 2. Dar permissão correta para apps de terceiros (Instagram, Facebook) lerem a imagem
+                clipData = ClipData.newUri(
+                    context.contentResolver,
+                    "Relatório do Treino",
+                    contentUri
+                )
+
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             }
-            context.startActivity(Intent.createChooser(shareIntent, "Compartilhar Treino"))
+
+            val chooser = Intent.createChooser(shareIntent, "Compartilhar Treino")
+            context.startActivity(chooser)
         }
     } catch (e: Exception) {
         e.printStackTrace()

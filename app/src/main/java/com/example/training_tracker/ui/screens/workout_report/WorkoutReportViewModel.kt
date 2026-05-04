@@ -49,6 +49,7 @@ class WorkoutReportViewModel(
             } else 0
 
             WorkoutReportUiState(
+                workoutName = workout?.name ?: "",
                 workoutDifficulty = workout?.difficulty,
                 heroSectionTitle = heroTitle,
                 completionDate = workout?.completionDate,
