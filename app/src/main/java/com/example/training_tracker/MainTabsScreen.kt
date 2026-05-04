@@ -47,7 +47,7 @@ fun MainTabsScreen(
 
     Scaffold(
         bottomBar = {
-            GroffitBottomNavBar(
+            StyBottomNavBar(
                 currentRoute = currentRoute,
                 onNavigate = { tab -> navigateToTab(tab) }
             )

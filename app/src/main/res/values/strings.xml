@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">GymTracker</string>
+    <string name="app_name">Sty</string>
 
     <string name="title_home">Meus Treinos</string>
     <string name="title_active_workout">Treino Atual</string>
@@ -35,7 +35,7 @@
     <string name="home_scheduled_workout_today">Seus treinos</string>
     <string name="home_create_new_workout_button">CRIAR NOVO TREINO</string>
     <string name="content_description_menu">Menu</string>
-    <string name="home_app_title">GROFFIT</string>
+    <string name="home_app_title">STY</string>
     <string name="content_description_profile">Perfil</string>
     <string name="home_default_workout_name">Treino</string>
     <string name="home_workout_completed_status">Treino concluído</string>
@@ -54,7 +54,7 @@
 
 
     <!-- LoginScreen -->
-    <string name="enter_app">Enter app</string>
+    <string name="enter_app">Entrar no app</string>
 
     <!-- RegisteredWorkoutsScreen -->
     <string name="registered_workouts_title">TREINOS REGISTRADOS</string>
@@ -124,7 +124,7 @@
     <string name="workout_screen_default_error_message">Ocorreu um erro</string>
 
     <!--  Workout Report SCREEN-->
-    <string name="workout_report_default_title" translatable="false">Treino Finalizado! ✅</string>
+    <string name="workout_report_default_title">Treino Finalizado! ✅</string>
 
     <string-array name="workout_difficulty_easy_phrases">
         <item>Aquecimento concluído! 🔥</item>
@@ -298,7 +298,7 @@
         <item>um Tiranossauro Rex adolescente 🦖</item>
     </string-array>
 
-    <string-array name="weight_comparison_10000">
+    <string-array name="weight_comparison_15000">
         <item>um ônibus escolar amarelo 🚌</item>
         <item>um Tiranossauro Rex adulto Rex 🦖</item>
         <item>um caça F-16 (sem mísseis) 🛩️</item>
@@ -306,12 +306,44 @@
         <item>uma âncora de navio de cruzeiro ⚓</item>
     </string-array>
 
-    <string-array name="weight_comparison_legendary">
+    <string-array name="weight_comparison_10000">
         <item>um ônibus de viagem de dois andares 🚍</item>
         <item>um tanque de guerra leve 🪖</item>
         <item>o sino Big Ben de Londres 🔔</item>
         <item>um tubarão Megalodonte 🦈</item>
         <item>um vagão de trem carregado 🚆</item>
+    </string-array>
+
+    <string-array name="weight_comparison_20000">
+        <item>um caminhão de bombeiros carregado 🚒</item>
+        <item>uma baleia-cinzenta jovem 🐳</item>
+        <item>quatro elefantes africanos juntos 🐘🐘🐘🐘</item>
+        <item>um avião de passageiros regional vazio ✈️</item>
+        <item>uma escavadeira hidráulica de médio porte 🏗️</item>
+    </string-array>
+
+    <string-array name="weight_comparison_25000">
+        <item>um ônibus articulado lotado 🚌💨</item>
+        <item>um blindado de transporte de tropas 🛡️</item>
+        <item>o peso de 15 carros populares 🚗</item>
+        <item>uma carga completa de um caminhão baú 🚚</item>
+        <item>uma baleia-jubarte adulta 🐋</item>
+    </string-array>
+
+    <string-array name="weight_comparison_30000">
+        <item>uma baleia-azul jovem 🌊</item>
+        <item>um caminhão bitrem carregado 🚛</item>
+        <item>um vagão de metrô vazio 🚇</item>
+        <item>o telescópio Hubble (aproximadamente três) 🔭</item>
+        <item>uma estátua do Cristo Redentor (a cabeça e as mãos) 🗿</item>
+    </string-array>
+
+    <string-array name="weight_comparison_legendary">
+    <item>um Boeing 737 vazio ✈️</item>
+    <item>duas baleias-jubarte adultas 🐋🐋</item>
+    <item>um caminhão cegonha carregado 🚚</item>
+    <item>o peso de 25 hipopótamos 🦛</item>
+    <item>uma casa de madeira inteira 🏠</item>
     </string-array>
 
     <string name="weight_title_0">Sem carga registrada 🤷‍♂️</string>
@@ -346,8 +378,8 @@
     <string name="consistencia_e_a_chave">Consistência é a chave</string>
     <string name="objetivo_atingido">Objetivo atingido! 🔥</string>
     <string name="completo">%1$d%% completo</string>
-    <string name="completed">COMPLETED</string>
-    <string name="today">TODAY</string>
+    <string name="completed">COMPLETO</string>
+    <string name="today">HOJE</string>
     <string name="livre">LIVRE</string>
     <string name="dica_faca_um_leve_agachamento_ou_uma_caminhada_de_15_minutos">Dica: faça um leve agachamento ou uma caminhada de 15 minutos</string>
     <string name="mantenha_o_foco">MANTENHA\nO FOCO.</string>
@@ -372,7 +404,7 @@
     <string name="maior_carga">Maior Carga</string>
     <string name="nenhum_registro">Nenhum registro</string>
     <string name="bem_vindo_ao">BEM-VINDO AO</string>
-    <string name="groffit">GROFFIT</string>
+    <string name="sty">STY</string>
     <string name="para_comecar_como_podemos_te_chamar">Para começar, como podemos te chamar?</string>
     <string name="seu_nome">Seu nome</string>
     <string name="ex_jose">Ex: José</string>
@@ -395,7 +427,7 @@
     <string name="relatorio_do_treino">RELATÓRIO DO TREINO</string>
     <string name="voltar">Voltar</string>
     <string name="compartilhe_seu_progresso">COMPARTILHE SEU PROGRESSO</string>
-    <string name="total_de_peso_levantado">TOTAL DE PESO LEVANTADO</string>
+    <string name="total_de_peso_levantado">VOLUME DE CARGA</string>
     <string name="belo_trabalho_hoje">Belo trabalho hoje!</string>
     <string name="serie_upper">SÉRIES</string>
     <string name="reps">REPS</string>
@@ -421,11 +453,34 @@
     <string name="comece_adicionando_um_exerc_cio">Comece adicionando um exercício</string>
     <string name="finalize_pelo_menos_3_exerc_cios">Finalize pelo menos 3 exercícios</string>
     <string name="de_exercicios_completos">%1$d de %2$d exercícios completos</string>
-    <string name="resume">Resume</string>
-    <string name="pause">Pause</string>
+    <string name="resume">Resumir</string>
+    <string name="pause">Pausar</string>
     <string name="erro_ao_carregar_dados">Erro ao carregar dados</string>
     <string name="ops_algo_deu_errado">Ops! Algo deu errado</string>
     <string name="tentar_novamente">TENTAR NOVAMENTE</string>
-
+    <string name="detalhes_do_treino_desconhecido">Não registrado</string>
+    <string name="muscle_chest">PEITO</string>
+    <string name="muscle_back">COSTAS</string>
+    <string name="muscle_triceps">TRÍCEPS</string>
+    <string name="muscle_biceps">BÍCEPS</string>
+    <string name="muscle_shoulders">OMBROS</string>
+    <string name="muscle_legs">PERNAS</string>
+    <string name="muscle_abs">ABDÔMEN</string>
+    <string name="plano_semanal">PLANO SEMANAL</string>
+    <string name="nenhuma_atividade">Nenhuma atividade</string>
+    <string name="historico">HISTÓRICO</string>
+    <string name="selecione_o_grupo_muscular_para">Selecione o grupo muscular para \"%1$s\"</string>
+    <string name="n_o_temos_certeza_do_grupamento_muscular_desse_exerc_cio_por_favor_ajude_nos_a_categoriz_lo">Não temos certeza do grupamento muscular desse exercício. Por favor, ajude-nos a categorizá-lo.</string>
+    <string name="recorde_pessoal">RECORDE</string>
+    <string name="recordes_pessoais">RECORDES PESSOAIS</string>
+    <string name="top_exercicios">TOP PESOS</string>
+    <string name="melhor_volume">MELHOR VOLUME</string>
+    <string name="filtrar_por_musculo_upper">FILTRAR POR MÚSCULO</string>
+    <string name="recordes_de_exercicios">RECORDES DE EXERCÍCIOS</string>
+    <string name="grafico_de_evolucao">GRÁFICO DE EVOLUÇÃO</string>
+    <string name="adicione_mais_recordes_para_acompanhar_a_evolucao">Adicione mais recordes para acompanhar a evolução</string>
+    <string name="historico_de_recordes">HISTÓRICO DE RECORDES</string>
+    <string name="recorde_atual">Recorde atual</string>
+    <string name="recorde_anterior">Recorde anterior</string>
 
 </resources>

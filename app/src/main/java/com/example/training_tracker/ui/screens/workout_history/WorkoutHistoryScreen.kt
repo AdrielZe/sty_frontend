@@ -62,7 +62,7 @@ fun WorkoutHistoryScreen(
             TopAppBar(
                 title = {
                     Text(
-                        "HISTORY",
+                        stringResource(R.string.historico),
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.Bold,
                             color = CyanAccent,
@@ -72,7 +72,11 @@ fun WorkoutHistoryScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null, tint = CyanAccent)
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = null,
+                            tint = CyanAccent
+                        )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
@@ -121,7 +125,7 @@ fun WorkoutHistoryScreen(
                         items(MuscleGroups.entries.toTypedArray()) { muscle ->
                             FilterChip(
                                 selected = uiState.selectedMuscleGroup == muscle,
-                                label = muscle.name.capitalize(Locale.ROOT),
+                                label = stringResource(muscle.resId).lowercase().replaceFirstChar { it.titlecase() },
                                 onClick = { onMuscleGroupSelected(muscle) }
                             )
                         }
@@ -172,8 +176,25 @@ fun HistoryCalendarCard(
     onDateSelected: (LocalDate?) -> Unit,
     onMoveMonth: (Long) -> Unit
 ) {
-    val monthTitle = currentMonthDate.format(DateTimeFormatter.ofPattern("MMMM yyyy", Locale.ENGLISH))
+    // 1. Título do mês traduzido (ex: Maio 2024 ou May 2024)
+    val monthTitle = currentMonthDate.format(
+        DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault())
+    )
+        .replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
+
+    // 2. Quantidade de dias no mês (CORREÇÃO DO ERRO)
     val daysInMonth = currentMonthDate.lengthOfMonth()
+
+    // 3. Dias da semana traduzidos automaticamente (D, S, T, Q...)
+    val daysOfWeekLabels = remember {
+        val symbols = java.text.DateFormatSymbols.getInstance(Locale.getDefault())
+        val shortDays = symbols.shortWeekdays // Retorna ["", "dom.", "seg.", ...]
+        // Calendário começa no Domingo (índice 1 no DateFormatSymbols)
+        listOf(1, 2, 3, 4, 5, 6, 7).map { index ->
+            shortDays[index].first().toString().uppercase()
+        }
+    }
+
     val firstDayOfMonth = currentMonthDate.withDayOfMonth(1).dayOfWeek.value % 7
 
     Card(
@@ -187,32 +208,57 @@ fun HistoryCalendarCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(monthTitle, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface, fontSize = 20.sp)
+                Text(
+                    monthTitle,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontSize = 20.sp
+                )
                 Row {
-                    IconButton(onClick = { onMoveMonth(-1) }) { Icon(Icons.Default.ChevronLeft, null, tint = MaterialTheme.colorScheme.onSurface) }
-                    IconButton(onClick = { onMoveMonth(1) }) { Icon(Icons.Default.ChevronRight, null, tint = MaterialTheme.colorScheme.onSurface) }
+                    IconButton(onClick = { onMoveMonth(-1) }) {
+                        Icon(
+                            Icons.Default.ChevronLeft,
+                            null,
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                    IconButton(onClick = { onMoveMonth(1) }) {
+                        Icon(
+                            Icons.Default.ChevronRight,
+                            null,
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
                 }
             }
 
             Spacer(Modifier.height(16.dp))
-            
-            val days = listOf(stringResource(R.string.D),
-                stringResource(R.string.S), stringResource(R.string.T),
-                stringResource(R.string.Q), stringResource(R.string.Tquinta),
-                stringResource(R.string.Ssexta), stringResource(R.string.Ssabado)
-            )
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                days.forEach { day ->
-                    Text(day, color = TextGray, fontSize = 12.sp, modifier = Modifier.width(32.dp), textAlign = TextAlign.Center)
+
+            // Renderiza os cabeçalhos (D, S, T, Q...)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                daysOfWeekLabels.forEach { day ->
+                    Text(
+                        day,
+                        color = TextGray,
+                        fontSize = 12.sp,
+                        modifier = Modifier.width(32.dp),
+                        textAlign = TextAlign.Center
+                    )
                 }
             }
-            
+
             Spacer(Modifier.height(12.dp))
-            
+
             var currentDay = 1
             for (week in 0..5) {
                 if (currentDay > daysInMonth) break
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
                     for (dayOfWeek in 0..6) {
                         if ((week == 0 && dayOfWeek < firstDayOfMonth) || currentDay > daysInMonth) {
                             Spacer(Modifier.size(32.dp))
@@ -250,16 +296,20 @@ fun HistoryCalendarCard(
             }
 
             AnimatedVisibility(visible = selectedDate != null) {
-                val workoutsOnSelectedDate = savedWorkouts.filter { it.completionDate == selectedDate }
+                val workoutsOnSelectedDate =
+                    savedWorkouts.filter { it.completionDate == selectedDate }
                 if (workoutsOnSelectedDate.isNotEmpty()) {
                     val musclesForDay = workoutsOnSelectedDate
                         .flatMap { it.exercises }
                         .mapNotNull { it.muscleGroup }
                         .distinct()
-                    
+
                     if (musclesForDay.isNotEmpty()) {
                         Column(modifier = Modifier.padding(top = 16.dp)) {
-                            HorizontalDivider(modifier = Modifier.padding(bottom = 16.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                            HorizontalDivider(
+                                modifier = Modifier.padding(bottom = 16.dp),
+                                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                            )
                             Text(
                                 stringResource(R.string.musculos_trabalhados),
                                 style = MaterialTheme.typography.labelSmall,
@@ -283,11 +333,35 @@ fun HistoryCalendarCard(
 
 @Composable
 fun HistoryFilterRow(currentSort: SortOrder, onSortChange: (SortOrder) -> Unit) {
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        FilterChip(selected = currentSort == SortOrder.DATE_DESC, label = stringResource(R.string.mais_recentes), onClick = { onSortChange(SortOrder.DATE_DESC) })
-        FilterChip(selected = currentSort == SortOrder.DATE_ASC, label = stringResource(R.string.mais_antigos), onClick = { onSortChange(SortOrder.DATE_ASC) })
-        FilterChip(selected = currentSort == SortOrder.NAME_ASC, label = "A-Z", onClick = { onSortChange(SortOrder.NAME_ASC) })
-        FilterChip(selected = currentSort == SortOrder.NAME_DESC, label = "Z-A", onClick = { onSortChange(SortOrder.NAME_DESC) })
+    LazyRow(
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        contentPadding = PaddingValues(horizontal = 4.dp), // Pequeno respiro nas bordas
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        item {
+            FilterChip(
+                selected = currentSort == SortOrder.DATE_DESC,
+                label = stringResource(R.string.mais_recentes),
+                onClick = { onSortChange(SortOrder.DATE_DESC) })
+        }
+        item {
+            FilterChip(
+                selected = currentSort == SortOrder.DATE_ASC,
+                label = stringResource(R.string.mais_antigos),
+                onClick = { onSortChange(SortOrder.DATE_ASC) })
+        }
+        item {
+            FilterChip(
+                selected = currentSort == SortOrder.NAME_ASC,
+                label = "A-Z",
+                onClick = { onSortChange(SortOrder.NAME_ASC) })
+        }
+        item {
+            FilterChip(
+                selected = currentSort == SortOrder.NAME_DESC,
+                label = "Z-A",
+                onClick = { onSortChange(SortOrder.NAME_DESC) })
+        }
     }
 }
 
@@ -316,7 +390,12 @@ fun HistoryWorkoutCard(workout: WorkoutHistory, onClick: () -> Unit) {
     val isDark = isSystemInDarkTheme()
 
     val dateText = remember(workout.completionDate) {
-        workout.completionDate.format(DateTimeFormatter.ofPattern("dd MMM, yyyy", Locale.getDefault()))
+        workout.completionDate.format(
+            DateTimeFormatter.ofPattern(
+                "dd MMM, yyyy",
+                Locale.getDefault()
+            )
+        )
     }
 
     val timeText = remember(workout.completionTime) {
@@ -326,8 +405,8 @@ fun HistoryWorkoutCard(workout: WorkoutHistory, onClick: () -> Unit) {
     }
 
     val volume = remember(workout.exercises) {
-        val total = workout.exercises.sumOf { ex -> 
-            ex.exerciseSets.sumOf { set -> 
+        val total = workout.exercises.sumOf { ex ->
+            ex.exerciseSets.sumOf { set ->
                 (set.weight.toDoubleOrNull() ?: 0.0) * (set.reps.toIntOrNull() ?: 0)
             }
         }
@@ -406,9 +485,11 @@ fun HistoryWorkoutCard(workout: WorkoutHistory, onClick: () -> Unit) {
                             )
                             if (timeText.isNotEmpty()) {
                                 Spacer(modifier = Modifier.width(8.dp))
-                                Box(modifier = Modifier
-                                    .size(2.dp)
-                                    .background(Color.LightGray, CircleShape))
+                                Box(
+                                    modifier = Modifier
+                                        .size(2.dp)
+                                        .background(Color.LightGray, CircleShape)
+                                )
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
                                     text = timeText,
@@ -451,16 +532,16 @@ fun HistoryWorkoutCard(workout: WorkoutHistory, onClick: () -> Unit) {
                             }
                         }
                     }
-                    
+
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
-                            Icons.Default.Timer, 
-                            null, 
-                            tint = Color.White.copy(alpha = 0.7f), 
+                            Icons.Default.Timer,
+                            null,
+                            tint = Color.White.copy(alpha = 0.7f),
                             modifier = Modifier.size(14.dp)
                         )
                         Text(
-                            text = " ${durationMinutes} min", 
+                            text = " ${durationMinutes} min",
                             color = Color.White.copy(alpha = 0.7f),
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold
@@ -477,10 +558,10 @@ fun MuscleBadgeHistory(muscle: MuscleGroups) {
     Surface(
         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f),
         shape = RoundedCornerShape(4.dp),
-        border = BorderStroke(0.5.dp,  MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f))
+        border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f))
     ) {
         Text(
-            text = muscle.name,
+            text = stringResource(muscle.resId),
             modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
             color = MaterialTheme.colorScheme.onSurface,
             fontSize = 8.sp,

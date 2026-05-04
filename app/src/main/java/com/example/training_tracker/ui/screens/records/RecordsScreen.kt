@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -16,6 +17,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -53,7 +55,7 @@ fun RecordsScreen(
             TopAppBar(
                 title = {
                     Text(
-                        "PERSONAL RECORDS",
+                        stringResource(R.string.recordes_pessoais),
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.Bold,
                             color = CyanAccent,
@@ -104,7 +106,7 @@ fun RecordsScreen(
 
                         RecordOverviewCard(
                             modifier = Modifier.fillMaxWidth(),
-                            title = "BEST VOLUME",
+                            title = stringResource(R.string.melhor_volume),
                             value = "${uiState.records?.volumeRecords?.maxOrNull() ?: 0.0} kg",
                             icon = Icons.AutoMirrored.Filled.ShowChart
                         )
@@ -114,7 +116,7 @@ fun RecordsScreen(
                 item {
                     Column {
                         Text(
-                            "FILTER BY MUSCLE",
+                            stringResource(R.string.filtrar_por_musculo_upper),
                             style = MaterialTheme.typography.labelLarge.copy(
                                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                                 fontWeight = FontWeight.Bold,
@@ -129,14 +131,14 @@ fun RecordsScreen(
                         ) {
                             item {
                                 MuscleGroupChip(
-                                    label = "ALL",
+                                    label = stringResource(R.string.todos),
                                     isSelected = uiState.selectedMuscleGroup == null,
                                     onClick = { onMuscleGroupSelected(null) }
                                 )
                             }
                             items(MuscleGroups.entries.toTypedArray()) { group ->
                                 MuscleGroupChip(
-                                    label = group.name,
+                                    label = stringResource(group.resId),
                                     isSelected = uiState.selectedMuscleGroup == group,
                                     onClick = { onMuscleGroupSelected(group) }
                                 )
@@ -147,7 +149,7 @@ fun RecordsScreen(
 
                 item {
                     Text(
-                        "EXERCISE PERSONAL BESTS",
+                        stringResource(R.string.recordes_de_exercicios),
                         style = MaterialTheme.typography.labelLarge.copy(
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                             fontWeight = FontWeight.Bold,
@@ -214,7 +216,7 @@ fun ExerciseHistoryContent(
             )
         )
         Text(
-            text = "EVOLUTION CHART",
+            text = stringResource(R.string.grafico_de_evolucao),
             style = MaterialTheme.typography.labelSmall.copy(
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
                 fontWeight = FontWeight.Bold
@@ -239,7 +241,7 @@ fun ExerciseHistoryContent(
             } else {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text(
-                        "Add more records to see evolution",
+                        stringResource(R.string.adicione_mais_recordes_para_acompanhar_a_evolucao),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
                     )
@@ -250,7 +252,7 @@ fun ExerciseHistoryContent(
         Spacer(modifier = Modifier.height(32.dp))
 
         Text(
-            text = "RECORD HISTORY",
+            text = stringResource(R.string.historico_de_recordes),
             modifier = Modifier.fillMaxWidth(),
             style = MaterialTheme.typography.labelLarge.copy(
                 fontWeight = FontWeight.Bold,
@@ -278,7 +280,9 @@ fun ExerciseHistoryContent(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = if (index == 0) "Current Record" else "Previous mark",
+                        text = if (index == 0) stringResource(R.string.recorde_atual) else stringResource(
+                            R.string.recorde_anterior
+                        ),
                         style = MaterialTheme.typography.bodyMedium.copy(
                             fontWeight = if (index == 0) FontWeight.Bold else FontWeight.Normal,
                             color = if (index == 0) CyanAccent else MaterialTheme.colorScheme.onSurface
@@ -299,17 +303,21 @@ fun ExerciseHistoryContent(
 
 @Composable
 fun EvolutionChart(history: List<Double>) {
-    val maxWeight = history.maxOrNull()?.toFloat() ?: 1f
-    val minWeight = history.minOrNull()?.toFloat() ?: 0f
+    // Invertemos a lista para que o registro mais antigo fique na esquerda
+    val chronologicalHistory = remember(history) { history.reversed() }
+
+    val maxWeight = chronologicalHistory.maxOrNull()?.toFloat() ?: 1f
+    val minWeight = chronologicalHistory.minOrNull()?.toFloat() ?: 0f
     val range = if (maxWeight == minWeight) 1f else maxWeight - minWeight
 
     Canvas(modifier = Modifier.fillMaxSize()) {
         val width = size.width
         val height = size.height
-        val spacing = width / (history.size - 1)
+        val spacing = width / (chronologicalHistory.size - 1)
 
-        val points = history.mapIndexed { index, weight ->
+        val points = chronologicalHistory.mapIndexed { index, weight ->
             val x = index * spacing
+            // O cálculo de Y permanece igual
             val y = height - ((weight.toFloat() - minWeight) / range) * height * 0.8f - (height * 0.1f)
             Offset(x, y)
         }
@@ -397,7 +405,7 @@ fun RecordsPodium(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                "TOP LIFTS",
+                stringResource(R.string.top_exercicios),
                 style = MaterialTheme.typography.labelLarge.copy(
                     color = CyanAccent,
                     fontWeight = FontWeight.Black,

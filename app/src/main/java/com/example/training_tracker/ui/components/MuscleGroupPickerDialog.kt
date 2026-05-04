@@ -10,8 +10,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.training_tracker.R
 import com.example.training_tracker.data.models.MuscleGroups
 import com.example.training_tracker.ui.theme.CyanAccent
 
@@ -25,15 +27,17 @@ fun MuscleGroupPickerDialog(
         onDismissRequest = onDismiss,
         title = {
             Text(
-                text = "Selecione o grupo muscular para \"$exerciseName\"",
+                text = stringResource(R.string.selecione_o_grupo_muscular_para, exerciseName),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
             )
         },
         text = {
-            Column(modifier = Modifier.fillMaxWidth().heightIn(max = 400.dp)) {
+            Column(modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(max = 400.dp)) {
                 Text(
-                    text = "Não temos certeza do grupamento muscular desse exercício. Por favor, ajude-nos a categorizá-lo.",
+                    text = stringResource(R.string.n_o_temos_certeza_do_grupamento_muscular_desse_exerc_cio_por_favor_ajude_nos_a_categoriz_lo),
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
@@ -50,7 +54,7 @@ fun MuscleGroupPickerDialog(
                             color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
                         ) {
                             Text(
-                                text = group.name,
+                                text = stringResource(group.resId),
                                 modifier = Modifier.padding(16.dp),
                                 style = MaterialTheme.typography.bodyLarge,
                                 fontWeight = FontWeight.SemiBold

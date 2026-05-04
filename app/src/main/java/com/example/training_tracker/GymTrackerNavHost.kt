@@ -186,7 +186,7 @@ fun GymTrackerNavHost() {
 }
 
 @Composable
-fun GroffitBottomNavBar(
+fun StyBottomNavBar(
     currentRoute: String,
     onNavigate: (String) -> Unit
 ) {

@@ -45,7 +45,7 @@ fun WelcomeScreen(
                 letterSpacing = 2.sp
             )
             Text(
-                text = stringResource(R.string.groffit),
+                text = stringResource(R.string.sty),
                 style = TextStyle(
                     brush = CyanGradient,
                     fontSize = 48.sp,

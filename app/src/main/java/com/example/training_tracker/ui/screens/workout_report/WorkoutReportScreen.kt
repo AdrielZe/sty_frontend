@@ -1,5 +1,8 @@
 package com.example.training_tracker.ui.screens.workout_report
 
+import android.content.Context
+import android.content.Intent
+import android.graphics.Bitmap
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -18,16 +21,21 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.layer.drawLayer
+import androidx.compose.ui.graphics.rememberGraphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -40,6 +48,7 @@ import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.FileProvider
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.training_tracker.R
@@ -49,6 +58,10 @@ import com.example.training_tracker.ui.theme.AppTheme
 import com.example.training_tracker.ui.theme.CyanAccent
 import com.example.training_tracker.ui.theme.CyanGradient
 import com.example.training_tracker.ui.theme.GreenGradient
+import kotlinx.coroutines.launch
+import java.io.File
+import java.io.FileOutputStream
+import java.text.NumberFormat
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -58,6 +71,9 @@ fun WorkoutReportScreen(
     onNavigateBack: () -> Unit,
 ) {
     val uiState by workoutReportScreenViewModel.uiState.collectAsState()
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+    val graphicsLayer = rememberGraphicsLayer()
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -96,27 +112,36 @@ fun WorkoutReportScreen(
             verticalArrangement = Arrangement.spacedBy(24.dp),
             contentPadding = PaddingValues(top = 16.dp, bottom = 40.dp)
         ) {
-            // 1. Gamification Card
             item {
-                GamificationCard(uiState = uiState)
+                // Seção que será capturada no print (do Topo até Recordes)
+                Column(
+                    modifier = Modifier
+                        .drawWithContent {
+                            // Captura o conteúdo visual desta Column para o graphicsLayer
+                            graphicsLayer.record {
+                                this@drawWithContent.drawContent()
+                            }
+                            drawContent()
+                        }
+                        .fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(24.dp)
+                ) {
+                    // 1. Gamification Card
+                    GamificationCard(uiState = uiState)
+
+                    // 2. Métricas Gerais
+                    MetricsGrid(uiState = uiState)
+
+                    // 3. Novos Recordes
+                    RecordsSection(uiState.records)
+                }
             }
 
-            // 2. Métricas Gerais
-            item {
-                MetricsGrid(uiState = uiState)
-            }
-
-            // 3. Muscle Distribution Chart
+            // Itens fora do print para manter a imagem limpa
             item {
                 MuscleIntensitySection(uiState.exercises)
             }
 
-            // 4. Novos Recordes
-            item {
-                RecordsSection(uiState.records)
-            }
-
-            // 5. Resumo de Exercícios
             item {
                 ExercisesSummarySection(uiState = uiState)
             }
@@ -124,7 +149,16 @@ fun WorkoutReportScreen(
             // Botão de Compartilhar
             item {
                 Button(
-                    onClick = { /* Compartilhar */ },
+                    onClick = {
+                        coroutineScope.launch {
+                            try {
+                                val bitmap = graphicsLayer.toImageBitmap().asAndroidBitmap()
+                                shareWorkoutBitmap(context, bitmap)
+                            } catch (e: Exception) {
+                                e.printStackTrace()
+                            }
+                        }
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(64.dp)
@@ -158,6 +192,35 @@ fun WorkoutReportScreen(
     }
 }
 
+private fun shareWorkoutBitmap(context: Context, bitmap: Bitmap) {
+    try {
+        val cachePath = File(context.cacheDir, "images")
+        cachePath.mkdirs()
+        val file = File(cachePath, "workout_report.png")
+        val stream = FileOutputStream(file)
+        bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
+        stream.close()
+
+        val contentUri = FileProvider.getUriForFile(
+            context,
+            "${context.packageName}.fileprovider",
+            file
+        )
+
+        if (contentUri != null) {
+            val shareIntent = Intent().apply {
+                action = Intent.ACTION_SEND
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                putExtra(Intent.EXTRA_STREAM, contentUri)
+                type = "image/png"
+            }
+            context.startActivity(Intent.createChooser(shareIntent, "Compartilhar Treino"))
+        }
+    } catch (e: Exception) {
+        e.printStackTrace()
+    }
+}
+
 @Composable
 fun GamificationCard(uiState: WorkoutReportUiState) {
     val isDark = isSystemInDarkTheme()
@@ -172,7 +235,7 @@ fun GamificationCard(uiState: WorkoutReportUiState) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .height(180.dp),
+            .height(230.dp),
         shape = RoundedCornerShape(24.dp),
         elevation = CardDefaults.cardElevation(8.dp)
     ) {
@@ -230,7 +293,7 @@ fun GamificationCard(uiState: WorkoutReportUiState) {
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Text(
-                        text = String.format(Locale.getDefault(), "%.0f", weightValue),
+                        text = NumberFormat.getInstance(Locale.getDefault()).format(weightValue),
                         style = MaterialTheme.typography.displayMedium.copy(
                             fontWeight = FontWeight.Black,
                             color = Color.White
@@ -248,7 +311,7 @@ fun GamificationCard(uiState: WorkoutReportUiState) {
 
                 Text(
                     text = uiState.totalWeightLiftedInfo?.comparisonText ?: stringResource(R.string.belo_trabalho_hoje),
-                    style = MaterialTheme.typography.bodySmall.copy(
+                    style = MaterialTheme.typography.titleMedium.copy(
                         color = Color.White.copy(alpha = 0.8f),
                         fontWeight = FontWeight.Medium
                     )
@@ -389,7 +452,7 @@ fun MuscleIntensitySection(exercises: List<Exercise>) {
                             ) {}
                             Spacer(Modifier.width(12.dp))
                             Text(
-                                text = muscle?.name ?: stringResource(R.string.outro),
+                                text = stringResource(muscle?.resId ?: R.string.nenhum_registro),
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurface
@@ -419,7 +482,9 @@ fun MuscleLineChart(data: List<Pair<com.example.training_tracker.data.models.Mus
     val accentColor = CyanAccent
     val textMeasurer = rememberTextMeasurer()
     val onSurface = MaterialTheme.colorScheme.onSurface
-    
+
+    val resources = androidx.compose.ui.platform.LocalContext.current.resources
+
     val labelStyle = MaterialTheme.typography.labelSmall.copy(
         color = onSurface.copy(alpha = 0.9f),
         fontWeight = FontWeight.ExtraBold,
@@ -489,12 +554,18 @@ fun MuscleLineChart(data: List<Pair<com.example.training_tracker.data.models.Mus
             )
 
             // Muscle Name Label above the dot
-            val muscleLabel = data[index].first?.name?.take(5) ?: "???"
+            val muscle = data[index].first
+            val translatedName = if (muscle != null) {
+                resources.getString(muscle.resId)
+            } else {
+                resources.getString(R.string.nenhum_registro)
+            }
+
             val textLayoutResult = textMeasurer.measure(
-                text = muscleLabel,
+                text = translatedName,
                 style = labelStyle
             )
-            
+
             drawText(
                 textLayoutResult = textLayoutResult,
                 topLeft = Offset(
@@ -545,7 +616,7 @@ fun RecordsSection(records: com.example.training_tracker.data.models.Records?) {
 
         sortedRecords.forEach { (exerciseName, maxWeight) ->
             NewRecordCard(
-                title = "PERSONAL BEST",
+                title = stringResource(R.string.recorde_pessoal),
                 value = String.format(Locale.getDefault(), "%.1fkg", maxWeight).replace(".0kg", "kg"),
                 subValue = exerciseName,
                 icon = Icons.Default.EmojiEvents,

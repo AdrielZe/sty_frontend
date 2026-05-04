@@ -35,7 +35,9 @@ import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.intl.Locale
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -210,7 +212,7 @@ fun RegisteredWorkoutsScreen(
                             viewModel.moveWorkout(workout, day)
                             state.draggedItem = null
                         }) { isOver ->
-                            DaySection(day = day.name, count = workouts.size, isHighlighted = isOver) {
+                            DaySection(day = day.toLocalizedName(), count = workouts.size, isHighlighted = isOver) {
                                 if (workouts.isEmpty()) {
                                     NoActivityCard(onCreateWorkoutClick = { onCreateWorkoutClick(day) })
                                 } else {
@@ -382,7 +384,7 @@ fun MuscleBadgeRegistered(muscle: MuscleGroups) {
         border = BorderStroke(0.5.dp,  MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f))
     ) {
         Text(
-            text = muscle.name,
+            text = stringResource(muscle.resId),
             modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
             color = MaterialTheme.colorScheme.onSurface,
             fontSize = 8.sp,
@@ -476,14 +478,14 @@ fun WeeklyPlanHeader() {
         Spacer(Modifier.width(12.dp))
         Column {
             Text(
-                "WEEKLY PLAN",
+                stringResource(R.string.plano_semanal),
                 style = MaterialTheme.typography.headlineSmall.copy(
                     fontWeight = FontWeight.Black,
                     color = MaterialTheme.colorScheme.onSurface
                 )
             )
             Text(
-                "CONSISTENCY IS KEY",
+                stringResource(R.string.consistencia_e_a_chave),
                 style = MaterialTheme.typography.labelSmall.copy(
                     color = CyanAccent,
                     letterSpacing = 2.sp,
@@ -514,7 +516,7 @@ fun NoActivityCard(onCreateWorkoutClick: () -> Unit) {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Icon(Icons.Default.Add, contentDescription = null, tint = CyanAccent.copy(alpha = 0.5f))
-            Text("No Activity", fontWeight = FontWeight.Bold, color = TextGray.copy(alpha = 0.6f))
+            Text(stringResource(R.string.nenhuma_atividade), fontWeight = FontWeight.Bold, color = TextGray.copy(alpha = 0.6f))
         }
     }
 }
@@ -552,4 +554,12 @@ fun DropTarget(onDrop: (Workout) -> Unit, content: @Composable (isOver: Boolean)
         }
     }
     Box(modifier = Modifier.onGloballyPositioned { rect = it.boundsInWindow() }) { content(isOver) }
+}
+
+@Composable
+fun DayOfWeek.toLocalizedName(): String {
+    val locale = java.util.Locale.getDefault()
+
+    return this.getDisplayName(java.time.format.TextStyle.FULL, locale)
+        .replaceFirstChar { if (it.isLowerCase()) it.titlecase(locale) else it.toString() }
 }

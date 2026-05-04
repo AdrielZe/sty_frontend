@@ -222,7 +222,7 @@ fun ProfileContent(
                 StatCard(
                     modifier = Modifier.weight(1f),
                     title = stringResource(R.string.foco),
-                    value = stats.mostTrainedMuscleGroup?.name ?: "-",
+                    value = stringResource(stats.mostTrainedMuscleGroup?.resId ?: R.string.nenhum_registro) ,
                     icon = Icons.Default.MyLocation
                 )
             }

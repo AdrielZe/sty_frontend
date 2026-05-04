@@ -1255,7 +1255,7 @@ fun MuscleBadge(muscle: MuscleGroups) {
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = muscle.name,
+                text = stringResource(id = muscle.resId),
                 color = Color.White,
                 fontSize = 8.sp,
                 fontWeight = FontWeight.Bold,

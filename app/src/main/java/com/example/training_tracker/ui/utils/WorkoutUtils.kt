@@ -797,8 +797,7 @@ fun SetLine(
 }
 
 @Composable
-fun
-        FinishWorkoutButton(
+fun FinishWorkoutButton(
     modifier: Modifier = Modifier,
     workout: Workout?,
     onComplete: () -> Unit

@@ -72,7 +72,7 @@ fun AppLoadingScreen() {
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
-                text = "GROFFIT",
+                text = stringResource(R.string.sty),
                 style = TextStyle(
                     brush = CyanGradient,
                     fontSize = 48.sp,

@@ -78,6 +78,10 @@ fun generateWeightComparison(context: Context, totalWeight: Double): String {
         totalWeight < 4200.0 -> R.array.weight_comparison_4200
         totalWeight < 6000.0 -> R.array.weight_comparison_6000
         totalWeight < 10000.0 -> R.array.weight_comparison_10000
+        totalWeight < 15000.0 -> R.array.weight_comparison_15000
+        totalWeight < 20000.0 -> R.array.weight_comparison_20000
+        totalWeight < 25000.0 -> R.array.weight_comparison_25000
+        totalWeight < 30000.0 -> R.array.weight_comparison_30000
         else -> R.array.weight_comparison_legendary
     }
 

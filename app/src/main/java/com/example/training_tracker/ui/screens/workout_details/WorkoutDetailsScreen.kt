@@ -473,7 +473,7 @@ fun ExerciseDetailItem(
                     Text(
                         modifier = Modifier
                             .padding(horizontal = 6.dp, vertical = 2.dp),
-                        text = exercise.muscleGroup.toString(),
+                        text = stringResource(exercise.muscleGroup?.resId ?: R.string.detalhes_do_treino_desconhecido),
                         style = MaterialTheme.typography.labelSmall,
                         maxLines = 1,
                         fontWeight = FontWeight.Bold,
@@ -514,8 +514,6 @@ fun AddExerciseSelectionDialog(
         }
     }
 
-    // A BLINDAGEM: Essa variável agora reage instantaneamente ao que é digitado.
-    // Ela só será 'true' se houver texto E nenhum exercício tiver o nome exato.
     val showCreateOption = remember(searchQuery, filteredExercises) {
         searchQuery.isNotBlank() && filteredExercises.isEmpty()
     }
@@ -608,7 +606,7 @@ fun AddExerciseSelectionDialog(
                                         modifier = Modifier
                                             .padding(4.dp)
                                             .weight(1f),
-                                        text = exercise.muscleGroup.toString(),
+                                        text = stringResource(exercise.muscleGroup?.resId ?: R.string.detalhes_do_treino_desconhecido),
                                         style = MaterialTheme.typography.labelSmall,
                                         maxLines = 1,
                                         fontWeight = FontWeight.Bold,

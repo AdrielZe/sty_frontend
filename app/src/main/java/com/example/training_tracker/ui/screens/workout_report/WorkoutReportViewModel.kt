@@ -48,8 +48,6 @@ class WorkoutReportViewModel(
                 (workout.durationMillis / 60000).toInt()
             } else 0
 
-            println("Received Records: ${workout?.records}")
-
             WorkoutReportUiState(
                 workoutDifficulty = workout?.difficulty,
                 heroSectionTitle = heroTitle,
