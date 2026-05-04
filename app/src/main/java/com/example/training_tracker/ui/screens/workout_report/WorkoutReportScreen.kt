@@ -8,15 +8,45 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.TrendingUp
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
+import androidx.compose.material.icons.filled.EmojiEvents
+import androidx.compose.material.icons.filled.FitnessCenter
+import androidx.compose.material.icons.filled.Repeat
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.Timer
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -38,14 +68,13 @@ import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.graphics.rememberGraphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.FileProvider
@@ -53,11 +82,8 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.training_tracker.R
 import com.example.training_tracker.data.models.Exercise
-import com.example.training_tracker.data.models.Records
-import com.example.training_tracker.ui.theme.AppTheme
 import com.example.training_tracker.ui.theme.CyanAccent
 import com.example.training_tracker.ui.theme.CyanGradient
-import com.example.training_tracker.ui.theme.GreenGradient
 import kotlinx.coroutines.launch
 import java.io.File
 import java.io.FileOutputStream
@@ -74,6 +100,10 @@ fun WorkoutReportScreen(
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     val graphicsLayer = rememberGraphicsLayer()
+
+                 val configuration = LocalConfiguration.current
+    val screenWidth = configuration.screenWidthDp.dp
+    val targetMinHeight = screenWidth * (16f / 9f)
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -104,26 +134,35 @@ fun WorkoutReportScreen(
             )
         },
     ) { paddingValues ->
-        LazyColumn(
+        val scrollState = rememberScrollState()
+
+        Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(horizontal = 24.dp),
-            verticalArrangement = Arrangement.spacedBy(24.dp),
-            contentPadding = PaddingValues(top = 16.dp, bottom = 40.dp)
+                .verticalScroll(scrollState),
+            verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
-            item {
-                // Seção que será capturada no print (do Topo até Recordes)
+            // Seção que será capturada no print (do Topo até Recordes)
+            // Usamos um Box com tamanho mínimo para manter o formato 9:16
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .drawWithContent {
+                        graphicsLayer.record {
+                            this@drawWithContent.drawContent()
+                        }
+                        drawContent()
+                    }
+                    .background(MaterialTheme.colorScheme.background)
+                    .defaultMinSize(minHeight = targetMinHeight),
+                contentAlignment = Alignment.TopCenter
+            ) {
                 Column(
                     modifier = Modifier
-                        .drawWithContent {
-                            // Captura o conteúdo visual desta Column para o graphicsLayer
-                            graphicsLayer.record {
-                                this@drawWithContent.drawContent()
-                            }
-                            drawContent()
-                        }
-                        .fillMaxWidth(),
+                        .fillMaxSize()
+                        // Padding farto para a imagem gerada ter um respiro nas laterais
+                        .padding(horizontal = 32.dp, vertical = 40.dp),
                     verticalArrangement = Arrangement.spacedBy(24.dp)
                 ) {
                     // 1. Gamification Card
@@ -138,16 +177,18 @@ fun WorkoutReportScreen(
             }
 
             // Itens fora do print para manter a imagem limpa
-            item {
+            // Adicionamos o padding lateral nesses itens isoladamente
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp),
+                verticalArrangement = Arrangement.spacedBy(24.dp)
+            ) {
                 MuscleIntensitySection(uiState.exercises)
-            }
 
-            item {
                 ExercisesSummarySection(uiState = uiState)
-            }
 
-            // Botão de Compartilhar
-            item {
+                // Botão de Compartilhar
                 Button(
                     onClick = {
                         coroutineScope.launch {
@@ -187,6 +228,8 @@ fun WorkoutReportScreen(
                         }
                     }
                 }
+
+                Spacer(modifier = Modifier.height(40.dp))
             }
         }
     }
@@ -225,7 +268,7 @@ private fun shareWorkoutBitmap(context: Context, bitmap: Bitmap) {
 fun GamificationCard(uiState: WorkoutReportUiState) {
     val isDark = isSystemInDarkTheme()
     val weightValue = uiState.totalWeightLiftedInfo?.value ?: 0.0
-    
+
     val image = when {
         weightValue >= 13000.0 -> R.drawable.weight1
         weightValue >= 8000.0 -> R.drawable.weight2
@@ -287,7 +330,7 @@ fun GamificationCard(uiState: WorkoutReportUiState) {
                         )
                     )
                 }
-                
+
                 Row(
                     verticalAlignment = Alignment.Bottom,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -310,7 +353,8 @@ fun GamificationCard(uiState: WorkoutReportUiState) {
                 }
 
                 Text(
-                    text = uiState.totalWeightLiftedInfo?.comparisonText ?: stringResource(R.string.belo_trabalho_hoje),
+                    text = uiState.totalWeightLiftedInfo?.comparisonText
+                        ?: stringResource(R.string.belo_trabalho_hoje),
                     style = MaterialTheme.typography.titleMedium.copy(
                         color = Color.White.copy(alpha = 0.8f),
                         fontWeight = FontWeight.Medium
@@ -380,16 +424,16 @@ fun MetricCard(modifier: Modifier, value: String, label: String, icon: ImageVect
             }
             Spacer(Modifier.height(12.dp))
             Text(
-                value, 
-                fontSize = 26.sp, 
-                fontWeight = FontWeight.Black, 
+                value,
+                fontSize = 26.sp,
+                fontWeight = FontWeight.Black,
                 color = MaterialTheme.colorScheme.onSurface
             )
             Text(
-                label, 
-                fontSize = 10.sp, 
-                color = MaterialTheme.colorScheme.onSurfaceVariant, 
-                fontWeight = FontWeight.ExtraBold, 
+                label,
+                fontSize = 10.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                fontWeight = FontWeight.ExtraBold,
                 letterSpacing = 1.sp
             )
         }
@@ -420,21 +464,27 @@ fun MuscleIntensitySection(exercises: List<Exercise>) {
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(
+                    alpha = 0.3f
+                )
+            ),
             border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f))
         ) {
             Column(modifier = Modifier.padding(24.dp)) {
-                Box(modifier = Modifier
-                    .fillMaxWidth()
-                    .height(160.dp)) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(160.dp)
+                ) {
                     MuscleLineChart(
                         data = muscleGroupsData,
                         modifier = Modifier.fillMaxSize()
                     )
                 }
-                
+
                 Spacer(modifier = Modifier.height(24.dp))
-                
+
                 // Detailed Legend below
                 muscleGroupsData.forEachIndexed { index, (muscle, count) ->
                     Row(
@@ -448,7 +498,12 @@ fun MuscleIntensitySection(exercises: List<Exercise>) {
                             Surface(
                                 modifier = Modifier.size(8.dp),
                                 shape = CircleShape,
-                                color = CyanAccent.copy(alpha = (1f - (index * 0.15f)).coerceIn(0.4f, 1f))
+                                color = CyanAccent.copy(
+                                    alpha = (1f - (index * 0.15f)).coerceIn(
+                                        0.4f,
+                                        1f
+                                    )
+                                )
                             ) {}
                             Spacer(Modifier.width(12.dp))
                             Text(
@@ -459,16 +514,22 @@ fun MuscleIntensitySection(exercises: List<Exercise>) {
                             )
                         }
                         Text(
-                            text = "$count ${if (count == 1) stringResource(R.string.serie) else stringResource(
-                                R.string.series_min
-                            )}",
+                            text = "$count ${
+                                if (count == 1) stringResource(R.string.serie) else stringResource(
+                                    R.string.series_min
+                                )
+                            }",
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.ExtraBold,
                             color = CyanAccent
                         )
                     }
                     if (index < muscleGroupsData.size - 1) {
-                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.1f))
+                        HorizontalDivider(
+                            color = MaterialTheme.colorScheme.outlineVariant.copy(
+                                alpha = 0.1f
+                            )
+                        )
                     }
                 }
             }
@@ -477,13 +538,16 @@ fun MuscleIntensitySection(exercises: List<Exercise>) {
 }
 
 @Composable
-fun MuscleLineChart(data: List<Pair<com.example.training_tracker.data.models.MuscleGroups?, Int>>, modifier: Modifier = Modifier) {
+fun MuscleLineChart(
+    data: List<Pair<com.example.training_tracker.data.models.MuscleGroups?, Int>>,
+    modifier: Modifier = Modifier
+) {
     val maxSets = remember(data) { data.maxOf { it.second }.toFloat().coerceAtLeast(1f) }
     val accentColor = CyanAccent
     val textMeasurer = rememberTextMeasurer()
     val onSurface = MaterialTheme.colorScheme.onSurface
 
-    val resources = androidx.compose.ui.platform.LocalContext.current.resources
+    val resources = LocalContext.current.resources
 
     val labelStyle = MaterialTheme.typography.labelSmall.copy(
         color = onSurface.copy(alpha = 0.9f),
@@ -494,12 +558,12 @@ fun MuscleLineChart(data: List<Pair<com.example.training_tracker.data.models.Mus
     Canvas(modifier = modifier) {
         val width = size.width
         val height = size.height
-        
+
         // Espaçamento para as labels no topo
         val topPadding = 30.dp.toPx()
         val bottomPadding = 10.dp.toPx()
         val chartHeight = height - topPadding - bottomPadding
-        
+
         val spacing = if (data.size > 1) width / (data.size - 1) else width
 
         val points = data.mapIndexed { index, pair ->
@@ -617,7 +681,8 @@ fun RecordsSection(records: com.example.training_tracker.data.models.Records?) {
         sortedRecords.forEach { (exerciseName, maxWeight) ->
             NewRecordCard(
                 title = stringResource(R.string.recorde_pessoal),
-                value = String.format(Locale.getDefault(), "%.1fkg", maxWeight).replace(".0kg", "kg"),
+                value = String.format(Locale.getDefault(), "%.1fkg", maxWeight)
+                    .replace(".0kg", "kg"),
                 subValue = exerciseName,
                 icon = Icons.Default.EmojiEvents,
                 color = CyanAccent
@@ -631,8 +696,15 @@ fun NewRecordCard(title: String, value: String, subValue: String, icon: ImageVec
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)),
-        border = BorderStroke(1.dp, Brush.linearGradient(listOf(color.copy(alpha = 0.6f), Color.Transparent)))
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(
+                alpha = 0.4f
+            )
+        ),
+        border = BorderStroke(
+            1.dp,
+            Brush.linearGradient(listOf(color.copy(alpha = 0.6f), Color.Transparent))
+        )
     ) {
         Row(
             modifier = Modifier.padding(20.dp),
@@ -644,24 +716,29 @@ fun NewRecordCard(title: String, value: String, subValue: String, icon: ImageVec
                 color = color.copy(alpha = 0.15f),
                 border = BorderStroke(1.dp, color.copy(alpha = 0.3f))
             ) {
-                Icon(icon, contentDescription = null, tint = color, modifier = Modifier.padding(14.dp))
+                Icon(
+                    icon,
+                    contentDescription = null,
+                    tint = color,
+                    modifier = Modifier.padding(14.dp)
+                )
             }
-            
+
             Spacer(Modifier.width(20.dp))
-            
+
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = title, 
-                    fontSize = 10.sp, 
-                    color = color, 
-                    fontWeight = FontWeight.ExtraBold, 
+                    text = title,
+                    fontSize = 10.sp,
+                    color = color,
+                    fontWeight = FontWeight.ExtraBold,
                     letterSpacing = 1.5.sp
                 )
                 Spacer(Modifier.height(4.dp))
                 Text(
-                    text = subValue.uppercase(), 
-                    fontSize = 14.sp, 
-                    color = MaterialTheme.colorScheme.onSurface, 
+                    text = subValue.uppercase(),
+                    fontSize = 14.sp,
+                    color = MaterialTheme.colorScheme.onSurface,
                     fontWeight = FontWeight.Bold,
                     maxLines = 1
                 )
@@ -669,16 +746,21 @@ fun NewRecordCard(title: String, value: String, subValue: String, icon: ImageVec
 
             Column(horizontalAlignment = Alignment.End) {
                 Text(
-                    text = value, 
-                    fontSize = 24.sp, 
-                    color = color, 
+                    text = value,
+                    fontSize = 24.sp,
+                    color = color,
                     fontWeight = FontWeight.Black,
-                    style = TextStyle(shadow = androidx.compose.ui.graphics.Shadow(color.copy(alpha = 0.3f), blurRadius = 8f))
+                    style = TextStyle(
+                        shadow = androidx.compose.ui.graphics.Shadow(
+                            color.copy(alpha = 0.3f),
+                            blurRadius = 8f
+                        )
+                    )
                 )
                 Text(
                     text = stringResource(R.string.novo_recorde),
-                    fontSize = 8.sp, 
-                    color = color.copy(alpha = 0.6f), 
+                    fontSize = 8.sp,
+                    color = color.copy(alpha = 0.6f),
                     fontWeight = FontWeight.Bold
                 )
             }
@@ -708,7 +790,11 @@ fun ExerciseSummaryCard(exercise: Exercise) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(
+                alpha = 0.3f
+            )
+        ),
         border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
@@ -752,7 +838,7 @@ fun ExerciseSummaryCard(exercise: Exercise) {
                             color = MaterialTheme.colorScheme.onSurface
                         )
                     }
-                    
+
                     Row {
                         Text(
                             "${set.weight} kg",
