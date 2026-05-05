@@ -11,7 +11,6 @@ import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.ListAlt
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -29,7 +28,7 @@ import com.example.training_tracker.ui.screens.create_workout.CreateWorkoutScree
 import com.example.training_tracker.ui.screens.home.HomeViewModel
 import com.example.training_tracker.ui.screens.registered_workouts.TextGray
 import com.example.training_tracker.ui.screens.workout_details.WorkoutDetailsScreen
-import com.example.training_tracker.ui.screens.workout_details.WorkoutDetailsViewModel
+import com.example.training_tracker.ui.screens.workout_details.WorkoutEditViewModel
 import com.example.training_tracker.ui.screens.workout_report.WorkoutReportScreen
 import com.example.training_tracker.ui.screens.workout_report.WorkoutReportViewModel
 import com.example.training_tracker.ui.screens.workout_screen.WorkoutScreen
@@ -113,8 +112,8 @@ fun GymTrackerNavHost() {
                 navArgument("canStart") { type = NavType.StringType }
             )
         ) {
-            val workoutDetailsViewModel: WorkoutDetailsViewModel =
-                viewModel(factory = WorkoutDetailsViewModel.Factory)
+            val workoutEditViewModel: WorkoutEditViewModel =
+                viewModel(factory = WorkoutEditViewModel.Factory)
             WorkoutDetailsScreen(
                 onNavigateBack = { navController.popBackStack() },
                 onStartWorkout = { workoutId ->
@@ -123,7 +122,7 @@ fun GymTrackerNavHost() {
                     }
                 },
                 onEditWorkoutName = { name ->
-                    workoutDetailsViewModel.updateWorkoutName(name = name)
+                    workoutEditViewModel.updateWorkoutName(name = name)
                 }
             )
         }

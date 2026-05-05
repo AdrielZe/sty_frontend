@@ -249,8 +249,35 @@ fun ActiveWorkoutCard(
     workout: Workout
 ) {
     var showMenu by remember { mutableStateOf(false) }
+    var showDeleteDialog by remember {mutableStateOf(false)}
+
     val muscleGroups = remember(workout) {
         workout.exercises.mapNotNull { it.muscleGroup }.distinct()
+    }
+
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text(stringResource(R.string.workout_details_remove_exercise_confirm_title)) },
+            text = {
+                Text(stringResource(R.string.tem_certeza_que_deseja_remover_o_treino, workout.name))
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        onDeleteClick()
+                        showDeleteDialog = false
+                    }
+                ) {
+                    Text(stringResource(R.string.workout_details_remove_button), color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) {
+                    Text(stringResource(R.string.workout_details_cancel_button))
+                }
+            }
+        )
     }
 
     Card(
@@ -348,7 +375,7 @@ fun ActiveWorkoutCard(
                         DropdownMenuItem(
                             text = { Text("Remover") },
                             onClick = {
-                                onDeleteClick()
+                                showDeleteDialog = true
                                 showMenu = false
                             },
                             leadingIcon = { Icon(Icons.Default.Delete, contentDescription = null, tint = MaterialTheme.colorScheme.error) }

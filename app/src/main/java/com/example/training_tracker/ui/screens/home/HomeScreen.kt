@@ -1,5 +1,6 @@
 package com.example.training_tracker.ui.screens.home
 
+import android.graphics.drawable.Icon
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.BorderStroke
@@ -40,6 +41,7 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.MailOutline
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -69,6 +71,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -385,62 +388,110 @@ fun FreestyleWorkoutNameDialog(
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
-            shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                .padding(16.dp)
+                // Adicionando uma borda sutil em degradê ou cor de destaque
+                .border(1.dp, CyanAccent.copy(alpha = 0.2f), RoundedCornerShape(28.dp)),
+            shape = RoundedCornerShape(28.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f)
+            ),
+            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
         ) {
             Column(
-                modifier = Modifier.padding(24.dp),
+                modifier = Modifier.padding(vertical = 32.dp, horizontal = 24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                // Ícone moderno no topo
+                Box(
+                    modifier = Modifier
+                        .size(56.dp)
+                        .background(CyanAccent.copy(alpha = 0.1f), CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Edit, // Certifique-se de importar Icons.Default.Edit
+                        contentDescription = null,
+                        tint = CyanAccent,
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
                 Text(
                     text = stringResource(R.string.nome_do_treino),
                     style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = CyanAccent
+                    fontWeight = FontWeight.ExtraBold, // Mais peso para modernidade
+                    color = MaterialTheme.colorScheme.onSurface
                 )
-                Spacer(modifier = Modifier.height(16.dp))
 
-                OutlinedTextField(
-                    value = workoutName,
-                    onValueChange = { workoutName = it },
-                    label = { Text(text = stringResource(R.string.como_quer_chamar_o_seu_treino), color = Color.Gray) },
-                    placeholder = { Text(text = stringResource(R.string.ex_treino_de_sexta), color = Color.Gray) },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                    singleLine = true,
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = CyanAccent,
-                        focusedLabelColor = CyanAccent,
-                        cursorColor = CyanAccent
-                    )
+                Text(
+                    text = stringResource(R.string.como_quer_chamar_o_seu_treino),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.Gray,
+                    textAlign = TextAlign.Center
                 )
 
                 Spacer(modifier = Modifier.height(24.dp))
 
+                OutlinedTextField(
+                    value = workoutName,
+                    onValueChange = { workoutName = it },
+                    placeholder = {
+                        Text(
+                            text = stringResource(R.string.ex_treino_de_sexta),
+                            color = Color.Gray.copy(alpha = 0.6f)
+                        )
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    singleLine = true,
+                    textStyle = TextStyle(fontWeight = FontWeight.Medium, fontSize = 16.sp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = CyanAccent,
+                        unfocusedBorderColor = Color.Gray.copy(alpha = 0.3f),
+                        cursorColor = CyanAccent,
+                        focusedContainerColor = CyanAccent.copy(alpha = 0.02f)
+                    )
+                )
+
+                Spacer(modifier = Modifier.height(32.dp))
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Text(
-                        text = stringResource(R.string.cancelar),
-                        modifier = Modifier
-                            .clickable { onDismiss() }
-                            .padding(12.dp),
-                        style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
+                    TextButton(
+                        onClick = onDismiss,
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(14.dp)
+                    ) {
+                        Text(
+                            text = stringResource(R.string.cancelar),
+                            color = Color.Gray,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+
                     Button(
                         onClick = { if (workoutName.isNotBlank()) onConfirm(workoutName) },
                         enabled = workoutName.isNotBlank(),
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(48.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = CyanAccent,
-                            disabledContainerColor = CyanAccent.copy(alpha = 0.5f)
+                            contentColor = Color.Black,
+                            disabledContainerColor = CyanAccent.copy(alpha = 0.3f)
                         ),
-                        shape = RoundedCornerShape(12.dp)
+                        shape = RoundedCornerShape(14.dp),
+                        elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
                     ) {
-                        Text(stringResource(R.string.iniciar), color = Color.Black, fontWeight = FontWeight.Bold)
+                        Text(
+                            text = stringResource(R.string.iniciar),
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.ExtraBold
+                        )
                     }
                 }
             }
@@ -766,9 +817,11 @@ fun WeeklyGoalPickerDialog(
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
-                                    text = "$num ${if (num == 1) stringResource(R.string.treino) else stringResource(
-                                        R.string.treinos
-                                    )}",
+                                    text = "$num ${
+                                        if (num == 1) stringResource(R.string.treino) else stringResource(
+                                            R.string.treinos
+                                        )
+                                    }",
                                     style = if (isSelected) {
                                         MaterialTheme.typography.headlineMedium.copy(
                                             fontWeight = FontWeight.Bold,
@@ -959,6 +1012,7 @@ fun CustomTopBar(
             fontWeight = FontWeight.ExtraBold,
             letterSpacing = 2.sp
         )
+
 
         Surface(
             shape = CircleShape,

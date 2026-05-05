@@ -64,7 +64,7 @@
     <string name="registered_workouts_remove_workout_menu">Remover Treino</string>
 
     <!-- WorkoutDetailsScreen -->
-    <string name="workout_details_title">DETALHES DO TREINO</string>
+    <string name="workout_edit_title">EDITAR TREINO</string>
     <string name="workout_details_total_exercises">%1$d exercícios no total</string>
     <string name="workout_details_exercise_list_title">LISTA DE EXERCÍCIOS</string>
     <string name="workout_details_start_workout_button">INICIAR TREINO AGORA</string>
@@ -482,5 +482,7 @@
     <string name="historico_de_recordes">HISTÓRICO DE RECORDES</string>
     <string name="recorde_atual">Recorde atual</string>
     <string name="recorde_anterior">Recorde anterior</string>
+    <string name="tem_certeza_que_deseja_remover_o_treino">Tem certeza que deseja remover o treino %1$s?</string>
+    <string name="criar">Criar</string>
 
 </resources>

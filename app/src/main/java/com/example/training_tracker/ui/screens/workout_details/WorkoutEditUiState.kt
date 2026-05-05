@@ -3,7 +3,7 @@ package com.example.training_tracker.ui.screens.workout_details
 import com.example.training_tracker.data.models.Exercise
 import com.example.training_tracker.data.models.Workout
 
-data class WorkoutDetailsUiState(
+data class WorkoutEditUiState(
     val workout: Workout? = null,
     val isLoading: Boolean = false,
     val canStartWorkout: Boolean = true,

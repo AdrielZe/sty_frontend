@@ -1,5 +1,6 @@
 package com.example.training_tracker.ui.screens.workout_details
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -17,12 +18,15 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Timer
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -35,11 +39,13 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.toSize
+import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.training_tracker.R
 import com.example.training_tracker.data.models.Exercise
@@ -56,7 +62,7 @@ fun WorkoutDetailsScreen(
     onNavigateBack: () -> Unit,
     onStartWorkout: (String) -> Unit,
     onEditWorkoutName: (String) -> Unit,
-    viewModel: WorkoutDetailsViewModel = viewModel(factory = WorkoutDetailsViewModel.Factory)
+    viewModel: WorkoutEditViewModel = viewModel(factory = WorkoutEditViewModel.Factory)
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var showAddExerciseDialog by remember { mutableStateOf(false) }
@@ -86,7 +92,7 @@ fun WorkoutDetailsScreen(
             TopAppBar(
                 title = {
                     Text(
-                        stringResource(id = R.string.workout_details_title),
+                        stringResource(id = R.string.workout_edit_title),
                         fontSize = 18.sp,
                         fontWeight = FontWeight.ExtraBold,
                         letterSpacing = 1.sp,
@@ -141,7 +147,7 @@ fun WorkoutDetailsScreen(
                                 Text(
                                     text = workout.name.uppercase(),
                                     style = MaterialTheme.typography.headlineMedium,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Black,
                                     color = MaterialTheme.colorScheme.onBackground,
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis
@@ -359,8 +365,8 @@ fun WorkoutDetailsScreen(
             AlertDialog(
                 onDismissRequest = { exerciseToDelete = null },
                 title = { Text(stringResource(R.string.workout_details_remove_exercise_confirm_title)) },
-                text = { 
-                    Text(stringResource(R.string.workout_details_remove_exercise_confirm_message, exercise.name)) 
+                text = {
+                    Text(stringResource(R.string.workout_details_remove_exercise_confirm_message, exercise.name))
                 },
                 confirmButton = {
                     TextButton(
@@ -384,30 +390,26 @@ fun WorkoutDetailsScreen(
 
 @Composable
 fun AddExerciseButton(onClick: () -> Unit) {
-    OutlinedButton(
+    Surface(
         onClick = onClick,
         modifier = Modifier
             .fillMaxWidth()
-            .height(56.dp),
-        shape = RoundedCornerShape(Dimens.cornerRadius),
-        border = androidx.compose.foundation.BorderStroke(
-            1.dp,
-            CyanAccent.copy(alpha = 0.5f)
-        ),
-        colors = ButtonDefaults.outlinedButtonColors(
-            contentColor = CyanAccent
-        )
+            .height(60.dp),
+        shape = RoundedCornerShape(16.dp),
+        color = CyanAccent.copy(alpha = 0.05f),
+        border = BorderStroke(2.dp, CyanAccent.copy(alpha = 0.3f))
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center
         ) {
-            Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(20.dp))
+            Icon(Icons.Default.Add, contentDescription = null, tint = CyanAccent)
             Spacer(modifier = Modifier.width(8.dp))
             Text(
                 stringResource(id = R.string.workout_details_add_exercise_button),
-                fontWeight = FontWeight.Bold,
-                letterSpacing = 1.sp
+                color = CyanAccent,
+                fontWeight = FontWeight.ExtraBold,
+                style = MaterialTheme.typography.bodyLarge
             )
         }
     }
@@ -418,76 +420,74 @@ fun ExerciseDetailItem(
     number: Int,
     exercise: Exercise,
     isEditMode: Boolean,
-    onRemove: () -> Unit,
-    elevation: androidx.compose.ui.unit.Dp = 2.dp
+    onRemove: () -> Unit
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
         ),
-        shape = RoundedCornerShape(Dimens.cornerRadius),
-        elevation = CardDefaults.cardElevation(defaultElevation = elevation)
+        shape = RoundedCornerShape(16.dp),
+        border = BorderStroke(1.dp, Color.Gray.copy(alpha = 0.1f))
     ) {
         Row(
-            modifier = Modifier.padding(Dimens.paddingMedium),
+            modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            // Badge do Número
             Surface(
-                modifier = Modifier.size(32.dp),
-                shape = RoundedCornerShape(8.dp),
-                color = CyanAccent.copy(alpha = 0.1f)
+                modifier = Modifier.size(36.dp),
+                shape = CircleShape,
+                color = CyanAccent.copy(alpha = 0.15f)
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Text(
                         text = number.toString(),
                         color = CyanAccent,
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.ExtraBold,
                         fontSize = 14.sp
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.width(Dimens.paddingMedium))
+            Spacer(modifier = Modifier.width(16.dp))
 
-            Row(
-                modifier = Modifier
-                    .weight(1f),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = exercise.name,
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Medium,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.weight(1f),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
 
+                Spacer(modifier = Modifier.height(4.dp))
+
+                // Tag de Músculo (Pequena e discreta)
                 Surface(
-                    modifier = Modifier.padding(horizontal = 8.dp),
                     color = CyanAccent,
                     shape = RoundedCornerShape(4.dp)
                 ) {
                     Text(
-                        modifier = Modifier
-                            .padding(horizontal = 6.dp, vertical = 2.dp),
-                        text = stringResource(exercise.muscleGroup?.resId ?: R.string.detalhes_do_treino_desconhecido),
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                        text = stringResource(exercise.muscleGroup?.resId ?: R.string.detalhes_do_treino_desconhecido).uppercase(),
                         style = MaterialTheme.typography.labelSmall,
-                        maxLines = 1,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
+                        fontWeight = FontWeight.Black,
+                        fontSize = 9.sp,
+                        color = Color.Black
                     )
                 }
             }
 
             if (isEditMode) {
-                IconButton(onClick = onRemove) {
+                IconButton(
+                    onClick = onRemove,
+                    modifier = Modifier.background(MaterialTheme.colorScheme.error.copy(alpha = 0.1f), CircleShape)
+                ) {
                     Icon(
                         imageVector = Icons.Default.Delete,
-                        contentDescription = stringResource(id = R.string.content_description_remove),
-                        tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f),
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.error,
                         modifier = Modifier.size(20.dp)
                     )
                 }
@@ -504,76 +504,111 @@ fun AddExerciseSelectionDialog(
 ) {
     var searchQuery by remember { mutableStateOf("") }
 
-    // Filtro normal para a lista de baixo
     val filteredExercises = remember(searchQuery, availableExercises) {
         val query = searchQuery.trim()
-        if (query.isEmpty()) {
-            availableExercises
-        } else {
-            availableExercises.filter { it.name.contains(query, ignoreCase = true) }
-        }
+        if (query.isEmpty()) availableExercises
+        else availableExercises.filter { it.name.contains(query, ignoreCase = true) }
     }
 
     val showCreateOption = remember(searchQuery, filteredExercises) {
         searchQuery.isNotBlank() && filteredExercises.isEmpty()
     }
 
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = {
-            Text(
-                stringResource(id = R.string.workout_details_select_exercise_dialog_title),
-                fontWeight = FontWeight.Bold
-            )
-        },
-        text = {
-            Column(modifier = Modifier
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            modifier = Modifier
                 .fillMaxWidth()
-                .height(500.dp)) {
+                .heightIn(max = 700.dp) // Limita a altura para não sumir com os botões
+                .padding(vertical = 16.dp)
+                .border(1.dp, CyanAccent.copy(alpha = 0.2f), RoundedCornerShape(28.dp)),
+            shape = RoundedCornerShape(28.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                // Ícone de Topo (Contexto Visual)
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .background(CyanAccent.copy(alpha = 0.1f), CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.FitnessCenter, // Ícone de exercício
+                        contentDescription = null,
+                        tint = CyanAccent,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Text(
+                    text = stringResource(id = R.string.workout_details_select_exercise_dialog_title),
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                // Campo de Pesquisa Moderno
                 OutlinedTextField(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
-                    placeholder = { Text(stringResource(id = R.string.workout_details_search_exercise_placeholder)) },
+                    placeholder = {
+                        Text(
+                            stringResource(id = R.string.workout_details_search_exercise_placeholder),
+                            color = Color.Gray.copy(alpha = 0.6f)
+                        )
+                    },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
-                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                    shape = RoundedCornerShape(16.dp),
+                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = CyanAccent) },
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = CyanAccent,
-                        focusedLabelColor = CyanAccent
+                        unfocusedBorderColor = Color.Gray.copy(alpha = 0.3f),
+                        cursorColor = CyanAccent,
+                        focusedContainerColor = CyanAccent.copy(alpha = 0.02f)
                     )
                 )
+
                 Spacer(modifier = Modifier.height(16.dp))
 
+                // Lista de Exercícios
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-
-                    // USAMOS A VARIÁVEL BLINDADA AQUI
                     if (showCreateOption) {
                         item {
                             Surface(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .clickable { onSelect(searchQuery.trim()) },
-                                shape = RoundedCornerShape(8.dp),
-                                color = Color.Transparent
+                                shape = RoundedCornerShape(12.dp),
+                                color = CyanAccent.copy(alpha = 0.05f)
                             ) {
-                                Text(
-                                    text = searchQuery.trim(),
-                                    modifier = Modifier.padding(12.dp),
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    color = CyanAccent,
-                                    fontWeight = FontWeight.Bold
-                                )
+                                Row(
+                                    modifier = Modifier.padding(16.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(Icons.Default.Add, contentDescription = null, tint = CyanAccent)
+                                    Spacer(Modifier.width(12.dp))
+                                    Text(
+                                        text = "${stringResource(R.string.criar)} \"${searchQuery.trim()}\"",
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        color = CyanAccent,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
                             }
-                            HorizontalDivider(
-                                color = MaterialTheme.colorScheme.outlineVariant.copy(
-                                    alpha = 0.5f
-                                )
-                            )
                         }
                     }
 
@@ -582,59 +617,58 @@ fun AddExerciseSelectionDialog(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clickable { onSelect(exercise.name) },
-                            shape = RoundedCornerShape(8.dp),
-                            color = Color.Transparent
+                            shape = RoundedCornerShape(12.dp),
+                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
                         ) {
-                            Row(modifier = Modifier
-                                .fillMaxWidth(),
+                            Row(
+                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
                                 verticalAlignment = Alignment.CenterVertically,
-//                                horizontalArrangement = Arrangement.SpaceBetween
+                                horizontalArrangement = Arrangement.SpaceBetween
                             ) {
                                 Text(
                                     text = exercise.name,
-                                    modifier = Modifier
-                                        .padding(12.dp)
-                                        .weight(1f),
-                                    style = MaterialTheme.typography.bodyLarge
+                                    modifier = Modifier.weight(1f),
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    fontWeight = FontWeight.Medium
                                 )
+
+                                // Tag de Grupo Muscular (Localizada)
                                 Surface(
-                                    modifier = Modifier.padding(4.dp),
                                     color = CyanAccent,
-                                    shape = RoundedCornerShape(4.dp)
+                                    shape = RoundedCornerShape(6.dp)
                                 ) {
                                     Text(
-                                        modifier = Modifier
-                                            .padding(4.dp)
-                                            .weight(1f),
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                                         text = stringResource(exercise.muscleGroup?.resId ?: R.string.detalhes_do_treino_desconhecido),
                                         style = MaterialTheme.typography.labelSmall,
-                                        maxLines = 1,
-                                        fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.onSurface
+                                        fontWeight = FontWeight.Black,
+                                        color = Color.Black
                                     )
                                 }
                             }
                         }
-                        HorizontalDivider(
-                            color = MaterialTheme.colorScheme.outlineVariant.copy(
-                                alpha = 0.5f
-                            )
-                        )
                     }
                 }
-            }
-        },
-        confirmButton = {},
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(
-                    stringResource(id = R.string.workout_details_cancel_button),
-                    color = Color.Gray
-                )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // Botão Cancelar
+                TextButton(
+                    onClick = onDismiss,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(14.dp)
+                ) {
+                    Text(
+                        stringResource(id = R.string.workout_details_cancel_button),
+                        color = Color.Gray,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
             }
         }
-    )
+    }
 }
+
 
 @Composable
 fun EditWorkoutNameDialog(
@@ -684,4 +718,69 @@ fun EditWorkoutNameDialog(
             }
         }
     )
+}
+
+@Composable
+fun RemoveExerciseDialog(
+    exerciseName: String,
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit
+) {
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            shape = RoundedCornerShape(28.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            modifier = Modifier
+                .padding(16.dp)
+                .border(1.dp, Color.Gray.copy(alpha = 0.1f), RoundedCornerShape(28.dp))
+        ) {
+            Column(
+                modifier = Modifier.padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(56.dp)
+                        .background(MaterialTheme.colorScheme.error.copy(alpha = 0.1f), CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(Icons.Default.Warning, contentDescription = null, tint = MaterialTheme.colorScheme.error)
+                }
+
+                Spacer(Modifier.height(16.dp))
+
+                Text(
+                    text = stringResource(R.string.workout_details_remove_exercise_confirm_title),
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center
+                )
+
+                Spacer(Modifier.height(8.dp))
+
+                Text(
+                    text = stringResource(R.string.workout_details_remove_exercise_confirm_message, exerciseName),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.Gray,
+                    textAlign = TextAlign.Center
+                )
+
+                Spacer(Modifier.height(24.dp))
+
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    TextButton(onClick = onDismiss, modifier = Modifier.weight(1f)) {
+                        Text(stringResource(R.string.workout_details_cancel_button), color = Color.Gray)
+                    }
+                    Button(
+                        onClick = onConfirm,
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Text(stringResource(R.string.workout_details_remove_button), fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+        }
+    }
 }

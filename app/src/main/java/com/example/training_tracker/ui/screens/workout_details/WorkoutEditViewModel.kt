@@ -10,7 +10,6 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.training_tracker.GymTrackerApplication
 import com.example.training_tracker.data.models.Exercise
 import com.example.training_tracker.data.models.MuscleGroups
-import com.example.training_tracker.data.models.Workout
 import com.example.training_tracker.data.repository.ExerciseRepository
 import com.example.training_tracker.data.repository.WorkoutRepository
 import com.example.training_tracker.domain.classifiers.ExerciseClassifier
@@ -24,7 +23,7 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-class WorkoutDetailsViewModel(
+class WorkoutEditViewModel(
     private val workoutRepository: WorkoutRepository,
     private val exerciseRepository: ExerciseRepository,
     private val classifier: ExerciseClassifier,
@@ -40,13 +39,13 @@ class WorkoutDetailsViewModel(
     private val _pendingExerciseName = MutableStateFlow<String?>(null)
     private val _showMuscleGroupPicker = MutableStateFlow(false)
 
-    val uiState: StateFlow<WorkoutDetailsUiState> = combine(
+    val uiState: StateFlow<WorkoutEditUiState> = combine(
         workoutRepository.getWorkoutById(workoutId),
         exerciseRepository.exercises,
         _pendingExerciseName,
         _showMuscleGroupPicker
     ) { workout, exercisesList, pendingName, showMusclePicker ->
-        WorkoutDetailsUiState(
+        WorkoutEditUiState(
             isLoading = false,
             workout = workout,
             canStartWorkout = canStart,
@@ -58,7 +57,7 @@ class WorkoutDetailsViewModel(
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(500),
-        initialValue = WorkoutDetailsUiState(isLoading = true)
+        initialValue = WorkoutEditUiState(isLoading = true)
     )
 
     fun updateWorkoutName(name: String) {
@@ -220,7 +219,7 @@ class WorkoutDetailsViewModel(
                 val workoutRepository = application.container.workoutRepository
                 val exerciseRepository = application.container.exerciseRepository
                 val classifier = application.container.exerciseClassifier
-                WorkoutDetailsViewModel(
+                WorkoutEditViewModel(
                     workoutRepository = workoutRepository,
                     exerciseRepository = exerciseRepository,
                     classifier = classifier,
