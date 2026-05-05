@@ -310,7 +310,7 @@ fun ExerciseCardUtils(
                 }
             }
         }
-    } else if (!isLocked) {
+    } else {
         Card(
             modifier = modifier
                 .fillMaxWidth()
@@ -384,7 +384,10 @@ fun ExerciseCardUtils(
                                                     color = MaterialTheme.colorScheme.error
                                                 )
                                             },
-                                            onClick = { onRemoveExercise(exercise.id); isMenuExpanded = false },
+                                            onClick = {
+                                                onRemoveExercise(exercise.id); isMenuExpanded =
+                                                false
+                                            },
                                             leadingIcon = {
                                                 Icon(
                                                     Icons.Default.Delete,
@@ -479,7 +482,9 @@ fun ExerciseCardUtils(
                     Spacer(Modifier.height(16.dp))
 
                     exercise.exerciseSets.forEach { set ->
-                        val isWeightError = showErrors && (set.weight.replace(',', '.').toDoubleOrNull() ?: 0.0) <= 0.0
+                        val isWeightError =
+                            showErrors && (set.weight.replace(',', '.').toDoubleOrNull()
+                                ?: 0.0) <= 0.0
                         val isRepsError = showErrors && (set.reps.toIntOrNull() ?: 0) <= 0
 
                         SetLine(
@@ -538,47 +543,48 @@ fun ExerciseCardUtils(
                 }
             }
         }
-    } else {
-        Card(
-            modifier = modifier
-                .fillMaxWidth()
-                .alpha(0.4f)
-                .clickable { onExpandedChange(!isExpanded) },
-            shape = RoundedCornerShape(20.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-        ) {
-            Row(
-                modifier = Modifier.padding(20.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(Icons.Default.Lock, null, tint = TextGray, modifier = Modifier.size(20.dp))
-                Spacer(Modifier.width(16.dp))
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        exercise.name,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        fontSize = 16.sp
-                    )
-                    Text(
-                        stringResource(
-                            R.string.series_reps,
-                            exercise.exerciseSets.size,
-                            exercise.exerciseSets.firstOrNull()?.reps ?: 0
-                        ),
-                        color = TextGray,
-                        fontSize = 12.sp
-                    )
-                }
-                Icon(
-                    imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                    contentDescription = null,
-                    tint = TextGray,
-                    modifier = Modifier.size(24.dp)
-                )
-            }
-        }
     }
+//    } else {
+//        Card(
+//            modifier = modifier
+//                .fillMaxWidth()
+//                .alpha(0.4f)
+//                .clickable { onExpandedChange(!isExpanded) },
+//            shape = RoundedCornerShape(20.dp),
+//            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+//        ) {
+//            Row(
+//                modifier = Modifier.padding(20.dp),
+//                verticalAlignment = Alignment.CenterVertically
+//            ) {
+//                Icon(Icons.Default.Lock, null, tint = TextGray, modifier = Modifier.size(20.dp))
+//                Spacer(Modifier.width(16.dp))
+//                Column(modifier = Modifier.weight(1f)) {
+//                    Text(
+//                        exercise.name,
+//                        fontWeight = FontWeight.Bold,
+//                        color = MaterialTheme.colorScheme.onSurface,
+//                        fontSize = 16.sp
+//                    )
+//                    Text(
+//                        stringResource(
+//                            R.string.series_reps,
+//                            exercise.exerciseSets.size,
+//                            exercise.exerciseSets.firstOrNull()?.reps ?: 0
+//                        ),
+//                        color = TextGray,
+//                        fontSize = 12.sp
+//                    )
+//                }
+//                Icon(
+//                    imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+//                    contentDescription = null,
+//                    tint = TextGray,
+//                    modifier = Modifier.size(24.dp)
+//                )
+//            }
+//        }
+//    }
 }
 
 @Composable
