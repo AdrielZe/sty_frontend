@@ -16,6 +16,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
@@ -195,11 +196,15 @@ fun StyBottomNavBar(
         modifier = Modifier.height(85.dp)
     ) {
         val items = listOf(
-            Triple(Routes.Home.name, Icons.Default.Home, "Home"),
-            Triple(Routes.RegisteredWorkouts.name, Icons.Default.FitnessCenter, "Treinos"),
-            Triple(Routes.WorkoutHistory.name, Icons.Default.History, "Histórico"),
-            Triple(Routes.Records.name, Icons.Default.EmojiEvents, "Recordes"),
-            Triple(Routes.Profile.name, Icons.Default.Person, "Perfil")
+            Triple(Routes.Home.name, Icons.Default.Home, stringResource(R.string.home)),
+            Triple(Routes.RegisteredWorkouts.name, Icons.Default.FitnessCenter,
+                stringResource(R.string.treinos_min)
+            ),
+            Triple(Routes.WorkoutHistory.name, Icons.Default.History, stringResource(R.string.historico_min)),
+            Triple(Routes.Records.name, Icons.Default.EmojiEvents,
+                stringResource(R.string.recordes)
+            ),
+            Triple(Routes.Profile.name, Icons.Default.Person, stringResource(R.string.perfil))
         )
 
         items.forEach { (route, icon, label) ->

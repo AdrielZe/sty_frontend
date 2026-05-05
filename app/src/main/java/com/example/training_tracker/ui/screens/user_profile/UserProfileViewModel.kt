@@ -91,6 +91,12 @@ class UserProfileViewModel(
         }
     }
 
+    fun updateUserName(newName: String) {
+        viewModelScope.launch {
+            userRepository.updateUserName(newName)
+        }
+    }
+
     companion object {
         val Factory = viewModelFactory {
             initializer {

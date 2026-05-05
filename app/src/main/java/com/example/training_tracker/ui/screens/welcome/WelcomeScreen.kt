@@ -67,8 +67,29 @@ fun WelcomeScreen(
             OutlinedTextField(
                 value = name,
                 onValueChange = { newValue ->
-                    if (newValue.all { it.isLetter() || it.isWhitespace() }) {
-                        name = newValue
+                    // 1. Validação de limite de 20 caracteres
+                    if (newValue.length <= 20) {
+
+                        // 2. Permite apenas letras e espaços
+                        if (newValue.all { it.isLetter() || it.isWhitespace() }) {
+
+                            // 3. Evita começar com espaço ou ter espaços duplos
+                            if (newValue.startsWith(" ") || newValue.contains("  ")) return@OutlinedTextField
+
+                            // 4. Validação de máximo de 2 espaços
+                            val spaceCount = newValue.count { it == ' ' }
+
+                            if (spaceCount <= 2) {
+                                // 5. Formatação: Primeira letra de cada palavra em Maiúscula
+                                val formattedName = newValue.split(" ").joinToString(" ") { word ->
+                                    word.replaceFirstChar {
+                                        if (it.isLowerCase()) it.titlecase(java.util.Locale.getDefault())
+                                        else it.toString()
+                                    }
+                                }
+                                name = formattedName
+                            }
+                        }
                     }
                 },
                 label = { Text(stringResource(R.string.seu_nome)) },

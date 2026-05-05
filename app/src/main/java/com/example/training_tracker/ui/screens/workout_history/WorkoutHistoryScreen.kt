@@ -5,7 +5,18 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -13,9 +24,24 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.ChevronLeft
+import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.HistoryToggleOff
+import androidx.compose.material.icons.filled.Timer
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -39,8 +65,7 @@ import com.example.training_tracker.ui.screens.registered_workouts.TextGray
 import com.example.training_tracker.ui.theme.CyanAccent
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-import java.time.format.FormatStyle
-import java.util.*
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -125,7 +150,8 @@ fun WorkoutHistoryScreen(
                         items(MuscleGroups.entries.toTypedArray()) { muscle ->
                             FilterChip(
                                 selected = uiState.selectedMuscleGroup == muscle,
-                                label = stringResource(muscle.resId).lowercase().replaceFirstChar { it.titlecase() },
+                                label = stringResource(muscle.resId).lowercase()
+                                    .replaceFirstChar { it.titlecase() },
                                 onClick = { onMuscleGroupSelected(muscle) }
                             )
                         }
@@ -158,11 +184,17 @@ fun WorkoutHistoryScreen(
                 )
             }
 
-            items(uiState.savedWorkouts, key = { it.id }) { workout ->
-                HistoryWorkoutCard(
-                    workout = workout,
-                    onClick = { onClickHistory(workout.id) }
-                )
+            if (uiState.savedWorkouts.isEmpty()) {
+                item {
+                    EmptyHistoryPlaceholder()
+                }
+            } else {
+                items(uiState.savedWorkouts, key = { it.id }) { workout ->
+                    HistoryWorkoutCard(
+                        workout = workout,
+                        onClick = { onClickHistory(workout.id) }
+                    )
+                }
             }
         }
     }
@@ -589,5 +621,29 @@ private fun getHistoryWorkoutImage(workout: WorkoutHistory): Int {
         MuscleGroups.TRICEPS -> R.drawable.triceps_workout
         MuscleGroups.ABS -> R.drawable.abs_workout
         else -> R.drawable.biceps_workout
+    }
+}
+
+@Composable
+fun EmptyHistoryPlaceholder() {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 40.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Icon(
+            Icons.Default.HistoryToggleOff,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f),
+            modifier = Modifier.size(60.dp)
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        Text(
+            text = stringResource(R.string.complete_treinos_para_ver_o_seu_hist_rico),
+            style = MaterialTheme.typography.labelSmall.copy(
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+            )
+        )
     }
 }

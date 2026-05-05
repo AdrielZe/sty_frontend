@@ -361,7 +361,7 @@
     <string name="cancelar">CANCELAR</string>
     <string name="iniciar">INICIAR</string>
     <string name="cancelar_treino">Cancelar treino</string>
-    <string name="tem_certeza_que_deseja_cancelar_e_remover_o_treino">Tem certeza que deseja cancelar e remover o treino%1$s?</string>
+    <string name="tem_certeza_que_deseja_cancelar_e_remover_o_treino">Tem certeza que deseja cancelar e remover o treino %1$s?</string>
     <string name="confirmar">Confirmar</string>
     <string name="treino_livre">Treino Livre</string>
     <string name="treino_livre_em_andamento_finalize_ou_cancele_esse_treino_antes_de_iniciar_outro">Treino livre em andamento: %1$s - finalize ou cancele esse treino antes de iniciar outro</string>
@@ -418,12 +418,12 @@
     <string name="S">S</string>
     <string name="T">T</string>
     <string name="Q">Q</string>
-    <string name="Tquinta">T</string>
-    <string name="Ssexta">F</string>
+    <string name="Tquinta">Q</string>
+    <string name="Ssexta">S</string>
     <string name="Ssabado">S</string>
     <string name="musculos_trabalhados">MÚSCULOS TRABALHADOS</string>
-    <string name="mais_recentes">Mais recentes</string>
-    <string name="mais_antigos">Mais antigos</string>
+    <string name="mais_recentes">Mais recente</string>
+    <string name="mais_antigos">Mais antigo</string>
     <string name="relatorio_do_treino">RELATÓRIO DO TREINO</string>
     <string name="voltar">Voltar</string>
     <string name="compartilhe_seu_progresso">COMPARTILHE SEU PROGRESSO</string>
@@ -441,7 +441,7 @@
     <string name="resumo_dos_exercicios">RESUMO DOS EXERCÍCIOS</string>
     <string name="serie_num">Série %1$d</string>
     <string name="finalizar_exercicio">Finalizar Exercício</string>
-    <string name="tem_certeza_que_deseja_finalizar_o_exercicio_ele_sera_marcado_como_concluido_e_nao_podera_mais_ser_editado">Tem certeza que deseja finalizar o exercício %1$s? Ele será marcado como concluído e não poderá mais ser editado.</string>
+    <string name="tem_certeza_que_deseja_finalizar_o_exercicio_ele_sera_marcado_como_concluido_e_nao_podera_mais_ser_editado">Tem certeza que deseja finalizar o exercício %1$s? Ele será marcado como concluído.</string>
     <string name="number_series">%1$d Séries</string>
     <string name="pronto">Pronto</string>
     <string name="serie_atual">SÉRIE ATUAL: %1$d</string>
@@ -484,5 +484,12 @@
     <string name="recorde_anterior">Recorde anterior</string>
     <string name="tem_certeza_que_deseja_remover_o_treino">Tem certeza que deseja remover o treino %1$s?</string>
     <string name="criar">Criar</string>
+    <string name="workout_details_title">DETALHES DO TREINO</string>
+    <string name="home">Home</string>
+    <string name="recordes">Recordes</string>
+    <string name="perfil">Perfil</string>
+    <string name="historico_min">Histórico</string>
+    <string name="nenhuma_atividade_registrada">Nenhuma atividade registrada</string>
+    <string name="complete_treinos_para_ver_o_seu_hist_rico">Complete treinos para ver o seu histórico</string>
 
 </resources>

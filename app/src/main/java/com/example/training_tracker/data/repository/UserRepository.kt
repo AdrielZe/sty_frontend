@@ -32,4 +32,11 @@ class UserRepository(private val userDao: UserDao) {
             userDao.upsertUser(currentUser.copy(profilePicture = uri))
         }
     }
+
+    suspend fun updateUserName(newName: String) {
+        val currentUser = userDao.getUser().first()
+        if (currentUser != null) {
+            userDao.upsertUser(currentUser.copy(name = newName))
+        }
+    }
 }

@@ -10,6 +10,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -17,9 +18,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -48,23 +47,33 @@ fun UserProfileScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
+    var showEditNameDialog by remember { mutableStateOf(false) }
 
     val photoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()
     ) { uri ->
         uri?.let {
             try {
-                // Dá ao seu app o direito de ler essa imagem para sempre (mesmo após reiniciar)
                 val contentResolver = context.contentResolver
                 val takeFlags: Int = Intent.FLAG_GRANT_READ_URI_PERMISSION
                 contentResolver.takePersistableUriPermission(it, takeFlags)
-
-                // Agora sim, salva no banco
                 viewModel.updateProfilePicture(it.toString())
             } catch (e: Exception) {
                 Log.e("PhotoPicker", "Erro ao obter permissão persistente", e)
             }
         }
+    }
+
+    if (showEditNameDialog && uiState is UserProfileUiState.Success) {
+        val user = (uiState as UserProfileUiState.Success).user
+        EditNameDialog(
+            initialName = user.name,
+            onDismiss = { showEditNameDialog = false },
+            onConfirm = { newName ->
+                viewModel.updateUserName(newName)
+                showEditNameDialog = false
+            }
+        )
     }
 
     Scaffold(
@@ -79,6 +88,7 @@ fun UserProfileScreen(
                 is UserProfileUiState.Loading -> {
                     CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
                 }
+
                 is UserProfileUiState.Error -> {
                     Text(
                         text = state.message,
@@ -86,6 +96,7 @@ fun UserProfileScreen(
                         modifier = Modifier.align(Alignment.Center)
                     )
                 }
+
                 is UserProfileUiState.Success -> {
                     ProfileContent(
                         user = state.user,
@@ -94,7 +105,8 @@ fun UserProfileScreen(
                             photoPickerLauncher.launch(
                                 PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
                             )
-                        }
+                        },
+                        onEditNameClick = { showEditNameDialog = true }
                     )
                 }
             }
@@ -106,7 +118,8 @@ fun UserProfileScreen(
 fun ProfileContent(
     user: User,
     stats: UserStats,
-    onEditPhotoClick: () -> Unit
+    onEditPhotoClick: () -> Unit,
+    onEditNameClick: () -> Unit
 ) {
     LazyColumn(
         modifier = Modifier
@@ -137,20 +150,18 @@ fun ProfileContent(
                     contentAlignment = Alignment.Center
                 ) {
                     if (!user.profilePicture.isNullOrEmpty()) {
-                        // Exibe a foto que o usuário escolheu
                         AsyncImage(
                             model = ImageRequest.Builder(LocalContext.current)
-                                .data(user.profilePicture) // A URI salva no banco
+                                .data(user.profilePicture)
                                 .crossfade(true)
                                 .build(),
                             contentDescription = stringResource(R.string.foto_de_perfil),
                             modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.Crop, // Importante para preencher o círculo
-                            error = painterResource(id = R.drawable.gym), // Caso a URI falhe
-                            placeholder = painterResource(id = R.drawable.gym) // Enquanto carrega
+                            contentScale = ContentScale.Crop,
+                            error = painterResource(id = R.drawable.gym),
+                            placeholder = painterResource(id = R.drawable.gym)
                         )
                     } else {
-                        // Imagem padrão caso o usuário ainda não tenha foto
                         Image(
                             painter = painterResource(id = R.drawable.gym),
                             contentDescription = stringResource(R.string.foto_de_perfil_padr_o),
@@ -158,7 +169,6 @@ fun ProfileContent(
                             contentScale = ContentScale.Crop
                         )
                     }
-
                 }
 
                 SmallFloatingActionButton(
@@ -170,17 +180,35 @@ fun ProfileContent(
                         .size(36.dp)
                         .offset(x = (-8).dp, y = (-8).dp)
                 ) {
-                    Icon(imageVector = Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
                 }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            Text(
-                text = user.nameDisplay ?: user.name,
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Spacer(modifier = Modifier.size(48.dp))
+                Text(
+                    text = user.name,
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                IconButton(onClick = onEditNameClick) {
+                    Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = "Editar nome",
+                        tint = CyanAccent,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
 
             Text(
                 text = "@${user.name.lowercase().replace(" ", "")}",
@@ -193,7 +221,10 @@ fun ProfileContent(
 
         item {
             // Stats Grid
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
                 StatCard(
                     modifier = Modifier.weight(1f),
                     title = stringResource(R.string.treinos_min),
@@ -212,7 +243,10 @@ fun ProfileContent(
 
         item {
             // Volume e Músculo
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
                 StatCard(
                     modifier = Modifier.weight(1f),
                     title = stringResource(R.string.vol_max),
@@ -222,7 +256,9 @@ fun ProfileContent(
                 StatCard(
                     modifier = Modifier.weight(1f),
                     title = stringResource(R.string.foco),
-                    value = stringResource(stats.mostTrainedMuscleGroup?.resId ?: R.string.nenhum_registro) ,
+                    value = stringResource(
+                        stats.mostTrainedMuscleGroup?.resId ?: R.string.nenhum_registro
+                    ),
                     icon = Icons.Default.MyLocation
                 )
             }
@@ -234,7 +270,11 @@ fun ProfileContent(
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(
+                        alpha = 0.5f
+                    )
+                )
             ) {
                 Row(
                     modifier = Modifier.padding(16.dp),
@@ -256,7 +296,8 @@ fun ProfileContent(
                             color = CyanAccent
                         )
                         Text(
-                            text = stats.heaviestExerciseName ?: stringResource(R.string.nenhum_registro),
+                            text = stats.heaviestExerciseName
+                                ?: stringResource(R.string.nenhum_registro),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold
                         )
@@ -273,6 +314,68 @@ fun ProfileContent(
 }
 
 @Composable
+fun EditNameDialog(
+    initialName: String,
+    onDismiss: () -> Unit,
+    onConfirm: (String) -> Unit
+) {
+    var name by remember { mutableStateOf(initialName) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Editar Nome") },
+        text = {
+            TextField(
+                value = name,
+                onValueChange =  { newValue ->
+                    // 1. Validação de limite de 20 caracteres
+                    if (newValue.length <= 20) {
+
+                        // 2. Permite apenas letras e espaços
+                        if (newValue.all { it.isLetter() || it.isWhitespace() }) {
+
+                            // 3. Evita começar com espaço ou ter espaços duplos
+                            if (newValue.startsWith(" ") || newValue.contains("  ")) return@TextField
+
+                            // 4. Validação de máximo de 2 espaços
+                            val spaceCount = newValue.count { it == ' ' }
+
+                            if (spaceCount <= 2) {
+                                // 5. Formatação: Primeira letra de cada palavra em Maiúscula
+                                val formattedName = newValue.split(" ").joinToString(" ") { word ->
+                                    word.replaceFirstChar {
+                                        if (it.isLowerCase()) it.titlecase(java.util.Locale.getDefault())
+                                        else it.toString()
+                                    }
+                                }
+                                name = formattedName
+                            }
+                        }
+                    }
+                },
+                label = { Text("Nome de usuário") },
+                singleLine = true,
+                colors = TextFieldDefaults.colors(
+                    focusedIndicatorColor = CyanAccent,
+                    unfocusedIndicatorColor = Color.Gray,
+                    cursorColor = CyanAccent
+                )
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = { onConfirm(name) }) {
+                Text("Salvar", color = CyanAccent)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancelar")
+            }
+        }
+    )
+}
+
+@Composable
 fun StatCard(
     title: String,
     value: String,
@@ -282,13 +385,30 @@ fun StatCard(
     Card(
         modifier = modifier,
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(
+                alpha = 0.5f
+            )
+        )
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Icon(icon, contentDescription = null, tint = CyanAccent, modifier = Modifier.size(24.dp))
+            Icon(
+                icon,
+                contentDescription = null,
+                tint = CyanAccent,
+                modifier = Modifier.size(24.dp)
+            )
             Spacer(modifier = Modifier.height(12.dp))
-            Text(text = title, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Text(text = value, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+            Text(
+                text = title,
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Text(
+                text = value,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
         }
     }
 }
