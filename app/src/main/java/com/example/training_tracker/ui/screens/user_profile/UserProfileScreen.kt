@@ -30,6 +30,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -383,7 +384,9 @@ fun StatCard(
     modifier: Modifier = Modifier
 ) {
     Card(
-        modifier = modifier,
+        // 👇 1. Usamos o defaultMinSize para garantir que o card tenha um tamanho base,
+        // mas permitimos que ele cresça se o texto interno precisar de mais espaço.
+        modifier = modifier.defaultMinSize(minHeight = 110.dp),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(
@@ -391,7 +394,11 @@ fun StatCard(
             )
         )
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
             Icon(
                 icon,
                 contentDescription = null,
@@ -402,12 +409,19 @@ fun StatCard(
             Text(
                 text = title,
                 style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                // 👇 2. Proteção para títulos longos (ex: "Calorias Queimadas")
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
             Text(
                 text = value,
                 style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                // 👇 3. Proteção para valores grandes (ex: "1.250.000")
+                // Se não couber na largura, ele diminui ou coloca reticências em vez de empurrar tudo
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
         }
     }

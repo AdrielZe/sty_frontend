@@ -2,6 +2,8 @@ package com.example.training_tracker
 
 import android.os.Build
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
@@ -14,6 +16,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.training_tracker.data.routes.Routes
 import androidx.compose.runtime.*
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.training_tracker.ui.screens.home.HomeUiState
 import com.example.training_tracker.ui.screens.home.HomeScreen
@@ -51,12 +54,13 @@ fun MainTabsScreen(
                 currentRoute = currentRoute,
                 onNavigate = { tab -> navigateToTab(tab) }
             )
-        }
+        },
+        contentWindowInsets = WindowInsets(0.dp)
     ) { innerPadding ->
         NavHost(
             navController = tabsNavController,
             startDestination = Routes.Home.name,
-            modifier = Modifier.padding(innerPadding)
+            modifier = Modifier.padding(innerPadding).consumeWindowInsets(innerPadding)
         ) {
             composable(route = Routes.Home.name) {
                 val homeUiState by homeViewModel.uiState.collectAsState()

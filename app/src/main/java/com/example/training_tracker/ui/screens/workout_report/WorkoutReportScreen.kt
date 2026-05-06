@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -77,6 +78,7 @@ import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.FileProvider
@@ -194,6 +196,8 @@ fun WorkoutReportScreen(
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Black,
                         letterSpacing = 1.sp,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
                         textAlign = TextAlign.Center
                     )
 
@@ -234,28 +238,42 @@ fun WorkoutReportScreen(
                     },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(64.dp)
+                        // 👇 1. Troca do height para defaultMinSize no Button
+                        .defaultMinSize(minHeight = 64.dp)
                         .shadow(16.dp, RoundedCornerShape(32.dp), spotColor = CyanAccent),
                     shape = RoundedCornerShape(32.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
-                    contentPadding = PaddingValues()
+                    contentPadding = PaddingValues() // Zera o padding padrão, o Box assume o controle
                 ) {
                     Box(
                         modifier = Modifier
-                            .fillMaxSize()
+                            // 👇 2. Troca do fillMaxSize para fillMaxWidth + defaultMinSize
+                            // Isso garante que o fundo com gradiente estique para baixo junto com o botão
+                            .fillMaxWidth()
+                            .defaultMinSize(minHeight = 64.dp)
                             .background(CyanGradient),
                         contentAlignment = Alignment.Center
                     ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
+                        Row(
+                            // 👇 3. Padding interno para garantir que o texto não cole nas bordas arredondadas
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
+                        ) {
                             Icon(Icons.Default.Share, contentDescription = null, tint = Color.White)
                             Spacer(Modifier.width(12.dp))
                             Text(
-                                stringResource(R.string.compartilhe_seu_progresso),
+                                text = stringResource(R.string.compartilhe_seu_progresso),
                                 style = MaterialTheme.typography.labelLarge.copy(
                                     fontWeight = FontWeight.ExtraBold,
                                     color = Color.White,
                                     letterSpacing = 1.sp
-                                )
+                                ),
+                                // 👇 4. A mágica de sempre: alinhamento central, maxLines e weight(1f, fill=false)
+                                textAlign = TextAlign.Center,
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.weight(1f, fill = false)
                             )
                         }
                     }
@@ -324,25 +342,29 @@ fun GamificationCard(uiState: WorkoutReportUiState) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .height(230.dp),
+            // 👇 1. defaultMinSize permite que os 230dp sejam uma base, não um teto inflexível
+            .defaultMinSize(minHeight = 230.dp),
         shape = RoundedCornerShape(24.dp),
         elevation = CardDefaults.cardElevation(8.dp)
     ) {
-        Box(modifier = Modifier.fillMaxSize()) {
+        // Removi o fillMaxSize() da Box
+        Box {
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
                     .data(image)
                     .crossfade(true)
                     .build(),
                 contentDescription = null,
-                modifier = Modifier.fillMaxSize(),
+                // 👇 2. matchParentSize nas imagens de fundo
+                modifier = Modifier.matchParentSize(),
                 contentScale = ContentScale.Crop,
                 alpha = if (isDark) 0.5f else 0.7f
             )
 
             Box(
                 modifier = Modifier
-                    .fillMaxSize()
+                    // 👇 2. matchParentSize no gradiente tbm
+                    .matchParentSize()
                     .background(
                         Brush.verticalGradient(
                             colors = listOf(
@@ -355,10 +377,13 @@ fun GamificationCard(uiState: WorkoutReportUiState) {
 
             Column(
                 modifier = Modifier
-                    .fillMaxSize()
+                    .fillMaxWidth()
+                    // 👇 3. defaultMinSize aqui garante que o Arrangement.Bottom mande tudo pra baixo
+                    .defaultMinSize(minHeight = 230.dp)
                     .padding(24.dp),
                 verticalArrangement = Arrangement.Bottom
             ) {
+                // --- LINHA 1: Título ---
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         Icons.AutoMirrored.Filled.TrendingUp,
@@ -373,10 +398,17 @@ fun GamificationCard(uiState: WorkoutReportUiState) {
                             fontWeight = FontWeight.ExtraBold,
                             color = CyanAccent,
                             letterSpacing = 1.5.sp
-                        )
+                        ),
+                        // Proteção contra traduções longas / telas finas
+                        modifier = Modifier.weight(1f, fill = false),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
 
+                Spacer(modifier = Modifier.height(4.dp))
+
+                // --- LINHA 2: Valor grandão + KG ---
                 Row(
                     verticalAlignment = Alignment.Bottom,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -386,7 +418,11 @@ fun GamificationCard(uiState: WorkoutReportUiState) {
                         style = MaterialTheme.typography.displayMedium.copy(
                             fontWeight = FontWeight.Black,
                             color = Color.White
-                        )
+                        ),
+                        // 👇 4. Proteção do número: Impede que um número gigantesco empurre o "kg" pra fora da tela
+                        modifier = Modifier.weight(1f, fill = false),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                     Text(
                         text = "kg",
@@ -398,6 +434,9 @@ fun GamificationCard(uiState: WorkoutReportUiState) {
                     )
                 }
 
+                Spacer(modifier = Modifier.height(4.dp))
+
+                // --- LINHA 3: Texto de comparação ---
                 Text(
                     text = uiState.totalWeightLiftedInfo?.comparisonText
                         ?: stringResource(R.string.belo_trabalho_hoje),
@@ -405,6 +444,9 @@ fun GamificationCard(uiState: WorkoutReportUiState) {
                         color = Color.White.copy(alpha = 0.8f),
                         fontWeight = FontWeight.Medium
                     )
+                    // Não tem maxLines aqui propositalmente!
+                    // Como liberamos o defaultMinSize do Card, se essa frase for gigante,
+                    // ela pode quebrar em 3 ou 4 linhas e o Card vai crescer graciosamente para acomodar.
                 )
             }
         }
@@ -442,9 +484,10 @@ fun MetricsGrid(uiState: WorkoutReportUiState) {
 }
 
 @Composable
-fun MetricCard(modifier: Modifier, value: String, label: String, icon: ImageVector, color: Color) {
+fun MetricCard(modifier: Modifier = Modifier, value: String, label: String, icon: ImageVector, color: Color) {
     Card(
-        modifier = modifier.height(130.dp),
+        // 👇 1. defaultMinSize libera o card para crescer se a fonte do celular for gigante
+        modifier = modifier.defaultMinSize(minHeight = 130.dp),
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
@@ -453,7 +496,10 @@ fun MetricCard(modifier: Modifier, value: String, label: String, icon: ImageVect
     ) {
         Column(
             modifier = Modifier
-                .fillMaxSize()
+                // 👇 2. fillMaxWidth() e defaultMinSize() no lugar de fillMaxSize()
+                // Isso garante que ele centralize verticalmente, mas permita o crescimento
+                .fillMaxWidth()
+                .defaultMinSize(minHeight = 130.dp)
                 .padding(12.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
@@ -470,22 +516,29 @@ fun MetricCard(modifier: Modifier, value: String, label: String, icon: ImageVect
             }
             Spacer(Modifier.height(12.dp))
             Text(
-                value,
+                text = value,
                 fontSize = 26.sp,
                 fontWeight = FontWeight.Black,
-                color = MaterialTheme.colorScheme.onSurface
+                color = MaterialTheme.colorScheme.onSurface,
+                // 👇 3. Proteção do Valor (garante que não passe de 1 linha e centraliza)
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                textAlign = TextAlign.Center
             )
             Text(
-                label,
+                text = label,
                 fontSize = 10.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontWeight = FontWeight.ExtraBold,
-                letterSpacing = 1.sp
+                letterSpacing = 1.sp,
+                // 👇 4. Proteção da Legenda (se for longa, quebra em 2 linhas centralizadas)
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                textAlign = TextAlign.Center
             )
         }
     }
 }
-
 @Composable
 fun MuscleIntensitySection(exercises: List<Exercise>) {
     val muscleGroupsData = remember(exercises) {
@@ -699,16 +752,27 @@ fun RecordsSection(records: com.example.training_tracker.data.models.Records?) {
     }
 
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            // 👇 1. fillMaxWidth() garante que a Row ocupe tudo
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             Text(
                 stringResource(R.string.new_achievements),
                 style = MaterialTheme.typography.labelMedium.copy(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     letterSpacing = 2.sp,
                     fontWeight = FontWeight.ExtraBold
-                )
+                ),
+                // 👇 2. weight(1f) impede que o título empurre o contador para fora da tela
+                modifier = Modifier.weight(1f),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
+
             Spacer(Modifier.width(8.dp))
+
+            // O selo do contador está protegido agora!
             Surface(
                 color = CyanAccent.copy(alpha = 0.2f),
                 shape = CircleShape
@@ -724,11 +788,19 @@ fun RecordsSection(records: com.example.training_tracker.data.models.Records?) {
             }
         }
 
+        // Dica: Se o Formatador do Java for usado, criamos um que remove zeros sozinho
+        val numberFormat = remember {
+            java.text.NumberFormat.getNumberInstance(Locale.getDefault()).apply {
+                maximumFractionDigits = 1 // Máximo de 1 casa decimal
+                minimumFractionDigits = 0 // Se for redondo (ex: 20), não mostra casas decimais
+            }
+        }
+
         sortedRecords.forEach { (exerciseName, maxWeight) ->
             NewRecordCard(
                 title = stringResource(R.string.recorde_pessoal),
-                value = String.format(Locale.getDefault(), "%.1fkg", maxWeight)
-                    .replace(".0kg", "kg"),
+                // 👇 3. Bug do ".0kg" resolvido! Agora "20.0" vira "20kg" e "20.5" vira "20,5kg" no Brasil
+                value = "${numberFormat.format(maxWeight)}kg",
                 subValue = exerciseName,
                 icon = Icons.Default.EmojiEvents,
                 color = CyanAccent
@@ -736,16 +808,13 @@ fun RecordsSection(records: com.example.training_tracker.data.models.Records?) {
         }
     }
 }
-
 @Composable
 fun NewRecordCard(title: String, value: String, subValue: String, icon: ImageVector, color: Color) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(
-                alpha = 0.4f
-            )
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
         ),
         border = BorderStroke(
             1.dp,
@@ -753,12 +822,15 @@ fun NewRecordCard(title: String, value: String, subValue: String, icon: ImageVec
         )
     ) {
         Row(
-            modifier = Modifier.padding(20.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp), // Reduzi levemente o padding de 20 para 16 para ganhar espaço
             verticalAlignment = Alignment.CenterVertically
         ) {
+            // ÍCONE (Esquerda) - Mantemos fixo, mas com Surface menor se necessário
             Surface(
-                modifier = Modifier.size(56.dp),
-                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier.size(48.dp), // Reduzi de 56 para 48 para priorizar o texto
+                shape = RoundedCornerShape(12.dp),
                 color = color.copy(alpha = 0.15f),
                 border = BorderStroke(1.dp, color.copy(alpha = 0.3f))
             ) {
@@ -766,36 +838,56 @@ fun NewRecordCard(title: String, value: String, subValue: String, icon: ImageVec
                     icon,
                     contentDescription = null,
                     tint = color,
-                    modifier = Modifier.padding(14.dp)
+                    modifier = Modifier.padding(12.dp)
                 )
             }
 
-            Spacer(Modifier.width(20.dp))
+            // Espaçador menor para ganhar largura vital
+            Spacer(Modifier.width(12.dp))
 
-            Column(modifier = Modifier.weight(1f)) {
+            // TEXTOS (Meio)
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
                 Text(
                     text = title,
                     fontSize = 10.sp,
                     color = color,
                     fontWeight = FontWeight.ExtraBold,
-                    letterSpacing = 1.5.sp
+                    letterSpacing = 1.sp, // Reduzi um pouco o espaçamento de letra
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
-                Spacer(Modifier.height(4.dp))
+
+                // Nome do exercício (SubValue)
                 Text(
                     text = subValue.uppercase(),
                     fontSize = 14.sp,
                     color = MaterialTheme.colorScheme.onSurface,
                     fontWeight = FontWeight.Bold,
-                    maxLines = 1
+                    // 👇 AQUI ESTÁ O SEGREDO: Permitir que o nome do exercício
+                    // use até 2 ou 3 linhas se a tela for estreita demais.
+                    maxLines = 2,
+                    lineHeight = 18.sp,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
 
-            Column(horizontalAlignment = Alignment.End) {
+            // Spacer de segurança
+            Spacer(Modifier.width(8.dp))
+
+            // VALOR (Direita)
+            Column(
+                horizontalAlignment = Alignment.End,
+                // Impedimos que esta coluna seja "esmagada"
+                modifier = Modifier.wrapContentWidth()
+            ) {
                 Text(
                     text = value,
-                    fontSize = 24.sp,
+                    fontSize = 20.sp, // Reduzi de 24 para 20 para evitar invasão de espaço
                     color = color,
                     fontWeight = FontWeight.Black,
+                    maxLines = 1,
                     style = TextStyle(
                         shadow = androidx.compose.ui.graphics.Shadow(
                             color.copy(alpha = 0.3f),
@@ -807,7 +899,9 @@ fun NewRecordCard(title: String, value: String, subValue: String, icon: ImageVec
                     text = stringResource(R.string.novo_recorde),
                     fontSize = 8.sp,
                     color = color.copy(alpha = 0.6f),
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    textAlign = TextAlign.End
                 )
             }
         }
@@ -837,20 +931,21 @@ fun ExerciseSummaryCard(exercise: Exercise) {
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(
-                alpha = 0.3f
-            )
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
         ),
         border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
             Text(
-                exercise.name.uppercase(),
+                text = exercise.name.uppercase(),
                 style = MaterialTheme.typography.titleMedium.copy(
                     fontWeight = FontWeight.Black,
                     color = CyanAccent,
                     letterSpacing = 1.sp
-                )
+                ),
+                // 👇 Blindagem contra nomes de exercícios gigantes
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
             )
             Spacer(Modifier.height(16.dp))
 
@@ -862,49 +957,77 @@ fun ExerciseSummaryCard(exercise: Exercise) {
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                    // BLOCO DA ESQUERDA (Bolinha + Texto)
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.weight(1f) // Protege o alinhamento se o texto crescer
+                    ) {
                         Surface(
                             modifier = Modifier.size(24.dp),
                             shape = CircleShape,
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
                         ) {
-                            Box(contentAlignment = Alignment.Center) {
+                            // 👇 MUDANÇA: Usamos Box com fillMaxSize para garantir
+                            // que o alinhamento Center seja absoluto.
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
                                 Text(
-                                    "${index + 1}",
+                                    text = "${index + 1}",
                                     fontSize = 10.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    textAlign = TextAlign.Center,
+                                    // 👇 IMPORTANTE: Forçamos a altura da linha para 1
+                                    // para o texto não ser empurrado por paddings invisíveis
+                                    lineHeight = 10.sp
                                 )
                             }
                         }
+
                         Spacer(Modifier.width(12.dp))
+
                         Text(
-                            stringResource(R.string.serie_num, index + 1),
+                            text = stringResource(R.string.serie_num, index + 1),
                             style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurface
+                            color = MaterialTheme.colorScheme.onSurface,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f, fill = false)
                         )
                     }
 
-                    Row {
+                    // BLOCO DA DIREITA (Peso x Reps)
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(start = 8.dp)
+                    ) {
                         Text(
-                            "${set.weight} kg",
+                            text = "${set.weight} kg",
                             style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.ExtraBold),
-                            color = MaterialTheme.colorScheme.onSurface
+                            color = MaterialTheme.colorScheme.onSurface,
+                            maxLines = 1
                         )
                         Text(
-                            "  ×  ",
+                            text = "  ×  ",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Text(
-                            "${set.reps} reps",
+                            text = "${set.reps} reps",
                             style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.ExtraBold),
-                            color = CyanAccent
+                            color = CyanAccent,
+                            maxLines = 1
                         )
                     }
                 }
+
                 if (index < exercise.exerciseSets.size - 1) {
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.05f))
+                    HorizontalDivider(
+                        modifier = Modifier.padding(vertical = 4.dp),
+                        color = MaterialTheme.colorScheme.outline.copy(alpha = 0.05f)
+                    )
                 }
             }
         }

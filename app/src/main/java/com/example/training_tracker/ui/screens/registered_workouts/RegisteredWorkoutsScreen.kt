@@ -38,6 +38,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.intl.Locale
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -304,7 +305,7 @@ fun ActiveWorkoutCard(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                // Imagem do Treino com Mapeamento Inteligente por MuscleGroup
+                // IMAGEM DO TREINO
                 Box(
                     modifier = Modifier
                         .size(56.dp)
@@ -325,6 +326,7 @@ fun ActiveWorkoutCard(
 
                 Spacer(Modifier.width(16.dp))
 
+                // COLUNA DOS TEXTOS (Título + Infos)
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = title.uppercase(),
@@ -332,12 +334,15 @@ fun ActiveWorkoutCard(
                             fontWeight = FontWeight.Black,
                             letterSpacing = 0.5.sp,
                             color = MaterialTheme.colorScheme.onSurface
-                        )
+                        ),
+                        // 👇 1. PROTEÇÃO DO TÍTULO: Se for muito longo, corta com "..."
+                        maxLines = 1, // ou 2, se preferir que ocupe mais espaço
+                        overflow = TextOverflow.Ellipsis
                     )
-                    
+
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(top = 4.dp)
+                        modifier = Modifier.padding(top = 4.dp).fillMaxWidth()
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.List,
@@ -349,9 +354,16 @@ fun ActiveWorkoutCard(
                             text = stringResource(R.string.exercicios, exercises),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.outline,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            // 👇 2. PROTEÇÃO DO TEXTO 1: weight(1f, fill = false) permite que o texto encolha
+                            // e receba "..." caso a tela seja muito fina, sem destruir o ícone de tempo!
+                            modifier = Modifier.weight(1f, fill = false),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
+
                         Spacer(Modifier.width(12.dp))
+
                         Icon(
                             imageVector = Icons.Default.Schedule,
                             contentDescription = null,
@@ -362,11 +374,16 @@ fun ActiveWorkoutCard(
                             text = " $duration",
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.outline,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            // 👇 3. PROTEÇÃO DO TEXTO 2
+                            modifier = Modifier.weight(1f, fill = false),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }
 
+                // MENU DROPDOWN
                 Box {
                     IconButton(onClick = { showMenu = true }) {
                         Icon(Icons.Default.MoreVert, contentDescription = null, tint = MaterialTheme.colorScheme.outline)
@@ -384,6 +401,7 @@ fun ActiveWorkoutCard(
                 }
             }
 
+            // LISTA DE MÚSCULOS
             if (muscleGroups.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(12.dp))
                 LazyRow(
@@ -395,10 +413,7 @@ fun ActiveWorkoutCard(
                     }
                 }
             }
-
             Spacer(Modifier.height(5.dp))
-
-
         }
     }
 }

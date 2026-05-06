@@ -38,6 +38,7 @@ import com.example.training_tracker.R
 import com.example.training_tracker.data.models.MuscleGroups
 import com.example.training_tracker.ui.theme.CyanAccent
 import com.example.training_tracker.ui.theme.CyanGradient
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -593,22 +594,43 @@ fun ExerciseRecordCard(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
+
+            // --- TEXTOS DA ESQUERDA ---
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    exerciseName.uppercase(),
+                    text = exerciseName.uppercase(),
                     style = MaterialTheme.typography.titleSmall.copy(
                         fontWeight = FontWeight.ExtraBold,
                         color = MaterialTheme.colorScheme.onSurface,
                         letterSpacing = 0.5.sp
-                    )
+                    ),
+                    // 👇 1. Proteção de texto: Limita a 2 linhas com "..." no final
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    stringResource(R.string.maior_recorde_pessoal),
+                    text = stringResource(R.string.maior_recorde_pessoal),
                     style = MaterialTheme.typography.labelSmall.copy(
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
-                    )
+                    ),
+                    // 👇 2. Proteção de texto: Garante que fique em apenas 1 linha
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
+            }
+
+            // 👇 3. O Campo de Força
+            // Garante que os textos da esquerda nunca vão tocar na caixa de peso da direita
+            Spacer(modifier = Modifier.width(16.dp))
+
+            // --- BADGE DE PESO DA DIREITA ---
+            // 👇 4. Formatação Inteligente (Evita o "20.0 kg")
+            val formattedWeight = remember(bestWeight) {
+                java.text.NumberFormat.getInstance(Locale.getDefault()).apply {
+                    maximumFractionDigits = 1
+                    minimumFractionDigits = 0 // Remove os zeros desnecessários
+                }.format(bestWeight)
             }
 
             Column(horizontalAlignment = Alignment.End) {
@@ -618,11 +640,12 @@ fun ExerciseRecordCard(
                         .padding(horizontal = 12.dp, vertical = 6.dp)
                 ) {
                     Text(
-                        "$bestWeight kg",
+                        text = "$formattedWeight kg",
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.Black,
                             color = Color.Black
-                        )
+                        ),
+                        maxLines = 1 // Garante que o peso não quebre o design do selo
                     )
                 }
             }

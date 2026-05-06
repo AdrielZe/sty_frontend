@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -138,7 +139,6 @@ fun ExerciseCardUtils(
         }
     }
 
-
     if (showCompleteDialog) {
         AlertDialog(
             onDismissRequest = { showCompleteDialog = false },
@@ -192,6 +192,9 @@ fun ExerciseCardUtils(
     }
 
     if (exercise.isCompleted) {
+        // ==============================================================
+        // CARD DO EXERCÍCIO CONCLUÍDO
+        // ==============================================================
         Card(
             modifier = modifier
                 .fillMaxWidth()
@@ -222,10 +225,13 @@ fun ExerciseCardUtils(
 
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            exercise.name,
+                            text = exercise.name,
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFF4CAF50),
-                            fontSize = 16.sp
+                            fontSize = 18.sp,
+                            // 👇 BLINDAGEM DO TEXTO: Títulos gigantes não vão quebrar o card
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                         Text(
                             text = stringResource(
@@ -281,7 +287,7 @@ fun ExerciseCardUtils(
                     Column(modifier = Modifier.fillMaxWidth()) {
                         AsyncImage(
                             modifier = Modifier
-                                .size(150.dp)
+                                .size(125.dp) // Reduzi de 150 para 100 para ficar agradável em telas pequenas
                                 .clip(CircleShape)
                                 .align(Alignment.CenterHorizontally)
                                 .background(color = Color.White)
@@ -293,6 +299,7 @@ fun ExerciseCardUtils(
                             contentScale = ContentScale.Fit,
                             contentDescription = null
                         )
+                        Spacer(Modifier.height(16.dp)) // Respiro após a imagem
                         exercise.exerciseSets.forEach { set ->
                             SetLine(
                                 modifier = Modifier.fillMaxWidth(),
@@ -311,6 +318,9 @@ fun ExerciseCardUtils(
             }
         }
     } else {
+        // ==============================================================
+        // CARD DO EXERCÍCIO ATIVO
+        // ==============================================================
         Card(
             modifier = modifier
                 .fillMaxWidth()
@@ -334,11 +344,14 @@ fun ExerciseCardUtils(
                             fontSize = 10.sp
                         )
                         Text(
-                            exercise.name,
+                            text = exercise.name,
                             fontWeight = FontWeight.Black,
                             color = MaterialTheme.colorScheme.onSurface,
                             fontSize = 22.sp,
-                            lineHeight = 28.sp
+                            lineHeight = 28.sp,
+                            // Títulos no máximo em 3 linhas
+                            maxLines = 3,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
 
@@ -385,8 +398,7 @@ fun ExerciseCardUtils(
                                                 )
                                             },
                                             onClick = {
-                                                onRemoveExercise(exercise.id); isMenuExpanded =
-                                                false
+                                                onRemoveExercise(exercise.id); isMenuExpanded = false
                                             },
                                             leadingIcon = {
                                                 Icon(
@@ -437,38 +449,39 @@ fun ExerciseCardUtils(
                 }
 
                 Column {
-                    Spacer(Modifier.height(4.dp))
+                    Spacer(Modifier.height(16.dp))
 
                     Row(
-                        modifier = Modifier,
+                        modifier = Modifier.fillMaxWidth(), // Garante que ocupa a largura total
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Surface(
-                            modifier = Modifier
-                                .weight(1f),
+                            modifier = Modifier.weight(1f), // Protegido pelo weight
                             color = CyanAccent.copy(alpha = 0.1f),
                             shape = RoundedCornerShape(8.dp),
                         ) {
                             val activeSet =
-                                exercise.exerciseSets.firstOrNull { !it.isCompleted }?.set ?: 1
+                                exercise.exerciseSets.lastOrNull() { !(it.weight.isEmpty() && it.reps.isEmpty()) }?.set ?: 1
                             Text(
-                                stringResource(R.string.serie_atual, activeSet),
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                text = stringResource(R.string.serie_atual, activeSet),
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
                                 color = CyanAccent,
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.Bold
+                                fontSize = 11.sp, // Ajuste leve no tamanho
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
 
-                        Spacer(Modifier.width(12.dp))
+                        Spacer(Modifier.width(16.dp))
 
                         AsyncImage(
+                            // 👇 O GRANDE BUG ESTAVA AQUI
+                            // Removido o width(300.dp) e o weight(1f) que geravam o conflito
                             modifier = Modifier
-                                .height(150.dp)
-                                .width(300.dp)
+                                .size(100.dp) // Define um tamanho seguro, redondo e harmônico
                                 .clip(CircleShape)
-                                .weight(1f)
-                                .border(width = 1.dp, color = CyanAccent)
+                                .border(width = 1.dp, color = CyanAccent, shape = CircleShape)
                                 .background(color = Color.White),
                             model = ImageRequest.Builder(LocalContext.current)
                                 .data(cardImage)
@@ -522,7 +535,9 @@ fun ExerciseCardUtils(
                             Text(
                                 stringResource(R.string.adicionar_serie),
                                 fontWeight = FontWeight.ExtraBold,
-                                color = Color.Black
+                                color = Color.Black,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
 
@@ -536,7 +551,8 @@ fun ExerciseCardUtils(
                                 stringResource(R.string.finalizar_exercicio_max),
                                 color = TextGray,
                                 fontWeight = FontWeight.Bold,
-                                fontSize = 12.sp
+                                fontSize = 12.sp,
+                                textAlign = TextAlign.Center
                             )
                         }
                     }
@@ -544,47 +560,6 @@ fun ExerciseCardUtils(
             }
         }
     }
-//    } else {
-//        Card(
-//            modifier = modifier
-//                .fillMaxWidth()
-//                .alpha(0.4f)
-//                .clickable { onExpandedChange(!isExpanded) },
-//            shape = RoundedCornerShape(20.dp),
-//            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-//        ) {
-//            Row(
-//                modifier = Modifier.padding(20.dp),
-//                verticalAlignment = Alignment.CenterVertically
-//            ) {
-//                Icon(Icons.Default.Lock, null, tint = TextGray, modifier = Modifier.size(20.dp))
-//                Spacer(Modifier.width(16.dp))
-//                Column(modifier = Modifier.weight(1f)) {
-//                    Text(
-//                        exercise.name,
-//                        fontWeight = FontWeight.Bold,
-//                        color = MaterialTheme.colorScheme.onSurface,
-//                        fontSize = 16.sp
-//                    )
-//                    Text(
-//                        stringResource(
-//                            R.string.series_reps,
-//                            exercise.exerciseSets.size,
-//                            exercise.exerciseSets.firstOrNull()?.reps ?: 0
-//                        ),
-//                        color = TextGray,
-//                        fontSize = 12.sp
-//                    )
-//                }
-//                Icon(
-//                    imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-//                    contentDescription = null,
-//                    tint = TextGray,
-//                    modifier = Modifier.size(24.dp)
-//                )
-//            }
-//        }
-//    }
 }
 
 @Composable
@@ -611,7 +586,7 @@ fun InputTextBox(
     }
 
     Column(modifier = modifier) {
-        Text(label, fontSize = 10.sp, color = if (isError) Color.Red else TextGray, fontWeight = FontWeight.Bold)
+        Text(label, fontSize = 10.sp, color = if (isError) Color.Red else TextGray, fontWeight = FontWeight.Bold, maxLines = 1)
         Spacer(Modifier.height(8.dp))
         Box(
             modifier = Modifier
@@ -850,7 +825,9 @@ fun FinishWorkoutButton(
         modifier = modifier
             .padding(horizontal = 24.dp)
             .fillMaxWidth()
-            .height(64.dp)
+            // 👇 1. Troca do height para defaultMinSize.
+            // A animação do drawBehind vai acompanhar automaticamente se o botão crescer!
+            .defaultMinSize(minHeight = 64.dp)
             .shadow(
                 elevation = if (canCompleteWorkout && workout?.isCompleted == false) 16.dp else 0.dp,
                 shape = RoundedCornerShape(32.dp),
@@ -886,6 +863,7 @@ fun FinishWorkoutButton(
                 if (progress.value > 0f) {
                     drawRect(
                         color = Color.Black.copy(alpha = 0.2f),
+                        // O size.height aqui já vai pegar o tamanho dinâmico do botão se ele crescer
                         size = size.copy(width = size.width * progress.value)
                     )
                 }
@@ -895,19 +873,21 @@ fun FinishWorkoutButton(
         Text(
             text = when {
                 workout?.isCompleted == true -> stringResource(id = R.string.workout_screen_finish_button_completed)
-                (workout?.exercises?.size
-                    ?: 0) < 1 -> stringResource(R.string.comece_adicionando_um_exerc_cio)
-
-                (workout?.exercises?.count { it.isCompleted }
-                    ?: 0) < 3 -> stringResource(R.string.finalize_pelo_menos_3_exerc_cios)
-
+                (workout?.exercises?.size ?: 0) < 1 -> stringResource(R.string.comece_adicionando_um_exerc_cio)
+                (workout?.exercises?.count { it.isCompleted } ?: 0) < 3 -> stringResource(R.string.finalize_pelo_menos_3_exerc_cios)
                 !canCompleteWorkout -> stringResource(id = R.string.workout_screen_finish_button_fill_sets)
                 else -> stringResource(id = R.string.workout_screen_finish_button_hold)
             },
             color = Color.White,
             fontWeight = FontWeight.ExtraBold,
             fontSize = 16.sp,
-            letterSpacing = 1.sp
+            letterSpacing = 1.sp,
+            // 👇 2. ALINHAMENTO E BLINDAGEM DE TEXTO:
+            textAlign = TextAlign.Center, // Fundamental para botões onde o texto pode ter 2 linhas
+            maxLines = 2, // Se a instrução for muito longa, permite usar 2 linhas
+            overflow = TextOverflow.Ellipsis,
+            // 👇 3. PADDING INTERNO: Garante que o texto não "bata" nas laterais arredondadas
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
         )
     }
 }
@@ -953,6 +933,8 @@ fun WorkoutTopBar(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
+
+            // BLOCO DA ESQUERDA (Botão Voltar + Textos)
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
                 IconButton(onClick = onBackClick) {
                     Icon(
@@ -962,7 +944,9 @@ fun WorkoutTopBar(
                     )
                 }
                 Spacer(modifier = Modifier.width(4.dp))
-                Column {
+
+                // COLUNA DE TEXTOS
+                Column(modifier = Modifier.weight(1f)) { // Adicionado weight(1f) aqui tbm para proteger do %
                     Text(
                         text = workoutName.uppercase(),
                         style = MaterialTheme.typography.titleLarge,
@@ -971,7 +955,12 @@ fun WorkoutTopBar(
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+
+                    // LINHA DO SUBTÍTULO E CRONÔMETRO
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
                         Text(
                             text = stringResource(
                                 R.string.de_exercicios_completos,
@@ -979,8 +968,14 @@ fun WorkoutTopBar(
                                 totalCount
                             ),
                             style = MaterialTheme.typography.labelSmall,
-                            color = TextGray
+                            color = TextGray,
+                            // 👇 1. PROTEÇÃO: weight(1f, fill=false)
+                            // Se faltar espaço, ESSE texto recebe "..." e protege o cronômetro!
+                            modifier = Modifier.weight(1f, fill = false),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
+
                         if (elapsedTime > 0) {
                             Spacer(modifier = Modifier.width(8.dp))
                             Box(
@@ -1003,23 +998,27 @@ fun WorkoutTopBar(
                                 fontWeight = FontWeight.Bold
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            IconButton(
-                                onClick = onPauseToggle,
-                                modifier = Modifier.size(20.dp)
-                            ) {
-                                Icon(
-                                    imageVector = if (isPaused) Icons.Default.PlayArrow else Icons.Default.Pause,
-                                    contentDescription = if (isPaused) stringResource(R.string.resume) else stringResource(
-                                        R.string.pause
-                                    ),
-                                    tint = CyanAccent,
-                                    modifier = Modifier.size(16.dp)
-                                )
-                            }
+
+                            // 👇 2. TROCA DO ICONBUTTON POR ICON + CLICKABLE
+                            // Isso remove a margem invisível gigante do IconButton
+                            // que desalinha os textos e força a barra a crescer sem necessidade.
+                            Icon(
+                                imageVector = if (isPaused) Icons.Default.PlayArrow else Icons.Default.Pause,
+                                contentDescription = if (isPaused) stringResource(R.string.resume) else stringResource(R.string.pause),
+                                tint = CyanAccent,
+                                modifier = Modifier
+                                    .size(24.dp) // Tamanho agradável para clique
+                                    .clip(CircleShape) // Garante que o efeito de toque seja redondo
+                                    .clickable { onPauseToggle() }
+                                    .padding(4.dp) // Um pequeno respiro interno
+                            )
                         }
                     }
                 }
             }
+
+            // BLOCO DA DIREITA (Porcentagem)
+            Spacer(modifier = Modifier.width(16.dp)) // Respiro seguro entre o texto e a %
             Text(
                 text = "%.0f%%".format(progressPercentage),
                 style = MaterialTheme.typography.titleLarge,
@@ -1027,8 +1026,6 @@ fun WorkoutTopBar(
                 color = CyanAccent
             )
         }
-
-        // Progress line as bottom border
         Box(
             modifier = Modifier
                 .fillMaxWidth()

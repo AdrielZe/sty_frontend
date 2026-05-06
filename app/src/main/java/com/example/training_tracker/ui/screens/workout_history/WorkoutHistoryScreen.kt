@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -421,6 +422,7 @@ fun FilterChip(selected: Boolean, label: String, onClick: () -> Unit) {
 fun HistoryWorkoutCard(workout: WorkoutHistory, onClick: () -> Unit) {
     val isDark = isSystemInDarkTheme()
 
+    // ... Seus formatadores de data, tempo, volume e músculos continuam iguais ...
     val dateText = remember(workout.completionDate) {
         workout.completionDate.format(
             DateTimeFormatter.ofPattern(
@@ -456,7 +458,8 @@ fun HistoryWorkoutCard(workout: WorkoutHistory, onClick: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .height(160.dp)
+            // 👇 1. Troca do height para defaultMinSize para permitir expansão
+            .defaultMinSize(minHeight = 160.dp)
             .clickable { onClick() },
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(
@@ -464,21 +467,24 @@ fun HistoryWorkoutCard(workout: WorkoutHistory, onClick: () -> Unit) {
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
-        Box(modifier = Modifier.fillMaxSize()) {
+        // 👇 2. Removido o fillMaxSize() do Box raiz para ele não travar o tamanho
+        Box {
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
                     .data(getHistoryWorkoutImage(workout))
                     .crossfade(true)
                     .build(),
                 contentDescription = null,
-                modifier = Modifier.fillMaxSize(),
+                // 👇 3. matchParentSize nas imagens de fundo
+                modifier = Modifier.matchParentSize(),
                 contentScale = ContentScale.Crop,
                 alpha = 0.6f
             )
 
             Box(
                 modifier = Modifier
-                    .fillMaxSize()
+                    // 👇 3. matchParentSize no gradiente também
+                    .matchParentSize()
                     .background(
                         Brush.verticalGradient(
                             colors = listOf(
@@ -491,21 +497,25 @@ fun HistoryWorkoutCard(workout: WorkoutHistory, onClick: () -> Unit) {
 
             Column(
                 modifier = Modifier
-                    .fillMaxSize()
+                    .fillMaxWidth()
+                    // 👇 4. defaultMinSize aqui para garantir o Arrangement.SpaceBetween
+                    .defaultMinSize(minHeight = 160.dp)
                     .padding(20.dp),
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
+                // --- LINHA DO TOPO ---
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.Top
                 ) {
-                    Column(modifier = Modifier.weight(1f)) {
+                    Column(modifier = Modifier.weight(1f)) { // O weight aqui salva a Row do volume!
                         Text(
                             text = workout.name.uppercase(),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Black,
                             color = Color.White,
+                            // O título já estava perfeito:
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
@@ -513,7 +523,11 @@ fun HistoryWorkoutCard(workout: WorkoutHistory, onClick: () -> Unit) {
                             Text(
                                 text = dateText,
                                 style = MaterialTheme.typography.labelSmall,
-                                color = Color.LightGray
+                                color = Color.LightGray,
+                                // Adicionada pequena proteção para idioma/tela fina
+                                modifier = Modifier.weight(1f, fill = false),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                             if (timeText.isNotEmpty()) {
                                 Spacer(modifier = Modifier.width(8.dp))
@@ -532,7 +546,7 @@ fun HistoryWorkoutCard(workout: WorkoutHistory, onClick: () -> Unit) {
                         }
                     }
 
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(16.dp)) // Respiro seguro para o título não colar no volume
 
                     Surface(
                         color = CyanAccent.copy(alpha = 0.2f),
@@ -549,6 +563,9 @@ fun HistoryWorkoutCard(workout: WorkoutHistory, onClick: () -> Unit) {
                     }
                 }
 
+                Spacer(modifier = Modifier.height(16.dp)) // Garante que topo e base não se esmaguem
+
+                // --- LINHA DA BASE ---
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -557,13 +574,20 @@ fun HistoryWorkoutCard(workout: WorkoutHistory, onClick: () -> Unit) {
                     if (muscleGroups.isNotEmpty()) {
                         LazyRow(
                             horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            // O weight(1f) foi brilhante aqui! Impede a Row de empurrar o tempo
                             modifier = Modifier.weight(1f)
                         ) {
                             items(muscleGroups) { muscle ->
                                 MuscleBadge(muscle = muscle)
                             }
                         }
+                    } else {
+                        // Um spacer vazio com weight para empurrar o tempo para a direita caso não haja músculos
+                        Spacer(modifier = Modifier.weight(1f))
                     }
+
+                    // 👇 5. Respiro adicionado para que a lista de tags não grude no tempo de duração
+                    Spacer(modifier = Modifier.width(16.dp))
 
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
@@ -576,7 +600,8 @@ fun HistoryWorkoutCard(workout: WorkoutHistory, onClick: () -> Unit) {
                             text = " ${durationMinutes} min",
                             color = Color.White.copy(alpha = 0.7f),
                             style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1 // Garante que o texto de tempo fique em linha única
                         )
                     }
                 }

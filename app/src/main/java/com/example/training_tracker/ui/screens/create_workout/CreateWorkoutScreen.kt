@@ -23,6 +23,8 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -183,29 +185,48 @@ fun CreateWorkoutScreen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(56.dp)
+                    // 👇 1. Troca do height(56.dp) para defaultMinSize.
+                    // Isso mantém a estética de um campo de formulário, mas permite que ele cresça.
+                    .defaultMinSize(minHeight = 56.dp)
                     .background(
                         color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
                         shape = RoundedCornerShape(Dimens.cornerRadius)
                     )
                     .border(
                         width = 1.dp,
-                        color = if (uiState.showErrors && !uiState.isExercisesValid) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.outline.copy(
-                            alpha = 0.5f
-                        ),
+                        color = if (uiState.showErrors && !uiState.isExercisesValid)
+                            MaterialTheme.colorScheme.error
+                        else
+                            MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
                         shape = RoundedCornerShape(Dimens.cornerRadius)
                     )
                     .clickable { showAddExerciseDialog = true }
-                    .padding(horizontal = 16.dp),
+                    // 👇 2. Padding horizontal movido para fora do Row para proteger o conteúdo
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
                 contentAlignment = Alignment.CenterStart
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.Add, contentDescription = null, tint = CyanAccent)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = null,
+                        tint = CyanAccent,
+                        modifier = Modifier.size(24.dp) // Tamanho fixo para o ícone não "dançar"
+                    )
+
                     Spacer(modifier = Modifier.width(12.dp))
+
                     Text(
                         text = stringResource(id = R.string.create_workout_click_to_select),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontSize = 14.sp
+                        fontSize = 14.sp,
+                        // 👇 3. A proteção mágica para textos de formulário:
+                        // O weight garante que o texto ocupe o espaço restante sem expulsar o ícone
+                        modifier = Modifier.weight(1f),
+                        maxLines = 2, // Permite que o seletor tenha até 2 linhas se a fonte for grande
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }
@@ -347,17 +368,13 @@ fun SaveWorkoutButton(
     isEnabled: Boolean,
     onClick: () -> Unit
 ) {
-    val gradientColors = listOf(
-        CyanAccent,
-        MaterialTheme.colorScheme.primary
-    )
-
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(64.dp)
+            // 👇 1. defaultMinSize permite que o botão cresça se o texto de aviso for longo
+            .defaultMinSize(minHeight = 64.dp)
             .shadow(
-                elevation = 16.dp,
+                elevation = if (isEnabled) 16.dp else 0.dp,
                 shape = RoundedCornerShape(32.dp),
                 spotColor = CyanAccent.copy(alpha = 0.5f)
             )
@@ -367,10 +384,13 @@ fun SaveWorkoutButton(
                     listOf(Color.Gray, Color.DarkGray)
                 )
             )
-            .clickable { onClick() },
+            // 👇 2. Só permite o clique se estiver habilitado
+            .clickable(enabled = isEnabled) { onClick() },
         contentAlignment = Alignment.Center
     ) {
         Row(
+            // 👇 3. Padding interno para o texto não encostar nas bordas se quebrar linha
+            modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center
         ) {
@@ -380,13 +400,21 @@ fun SaveWorkoutButton(
                 tint = Color.White,
                 modifier = Modifier.size(24.dp)
             )
+
             Spacer(modifier = Modifier.width(12.dp))
+
             Text(
                 text = if (isEnabled) text else stringResource(R.string.adicione_pelo_menos_3_exercicios),
                 color = Color.White,
                 fontWeight = FontWeight.Bold,
                 fontSize = 16.sp,
-                letterSpacing = 1.sp
+                letterSpacing = 1.sp,
+                // 👇 4. Centralização e proteção contra transbordamento
+                textAlign = TextAlign.Center,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                // 👇 5. Impede que o texto "empurre" o ícone para fora da tela
+                modifier = Modifier.weight(1f, fill = false)
             )
         }
     }

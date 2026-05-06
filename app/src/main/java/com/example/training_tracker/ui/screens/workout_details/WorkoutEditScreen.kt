@@ -143,6 +143,8 @@ fun WorkoutDetailsScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
 
+                            // 👇 1. A Column principal agora tem weight(1f) para garantir
+                            // que pare de crescer antes de empurrar o botão de editar para fora.
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
                                     text = workout.name.uppercase(),
@@ -153,36 +155,51 @@ fun WorkoutDetailsScreen(
                                     overflow = TextOverflow.Ellipsis
                                 )
 
-                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                // 👇 2. Linha de métricas secundárias
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
                                     Text(
                                         text = stringResource(
                                             id = R.string.workout_details_total_exercises,
                                             workout.exercises.size
                                         ),
                                         style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        // 👇 3. PROTEÇÃO: Se o texto "12 exercícios" for muito longo em algum idioma,
+                                        // ele recebe reticências e protege o ícone do cronômetro à direita.
+                                        modifier = Modifier.weight(1f, fill = false),
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
                                     )
+
                                     Spacer(modifier = Modifier.width(16.dp))
-                                    Icon(
-                                        imageVector = Icons.Default.Timer,
-                                        contentDescription = null,
-                                        tint = CyanAccent,
-                                        modifier = Modifier.size(16.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    Text(
-                                        text = "${workout.estimatedTime} min",
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
+
+                                    // CRONÔMETRO
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(
+                                            imageVector = Icons.Default.Timer,
+                                            contentDescription = null,
+                                            tint = CyanAccent,
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Text(
+                                            text = "${workout.estimatedTime} min",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            maxLines = 1 // Garante que o tempo nunca quebre linha
+                                        )
+                                    }
                                 }
                             }
 
+                            // 👇 4. Espaçamento de segurança entre os textos e o botão de editar
                             if (uiState.isEditMode) {
+                                Spacer(modifier = Modifier.width(8.dp))
                                 IconButton(
-                                    onClick = {
-                                        showEditWorkoutNameDialog = true;
-                                    }
+                                    onClick = { showEditWorkoutNameDialog = true }
                                 ) {
                                     Icon(
                                         imageVector = Icons.Default.Edit,

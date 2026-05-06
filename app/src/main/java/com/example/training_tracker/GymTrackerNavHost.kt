@@ -5,7 +5,11 @@ import androidx.annotation.RequiresApi
 import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.FitnessCenter
@@ -17,6 +21,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
@@ -193,37 +198,37 @@ fun StyBottomNavBar(
     NavigationBar(
         containerColor = MaterialTheme.colorScheme.surface,
         tonalElevation = 0.dp,
-        modifier = Modifier.height(85.dp)
+        modifier = Modifier
+            .fillMaxWidth(),
     ) {
         val items = listOf(
             Triple(Routes.Home.name, Icons.Default.Home, stringResource(R.string.home)),
-            Triple(Routes.RegisteredWorkouts.name, Icons.Default.FitnessCenter,
-                stringResource(R.string.treinos_min)
-            ),
+            Triple(Routes.RegisteredWorkouts.name, Icons.Default.FitnessCenter, stringResource(R.string.treinos_min)),
             Triple(Routes.WorkoutHistory.name, Icons.Default.History, stringResource(R.string.historico_min)),
-            Triple(Routes.Records.name, Icons.Default.EmojiEvents,
-                stringResource(R.string.recordes)
-            ),
+            Triple(Routes.Records.name, Icons.Default.EmojiEvents, stringResource(R.string.recordes)),
             Triple(Routes.Profile.name, Icons.Default.Person, stringResource(R.string.perfil))
         )
 
         items.forEach { (route, icon, label) ->
             val isSelected = currentRoute == route
-            
+
             NavigationBarItem(
                 selected = isSelected,
                 onClick = { if (!isSelected) onNavigate(route) },
-                icon = { 
+                icon = {
                     Icon(
-                        imageVector = icon, 
+                        imageVector = icon,
                         contentDescription = label
-                    ) 
+                    )
                 },
-                label = { 
+                label = {
                     Text(
                         text = label,
-                        style = MaterialTheme.typography.labelSmall
-                    ) 
+                        style = MaterialTheme.typography.labelSmall,
+                        // BLINDAGEM DE TEXTO AQUI 👇
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
                 },
                 alwaysShowLabel = true,
                 colors = NavigationBarItemDefaults.colors(

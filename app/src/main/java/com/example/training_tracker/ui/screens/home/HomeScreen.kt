@@ -15,12 +15,14 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -81,6 +83,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -556,7 +559,7 @@ fun FreestyleWorkoutCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .height(120.dp)
+            .defaultMinSize(minHeight = 100.dp)
             .clickable(enabled = !isLocked) { onClick() },
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(
@@ -572,7 +575,7 @@ fun FreestyleWorkoutCard(
     ) {
         Row(
             modifier = Modifier
-                .fillMaxSize()
+                .fillMaxWidth()
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -611,22 +614,26 @@ fun FreestyleWorkoutCard(
                         stringResource(R.string.nao_planejou_seu_treino_inicie_um_treino_livre_e_adicione_os_exercicios_na_hora),
                     style = Typography.labelSmall,
                     color = if (isLocked) Color.Gray else MaterialTheme.colorScheme.onSurfaceVariant,
-                    lineHeight = 14.sp
                 )
                 if (isLocked) {
-                    TextButton(
-                        onClick = { showCancelDialog = !showCancelDialog },
-                        contentPadding = PaddingValues(0.dp)
-                    ) {
-                        Text(stringResource(R.string.cancelar_treino))
-                    }
+                    Text(
+                        text = stringResource(R.string.cancelar_treino),
+                        style = Typography.labelMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier
+                            .padding(top = 8.dp) // Um pequeno respiro entre a descrição e o botão
+                            .clip(RoundedCornerShape(4.dp)) // Deixa o efeito de clique arredondado
+                            .clickable { showCancelDialog = true }
+                            .padding(4.dp) // Padding interno para a área de clique ficar confortável
+                    )
                 }
             }
             if (!isLocked) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                     contentDescription = null,
-                    tint = CyanAccent
+                    tint = CyanAccent,
                 )
             }
         }
@@ -882,7 +889,8 @@ fun WeeklyProgressCard(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .height(160.dp),
+            // 👇 1. defaultMinSize para permitir o card esticar verticalmente se precisar
+            .defaultMinSize(minHeight = 160.dp),
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(
             containerColor = Color.Transparent
@@ -890,7 +898,8 @@ fun WeeklyProgressCard(
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
-        Box(modifier = Modifier.fillMaxSize()) {
+        // Removi o fillMaxSize() daqui para a Box acompanhar o tamanho da Row interna
+        Box {
 
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
@@ -899,44 +908,62 @@ fun WeeklyProgressCard(
                     .build(),
                 contentDescription = stringResource(R.string.fundo_do_card),
                 contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize()
+                // 👇 2. matchParentSize() garante que a imagem acompanhe o crescimento do card
+                modifier = Modifier.matchParentSize()
             )
 
             Box(
                 modifier = Modifier
-                    .fillMaxSize()
+                    // 👇 2. matchParentSize() no overlay escuro tbm
+                    .matchParentSize()
                     .background(Color.Black.copy(alpha = 0.5f))
             )
 
             Column(
                 modifier = Modifier
-                    .fillMaxSize()
+                    .fillMaxWidth()
+                    // Adicionei defaultMinSize na Column tbm para o SpaceBetween vertical funcionar certinho
+                    .defaultMinSize(minHeight = 160.dp)
                     .padding(20.dp),
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
+
+                // --- LINHA DO TOPO ---
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
+                    // Removi o Arrangement.SpaceBetween daqui, pois o weight() vai fazer o trabalho!
                     verticalAlignment = Alignment.Top
                 ) {
-                    Column {
+
+                    // LADO ESQUERDO (Textos + Lápis)
+                    Column(
+                        // 👇 3. A SALVAÇÃO HORIZONTAL: weight(1f)
+                        // Impede que os textos empurrem o botão "X / Y" para fora da tela.
+                        modifier = Modifier.weight(1f)
+                    ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
                                 text = stringResource(R.string.progresso_semanal),
                                 color = Color.White,
                                 style = Typography.titleMedium,
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.Bold,
+                                // 👇 4. fill = false permite que o texto quebre de linha
+                                // sem empurrar o ícone de lápis para longe se sobrar espaço.
+                                modifier = Modifier.weight(1f, fill = false)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Icon(
                                 imageVector = Icons.Default.Edit,
                                 contentDescription = stringResource(R.string.editar_meta),
                                 modifier = Modifier
-                                    .size(14.dp)
+                                    .size(16.dp) // Aumentei um tiquinho (14.dp é bem ruim de clicar)
                                     .clickable { onEditGoal() },
                                 tint = CyanAccent
                             )
                         }
+
+                        Spacer(modifier = Modifier.height(4.dp))
+
                         Text(
                             text = stringResource(R.string.consistencia_e_a_chave),
                             color = Color.LightGray,
@@ -944,6 +971,10 @@ fun WeeklyProgressCard(
                         )
                     }
 
+                    // Um espaço seguro entre os textos e o contador para eles nunca se colarem
+                    Spacer(modifier = Modifier.width(16.dp))
+
+                    // LADO DIREITO (Contador X / Y)
                     Surface(
                         color = CyanAccent.copy(alpha = 0.1f),
                         shape = CircleShape,
@@ -959,6 +990,9 @@ fun WeeklyProgressCard(
                     }
                 }
 
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // --- BLOCO DA BARRA DE PROGRESSO ---
                 Column {
                     Box(
                         modifier = Modifier
@@ -970,7 +1004,7 @@ fun WeeklyProgressCard(
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth(fraction = progress)
-                                .fillMaxHeight()
+                                .fillMaxHeight() // fillMaxHeight aqui está seguro, pois o pai tem altura fixa de 8.dp
                                 .background(CyanGradient)
                         )
                     }
@@ -997,6 +1031,7 @@ fun CustomTopBar(
 ) {
     Row(
         modifier = Modifier
+            .statusBarsPadding()
             .fillMaxWidth()
             .padding(horizontal = 24.dp, vertical = 18.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -1056,7 +1091,8 @@ fun MainGradientButton(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(64.dp)
+            // 👇 1. defaultMinSize para manter os 64.dp de design, mas permitindo expansão
+            .defaultMinSize(minHeight = 64.dp)
             .shadow(
                 elevation = 16.dp,
                 shape = RoundedCornerShape(32.dp),
@@ -1070,6 +1106,8 @@ fun MainGradientButton(
         contentAlignment = Alignment.Center
     ) {
         Row(
+            // 👇 2. Um padding de segurança para o conteúdo nunca colar nas bordas arredondadas do botão
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center
         ) {
@@ -1085,12 +1123,16 @@ fun MainGradientButton(
                 color = Color.White,
                 fontWeight = FontWeight.Bold,
                 fontSize = 16.sp,
-                letterSpacing = 1.sp
+                letterSpacing = 1.sp,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                textAlign = TextAlign.Center, // Mantém o texto alinhado se quebrar a linha
+                // 👇 4. weight(1f, fill = false) mantém tudo centralizado, mas permite que o texto encolha sem vazar do botão!
+                modifier = Modifier.weight(1f, fill = false)
             )
         }
     }
 }
-
 @Composable
 fun WorkoutCard(modifier: Modifier = Modifier, workout: Workout?, onClick: () -> Unit) {
     val isCompleted = workout?.isCompleted == true
@@ -1104,31 +1146,29 @@ fun WorkoutCard(modifier: Modifier = Modifier, workout: Workout?, onClick: () ->
         onClick = onClick,
         modifier = modifier
             .fillMaxWidth()
-            .height(200.dp)
+            .defaultMinSize(minHeight = 200.dp)
             .padding(vertical = 8.dp),
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (isSystemDark) MaterialTheme.colorScheme.surface else Color(
-                0XFF0D0D0D
-            )
+            containerColor = if (isSystemDark) MaterialTheme.colorScheme.surface else Color(0XFF0D0D0D)
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
-        Box(modifier = Modifier.fillMaxSize()) {
+        Box {
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
                     .data(getWorkoutImageRes(workout))
                     .crossfade(true)
                     .build(),
                 contentDescription = null,
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier.matchParentSize(),
                 contentScale = ContentScale.Crop,
                 alpha = if (isCompleted) 0.2f else if (isSystemDark) 0.5f else 0.7f
             )
 
             Box(
                 modifier = Modifier
-                    .fillMaxSize()
+                    .matchParentSize()
                     .background(
                         Brush.verticalGradient(
                             colors = listOf(
@@ -1143,7 +1183,8 @@ fun WorkoutCard(modifier: Modifier = Modifier, workout: Workout?, onClick: () ->
 
             Column(
                 modifier = Modifier
-                    .fillMaxSize()
+                    .fillMaxWidth()
+                    .defaultMinSize(minHeight = 200.dp)
                     .padding(20.dp),
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
@@ -1159,18 +1200,14 @@ fun WorkoutCard(modifier: Modifier = Modifier, workout: Workout?, onClick: () ->
                                 alpha = 0.9f
                             )
                     ) {
-                        Row {
-                            Text(
-                                text = if (isCompleted) stringResource(R.string.completed) else stringResource(
-                                    R.string.today
-                                ),
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                                color = Color.White,
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.ExtraBold,
-                                letterSpacing = 1.sp
-                            )
-                        }
+                        Text(
+                            text = if (isCompleted) stringResource(R.string.completed) else stringResource(R.string.today),
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                            color = Color.White,
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            letterSpacing = 1.sp
+                        )
                     }
 
                     if (workout?.id == "freestyle_workout_id") {
@@ -1195,13 +1232,19 @@ fun WorkoutCard(modifier: Modifier = Modifier, workout: Workout?, onClick: () ->
                     }
                 }
 
-                Column {
+                // --- COLUNA DE BAIXO (Nome, Status, Infos e Músculos) ---
+                Column(
+                    // 👇 3. PROTEÇÃO DO ÍCONE: Se não estiver completo, adiciona um padding na direita
+                    // para garantir que o título e as infos nunca encostem na seta branca gigante!
+                    modifier = Modifier.padding(end = if (!isCompleted) 48.dp else 0.dp)
+                ) {
                     Text(
-                        text = workout?.name
-                            ?: stringResource(id = R.string.home_default_workout_name),
+                        text = workout?.name ?: stringResource(id = R.string.home_default_workout_name),
                         style = Typography.titleLarge,
                         fontWeight = FontWeight.Bold,
-                        color = Color.White
+                        color = Color.White,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
 
                     Spacer(modifier = Modifier.height(8.dp))
@@ -1246,7 +1289,8 @@ fun WorkoutCard(modifier: Modifier = Modifier, workout: Workout?, onClick: () ->
                                 workout?.exercises?.size ?: 0
                             ),
                             color = Color.White.copy(alpha = 0.7f),
-                            style = Typography.bodySmall
+                            style = Typography.bodySmall,
+                            maxLines = 1 // Bom garantir aqui tbm
                         )
                         Spacer(modifier = Modifier.width(16.dp))
                         Icon(
@@ -1259,7 +1303,8 @@ fun WorkoutCard(modifier: Modifier = Modifier, workout: Workout?, onClick: () ->
                         Text(
                             text = "${workout?.estimatedTime ?: 0} min",
                             color = Color.White.copy(alpha = 0.7f),
-                            style = Typography.bodySmall
+                            style = Typography.bodySmall,
+                            maxLines = 1
                         )
                     }
 
@@ -1277,6 +1322,7 @@ fun WorkoutCard(modifier: Modifier = Modifier, workout: Workout?, onClick: () ->
                 }
             }
 
+            // --- BOTÃO DE SETA ABSOLUTO ---
             if (!isCompleted) {
                 Box(
                     modifier = Modifier
@@ -1332,7 +1378,7 @@ fun EmptyWorkoutCard(modifier: Modifier = Modifier) {
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .height(200.dp),
+            .defaultMinSize(minHeight = 200.dp),
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(
             containerColor = if (isSystemDark) MaterialTheme.colorScheme.surfaceVariant else Color.Black
@@ -1345,14 +1391,14 @@ fun EmptyWorkoutCard(modifier: Modifier = Modifier) {
                     .crossfade(true)
                     .build(),
                 contentDescription = null,
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier.matchParentSize(),
                 contentScale = ContentScale.Crop,
                 alpha = if (isSystemDark) 0.3f else 0.55f
             )
 
             Box(
                 modifier = Modifier
-                    .fillMaxSize()
+                    .matchParentSize()
                     .background(
                         Brush.verticalGradient(
                             colors = listOf(
@@ -1366,6 +1412,7 @@ fun EmptyWorkoutCard(modifier: Modifier = Modifier) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
+                    .defaultMinSize(minHeight = 200.dp)
                     .padding(24.dp),
                 verticalArrangement = Arrangement.Bottom
             ) {
@@ -1398,7 +1445,8 @@ fun EmptyWorkoutCard(modifier: Modifier = Modifier) {
                         color = Color.White,
                         style = Typography.bodySmall,
                         fontWeight = FontWeight.Medium,
-                        lineHeight = 18.sp
+                        lineHeight = 18.sp,
+                        modifier = Modifier.weight(1f)
                     )
                 }
             }
@@ -1413,7 +1461,8 @@ fun MomentumCard(count: Int) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(150.dp)
+            // 👇 1. defaultMinSize para garantir o visual padrão, mas permitir o crescimento
+            .defaultMinSize(minHeight = 150.dp)
             .clip(RoundedCornerShape(24.dp))
             .background(if (isSystemDark) MaterialTheme.colorScheme.surface else Color(0XFF262525))
     ) {
@@ -1423,13 +1472,15 @@ fun MomentumCard(count: Int) {
                 .crossfade(true)
                 .build(),
             contentDescription = null,
-            modifier = Modifier.fillMaxSize(),
+            // 👇 2. matchParentSize() para a imagem preencher o fundo independentemente da altura que o Box assumir
+            modifier = Modifier.matchParentSize(),
             contentScale = ContentScale.Crop,
             alpha = 0.4f
         )
 
         Column(
             modifier = Modifier
+                .fillMaxWidth() // Adicionado para a Row interna se comportar bem
                 .padding(24.dp)
                 .align(Alignment.CenterStart)
         ) {
@@ -1443,7 +1494,8 @@ fun MomentumCard(count: Int) {
             )
             Spacer(Modifier.height(8.dp))
             Row(
-                modifier = Modifier.fillMaxSize(),
+                // 👇 3. fillMaxWidth() no lugar de fillMaxSize() para acompanhar a altura dinâmica da Column
+                modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -1451,8 +1503,11 @@ fun MomentumCard(count: Int) {
                     text = stringResource(R.string.treinos_totais),
                     style = Typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = Color.White
+                    color = Color.White,
+                    modifier = Modifier.weight(1f)
                 )
+
+                Spacer(modifier = Modifier.width(16.dp))
 
                 Column(horizontalAlignment = Alignment.End) {
                     Text(
@@ -1466,7 +1521,6 @@ fun MomentumCard(count: Int) {
         }
     }
 }
-
 @Composable
 fun EmptyMomentumCard() {
     val isSystemDark = isSystemInDarkTheme()
