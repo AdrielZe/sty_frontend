@@ -439,4 +439,7 @@
     <string name="recordes">Records</string>
     <string name="perfil">Profile</string>
     <string name="historico_min">History</string>
+    <string name="nenhuma_atividade_registrada">No activities registered</string>
+    <string name="complete_treinos_para_ver_o_seu_hist_rico">Complete workouts to view your history</string>
+    <string name="iniciar_treino">START WORKOUT</string>
 </resources>

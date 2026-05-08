@@ -491,5 +491,6 @@
     <string name="historico_min">Histórico</string>
     <string name="nenhuma_atividade_registrada">Nenhuma atividade registrada</string>
     <string name="complete_treinos_para_ver_o_seu_hist_rico">Complete treinos para ver o seu histórico</string>
+    <string name="iniciar_treino">INICIAR TREINO</string>
 
 </resources>

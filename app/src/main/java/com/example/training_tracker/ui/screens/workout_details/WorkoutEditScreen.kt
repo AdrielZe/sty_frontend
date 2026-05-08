@@ -92,7 +92,9 @@ fun WorkoutDetailsScreen(
             TopAppBar(
                 title = {
                     Text(
-                        stringResource(id = R.string.workout_edit_title),
+                        text = if (uiState.isEditMode) stringResource(id = R.string.workout_edit_title) else stringResource(
+                            R.string.iniciar_treino
+                        ),
                         fontSize = 18.sp,
                         fontWeight = FontWeight.ExtraBold,
                         letterSpacing = 1.sp,
