@@ -67,11 +67,6 @@ class DefaultAppContainer(
 
     init {
         scope.launch {
-            // 1. Lemos a primeira emissão (first) que vier do banco de dados
-            val currentExercises = exerciseRepository.exercises.first()
-
-            // 2. Se a lista estiver vazia, é porque o usuário acabou de instalar o app
-            if (currentExercises.isEmpty()) {
                 val defaultExercises = listOf(
                     // PEITO
                     Exercise(name = "Supino Reto (Barra)", muscleGroup = MuscleGroups.CHEST, isDefault = true),
@@ -239,10 +234,12 @@ class DefaultAppContainer(
                     Exercise(name = "Abdominal Oblíquo (Polia)", muscleGroup = MuscleGroups.ABS, isDefault = true),
                 )
 
-                // Inserir um a um no repositorio
-                defaultExercises.forEach { exercise ->
-                    exerciseRepository.addExercise(exercise)
-                }
+            val currentExercises = exerciseRepository.exercises.first()
+
+            val existingNames = currentExercises.map { it.name }.toSet()
+
+            defaultExercises.filter { it.name !in existingNames }.forEach { newExercise ->
+                exerciseRepository.addExercise(newExercise)
             }
         }
     }
