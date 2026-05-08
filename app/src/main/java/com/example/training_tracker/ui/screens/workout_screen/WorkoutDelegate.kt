@@ -26,6 +26,7 @@ interface WorkoutDelegate {
     suspend fun reopenExercise(workout: Workout, exerciseId: String)
     suspend fun updateExerciseRecords(workout: Workout): MutableMap<String, MutableList<Double>>
     suspend fun updateVolumeRecord(workout: Workout): MutableList<Double>?
+    fun enrichWorkoutWithHistory(workout: Workout, histories: List<WorkoutHistory>): Workout
 
     suspend fun completeWorkout(
         workout: Workout,
@@ -228,6 +229,29 @@ class WorkoutDelegateImpl(
 
             null
         }
+    }
+
+    override fun enrichWorkoutWithHistory(workout: Workout, histories: List<WorkoutHistory>): Workout {
+        val sortedHistories = histories.sortedWith(
+            compareByDescending<WorkoutHistory> { it.completionDate }
+                .thenByDescending { it.completionTime ?: LocalTime.MIN }
+        )
+        
+        val updatedExercises = workout.exercises.map { exercise ->
+            val lastPerformance = sortedHistories.firstOrNull { history ->
+                history.exercises.any { it.name.equals(exercise.name, ignoreCase = true) }
+            }?.exercises?.find { it.name.equals(exercise.name, ignoreCase = true) }
+            
+            val updatedSets = exercise.exerciseSets.map { set ->
+                val lastSet = lastPerformance?.exerciseSets?.find { it.set == set.set }
+                set.copy(
+                    previousWeight = lastSet?.weight ?: "",
+                    previousReps = lastSet?.reps ?: ""
+                )
+            }
+            exercise.copy(exerciseSets = updatedSets)
+        }
+        return workout.copy(exercises = updatedExercises)
     }
 
     override suspend fun completeWorkout(
