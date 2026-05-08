@@ -37,12 +37,17 @@ class WorkoutViewModel(
     }
 
     val uiState = combine(
-        workoutRepository.getWorkoutById(workoutId), _finishedWorkoutSession
-    ) { dbWorkout, finishedWorkout ->
+        workoutRepository.getWorkoutById(workoutId),
+        workoutHistoryRepository.workoutHistories,
+        _finishedWorkoutSession
+    ) { dbWorkout, histories, finishedWorkout ->
         if (finishedWorkout != null) {
             WorkoutUiState(workout = finishedWorkout)
+        } else if (dbWorkout != null) {
+            val enrichedWorkout = enrichWorkoutWithHistory(dbWorkout, histories)
+            WorkoutUiState(workout = enrichedWorkout)
         } else {
-            WorkoutUiState(workout = dbWorkout)
+            WorkoutUiState(workout = null)
         }
     }.stateIn(
         scope = viewModelScope,

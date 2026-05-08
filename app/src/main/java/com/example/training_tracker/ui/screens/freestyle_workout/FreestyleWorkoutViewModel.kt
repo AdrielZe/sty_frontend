@@ -49,31 +49,51 @@ class FreestyleWorkoutViewModel(
     val uiState: StateFlow<FreestyleWorkoutUiState> = combine(
         workoutRepository.getWorkoutById(FREESTYLE_WORKOUT_ID),
         exerciseRepository.exercises,
-        _showExercisePicker,
-        _finishedWorkoutSession,
-        combine(_pendingExerciseName, _showMuscleGroupPicker) { name, show -> name to show }
-    ) { workout, availableExercises, showPicker, finishedWorkout, pendingInfo ->
-        val (pendingName, showMusclePicker) = pendingInfo
-
-        if (finishedWorkout != null) {
-            FreestyleWorkoutUiState(workout = finishedWorkout)
+        workoutHistoryRepository.workoutHistories,
+        combine(
+            _showExercisePicker,
+            _finishedWorkoutSession,
+            _pendingExerciseName,
+            _showMuscleGroupPicker
+        ) { showPicker, finishedWorkout, pendingName, showMusclePicker ->
+            InternalState(showPicker, finishedWorkout, pendingName, showMusclePicker)
+        }
+    ) { workout, availableExercises, histories, internalState ->
+        if (internalState.finishedWorkoutSession != null) {
+            FreestyleWorkoutUiState(workout = internalState.finishedWorkoutSession)
+        } else if (workout != null) {
+            val enrichedWorkout = enrichWorkoutWithHistory(workout, histories)
+            FreestyleWorkoutUiState(
+                workout = enrichedWorkout,
+                availableExercises = availableExercises,
+                showExercisePicker = internalState.showExercisePicker,
+                pendingExerciseName = internalState.pendingExerciseName,
+                showMuscleGroupPicker = internalState.showMuscleGroupPicker
+            )
         } else {
             FreestyleWorkoutUiState(
-                workout = workout ?: Workout(
+                workout = Workout(
                     id = FREESTYLE_WORKOUT_ID,
                     name = "Freestyle Workout",
                     isOnGoing = false
                 ),
                 availableExercises = availableExercises,
-                showExercisePicker = showPicker,
-                pendingExerciseName = pendingName,
-                showMuscleGroupPicker = showMusclePicker
+                showExercisePicker = internalState.showExercisePicker,
+                pendingExerciseName = internalState.pendingExerciseName,
+                showMuscleGroupPicker = internalState.showMuscleGroupPicker
             )
         }
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = FreestyleWorkoutUiState()
+    )
+
+    private data class InternalState(
+        val showExercisePicker: Boolean,
+        val finishedWorkoutSession: Workout?,
+        val pendingExerciseName: String?,
+        val showMuscleGroupPicker: Boolean
     )
 
     init {
@@ -102,7 +122,7 @@ class FreestyleWorkoutViewModel(
 
     fun togglePauseWorkout() {
         viewModelScope.launch {
-            togglePauseWorkout(uiState.value.workout)
+            uiState.value.workout.let { togglePauseWorkout(it) }
         }
     }
 

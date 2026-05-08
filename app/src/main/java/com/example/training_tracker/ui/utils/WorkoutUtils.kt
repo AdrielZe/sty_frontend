@@ -305,6 +305,8 @@ fun ExerciseCardUtils(
                                 modifier = Modifier.fillMaxWidth(),
                                 inputValueReps = set.reps,
                                 inputValueWeight = set.weight,
+                                previousReps = set.previousReps,
+                                previousWeight = set.previousWeight,
                                 isDeleteMode = false,
                                 isCompleted = true,
                                 onRepsChange = { _, _ -> },
@@ -504,6 +506,8 @@ fun ExerciseCardUtils(
                             modifier = Modifier.fillMaxWidth(),
                             inputValueReps = set.reps,
                             inputValueWeight = set.weight,
+                            previousReps = set.previousReps,
+                            previousWeight = set.previousWeight,
                             isDeleteMode = isDeleteMode,
                             isCompleted = set.isCompleted,
                             isErrorWeight = isWeightError,
@@ -570,6 +574,7 @@ fun InputTextBox(
     isError: Boolean = false,
     maxLength: Int = Int.MAX_VALUE,
     inputValue: String,
+    placeholder: String = "0",
     onValueChange: (String) -> Unit
 ) {
     var textFieldValue by remember {
@@ -629,7 +634,7 @@ fun InputTextBox(
                     ) {
                         if (textFieldValue.text.isEmpty()) {
                             Text(
-                                text = "0",
+                                text = placeholder.ifEmpty { "0" },
                                 style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
@@ -654,6 +659,8 @@ fun SetLine(
     setNumber: Int,
     inputValueWeight: String,
     inputValueReps: String,
+    previousWeight: String = "",
+    previousReps: String = "",
     isErrorWeight: Boolean = false,
     isErrorReps: Boolean = false,
     onRepsChange: (Int, String) -> Unit,
@@ -748,6 +755,7 @@ fun SetLine(
                 isLocked = isCompleted,
                 isError = isErrorWeight,
                 inputValue = inputValueWeight,
+                placeholder = previousWeight,
                 onValueChange = {
                     onWeightChange(setNumber, it)
                 },
@@ -760,6 +768,7 @@ fun SetLine(
                 isError = isErrorReps,
                 maxLength = 3,
                 inputValue = inputValueReps,
+                placeholder = previousReps,
                 onValueChange = { onRepsChange(setNumber, it) },
             )
         }
@@ -1071,4 +1080,3 @@ fun ErrorDialog(
         },
     )
 }
-
