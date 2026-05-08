@@ -12,7 +12,6 @@ import java.nio.charset.CodingErrorAction.REPLACE
 
 @Dao
 interface ExerciseDao {
-
     @Query("SELECT * FROM exercises")
     fun getAllExercises(): Flow<List<Exercise>>
 
@@ -27,5 +26,4 @@ interface ExerciseDao {
 
     @Query("DELETE FROM exercises")
     suspend fun deleteAll()
-
 }

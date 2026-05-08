@@ -1,9 +1,8 @@
-package com.example.training_tracker.domain.repository
+package com.example.training_tracker.data.repository
 
 import com.example.training_tracker.data.local.dao.ExerciseDao
 import com.example.training_tracker.data.models.Exercise
-import com.example.training_tracker.data.repository.ExerciseRepository
-import kotlinx.coroutines.flow.Flow
+import com.example.training_tracker.domain.repository.ExerciseRepository
 
 class ExerciseRepositoryImpl(
     private val exerciseDao: ExerciseDao

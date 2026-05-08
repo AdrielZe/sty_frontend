@@ -7,8 +7,8 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.training_tracker.GymTrackerApplication
 import com.example.training_tracker.data.models.MuscleGroups
-import com.example.training_tracker.data.repository.ExerciseRepository
-import com.example.training_tracker.data.repository.RecordsRepository
+import com.example.training_tracker.domain.repository.ExerciseRepository
+import com.example.training_tracker.domain.repository.RecordsRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow

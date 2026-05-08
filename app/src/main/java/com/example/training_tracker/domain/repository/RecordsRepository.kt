@@ -1,4 +1,4 @@
-package com.example.training_tracker.data.repository
+package com.example.training_tracker.domain.repository
 
 import com.example.training_tracker.data.models.Records
 import kotlinx.coroutines.flow.Flow

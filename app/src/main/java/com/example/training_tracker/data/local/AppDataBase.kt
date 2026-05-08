@@ -23,7 +23,6 @@ import kotlinx.coroutines.launch
 @Database(entities = [Workout::class, Exercise::class, WorkoutHistory::class, Records::class, User::class], version = 32)
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
-
     abstract fun workoutDao(): WorkoutDao
     abstract fun exerciseDao(): ExerciseDao
     abstract fun workoutHistoryDao(): WorkoutHistoryDao

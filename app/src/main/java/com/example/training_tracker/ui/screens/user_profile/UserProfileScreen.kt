@@ -410,7 +410,6 @@ fun StatCard(
                 text = title,
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                // 👇 2. Proteção para títulos longos (ex: "Calorias Queimadas")
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )

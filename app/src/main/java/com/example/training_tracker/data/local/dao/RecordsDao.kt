@@ -14,7 +14,6 @@ interface RecordsDao {
     @Query("SELECT * FROM records LIMIT 1")
     fun getRecordFlow(): Flow<Records?>
 
-    // 2. Usado para a nossa lógica de updateRecords() no repositório
     @Query("SELECT * FROM records LIMIT 1")
     fun getRecord(): Records?
 

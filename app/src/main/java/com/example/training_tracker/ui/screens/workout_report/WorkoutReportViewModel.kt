@@ -10,7 +10,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.training_tracker.GymTrackerApplication
-import com.example.training_tracker.data.repository.WorkoutHistoryRepository
+import com.example.training_tracker.domain.repository.WorkoutHistoryRepository
 import com.example.training_tracker.ui.utils.countTotalReps
 import com.example.training_tracker.ui.utils.countTotalSets
 import com.example.training_tracker.ui.utils.generateHeroTitle

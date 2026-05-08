@@ -3,7 +3,19 @@ package com.example.training_tracker.ui.screens.create_workout
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -13,8 +25,27 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -30,9 +61,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.training_tracker.R
 import com.example.training_tracker.data.models.Exercise
-import com.example.training_tracker.data.models.mocks.availableExercises
 import com.example.training_tracker.ui.components.MuscleGroupPickerDialog
-import com.example.training_tracker.ui.screens.home.MainGradientButton
 import com.example.training_tracker.ui.screens.workout_details.AddExerciseSelectionDialog
 import com.example.training_tracker.ui.theme.AppTheme
 import com.example.training_tracker.ui.theme.CyanAccent
@@ -81,10 +110,10 @@ fun CreateWorkoutScreen(
             text = stringResource(R.string.adicione_pelo_menos_3_exercicios_para_salvar_seu_treino),
             onDismissRequest = { showErrorMessage = false }
         )
-
     }
 
     val pendingName = uiState.pendingExerciseName
+
     if (uiState.showMuscleGroupPicker && pendingName != null) {
         MuscleGroupPickerDialog(
             exerciseName = pendingName,
@@ -131,16 +160,18 @@ fun CreateWorkoutScreen(
                 .fillMaxSize()
                 .verticalScroll(scrollState)
         ) {
+
             Spacer(modifier = Modifier.height(Dimens.paddingMedium))
 
-            // Nome do Treino
             Text(
                 text = stringResource(id = R.string.create_workout_name_label),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = if (uiState.showErrors && !uiState.isNameValid) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onBackground
             )
+
             Spacer(modifier = Modifier.height(Dimens.paddingSmall))
+
             OutlinedTextField(
                 value = uiState.workoutName,
                 onValueChange = { viewModel.updateWorkoutName(it) },
@@ -157,7 +188,6 @@ fun CreateWorkoutScreen(
 
             Spacer(modifier = Modifier.height(Dimens.paddingLarge))
 
-            // Seleção do Dia
             Text(
                 text = stringResource(id = R.string.create_workout_day_label),
                 style = MaterialTheme.typography.titleMedium,
@@ -173,7 +203,6 @@ fun CreateWorkoutScreen(
 
             Spacer(modifier = Modifier.height(Dimens.paddingExtraLarge))
 
-            // Adicionar Exercício
             Text(
                 text = stringResource(id = R.string.create_workout_add_exercise_label),
                 style = MaterialTheme.typography.titleMedium,
@@ -185,8 +214,6 @@ fun CreateWorkoutScreen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    // 👇 1. Troca do height(56.dp) para defaultMinSize.
-                    // Isso mantém a estética de um campo de formulário, mas permite que ele cresça.
                     .defaultMinSize(minHeight = 56.dp)
                     .background(
                         color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
@@ -201,7 +228,6 @@ fun CreateWorkoutScreen(
                         shape = RoundedCornerShape(Dimens.cornerRadius)
                     )
                     .clickable { showAddExerciseDialog = true }
-                    // 👇 2. Padding horizontal movido para fora do Row para proteger o conteúdo
                     .padding(horizontal = 16.dp, vertical = 8.dp),
                 contentAlignment = Alignment.CenterStart
             ) {
@@ -213,7 +239,7 @@ fun CreateWorkoutScreen(
                         imageVector = Icons.Default.Add,
                         contentDescription = null,
                         tint = CyanAccent,
-                        modifier = Modifier.size(24.dp) // Tamanho fixo para o ícone não "dançar"
+                        modifier = Modifier.size(24.dp)
                     )
 
                     Spacer(modifier = Modifier.width(12.dp))
@@ -222,10 +248,8 @@ fun CreateWorkoutScreen(
                         text = stringResource(id = R.string.create_workout_click_to_select),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontSize = 14.sp,
-                        // 👇 3. A proteção mágica para textos de formulário:
-                        // O weight garante que o texto ocupe o espaço restante sem expulsar o ícone
                         modifier = Modifier.weight(1f),
-                        maxLines = 2, // Permite que o seletor tenha até 2 linhas se a fonte for grande
+                        maxLines = 2,
                         overflow = TextOverflow.Ellipsis
                     )
                 }
@@ -233,7 +257,6 @@ fun CreateWorkoutScreen(
 
             Spacer(modifier = Modifier.height(Dimens.paddingLarge))
 
-            // Lista de Exercícios Adicionados
             Text(
                 text = stringResource(id = R.string.create_workout_added_exercises_title),
                 style = MaterialTheme.typography.labelLarge,
