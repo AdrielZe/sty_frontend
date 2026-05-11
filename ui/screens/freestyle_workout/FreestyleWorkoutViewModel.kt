@@ -95,15 +95,14 @@ class FreestyleWorkoutViewModel(
             viewModelScope.launch(Dispatchers.Default) {
                 try {
                     val predictedMuscleKey = classifier.classify(nameFormatted)
-                    val predictedMuscleGroup = when (predictedMuscleKey) {
-                        "peito" -> MuscleGroups.CHEST
-                        "costas" -> MuscleGroups.BACK
-                        "perna" -> MuscleGroups.LEGS
-                        "ombro" -> MuscleGroups.SHOULDERS
-                        "biceps" -> MuscleGroups.BICEPS
-                        "triceps" -> MuscleGroups.TRICEPS
-                        "abdomen" -> MuscleGroups.ABS
-                        else -> MuscleGroups.ABS
+                    val predictedMuscleGroup = try {
+                        if (result.label != null) {
+                            MuscleGroups.valueOf(result.label)
+                        } else {
+                            MuscleGroups.ABS
+                        }
+                    } catch (e: IllegalArgumentException) {
+                        MuscleGroups.ABS
                     }
 
                     val newExerciseToDB = Exercise(

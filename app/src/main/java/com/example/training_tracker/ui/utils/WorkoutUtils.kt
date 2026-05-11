@@ -125,7 +125,10 @@ fun ExerciseCardUtils(
     val cardImage = when (exercise.muscleGroup) {
         MuscleGroups.CHEST -> R.drawable.chest
         MuscleGroups.BACK -> R.drawable.back
-        MuscleGroups.LEGS -> R.drawable.legs
+        MuscleGroups.QUADRICEPS -> R.drawable.quadriceps_workout
+        MuscleGroups.HAMSTRINGS -> R.drawable.hamstrings_workout
+        MuscleGroups.CALF -> R.drawable.calf_workout
+        MuscleGroups.GLUTE -> R.drawable.glute_workout
         MuscleGroups.SHOULDERS -> R.drawable.shoulders
         MuscleGroups.ABS -> R.drawable.abs
         MuscleGroups.BICEPS -> R.drawable.biceps

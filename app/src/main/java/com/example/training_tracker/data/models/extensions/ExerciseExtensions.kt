@@ -8,6 +8,6 @@ fun Exercise.isValidToComplete(): Boolean {
         val weight = set.weight.replace(',', '.').toDoubleOrNull() ?: 0.0
         val reps = set.reps.toIntOrNull() ?: 0
 
-        weight > 0 && reps > 0
+        reps > 0
     }
 }

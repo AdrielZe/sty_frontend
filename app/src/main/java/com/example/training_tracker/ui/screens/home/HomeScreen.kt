@@ -652,7 +652,10 @@ private fun getWorkoutImageRes(workout: Workout?): Int {
     return when (mostFrequentMuscleGroup) {
         MuscleGroups.CHEST -> R.drawable.chest_workout
         MuscleGroups.BACK -> R.drawable.back_workout
-        MuscleGroups.LEGS -> R.drawable.leg_workout
+        MuscleGroups.QUADRICEPS -> R.drawable.leg_workout
+        MuscleGroups.HAMSTRINGS -> R.drawable.hamstrings_workout_home
+        MuscleGroups.CALF -> R.drawable.calf_workout_home
+        MuscleGroups.GLUTE -> R.drawable.glute_workout_home
         MuscleGroups.SHOULDERS -> R.drawable.shoulder_workout
         MuscleGroups.BICEPS -> R.drawable.biceps_workout
         MuscleGroups.TRICEPS -> R.drawable.triceps_workout

@@ -112,15 +112,14 @@ class WorkoutEditViewModel(
                         return@launch
                     }
 
-                    val predictedMuscleGroup = when (result.label) {
-                        "peito" -> MuscleGroups.CHEST
-                        "costas" -> MuscleGroups.BACK
-                        "perna" -> MuscleGroups.LEGS
-                        "ombro" -> MuscleGroups.SHOULDERS
-                        "biceps" -> MuscleGroups.BICEPS
-                        "triceps" -> MuscleGroups.TRICEPS
-                        "abdomen" -> MuscleGroups.ABS
-                        else -> MuscleGroups.ABS
+                    val predictedMuscleGroup = try {
+                        if (result.label != null) {
+                            MuscleGroups.valueOf(result.label)
+                        } else {
+                            MuscleGroups.ABS
+                        }
+                    } catch (e: IllegalArgumentException) {
+                        MuscleGroups.ABS
                     }
 
                     saveNewExercise(nameFormatted, predictedMuscleGroup)

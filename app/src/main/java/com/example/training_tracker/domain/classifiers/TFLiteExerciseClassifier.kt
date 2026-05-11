@@ -1,6 +1,7 @@
 package com.example.training_tracker.domain.classifiers
 
 import android.content.Context
+import android.util.Log
 import org.tensorflow.lite.Interpreter
 import java.io.FileInputStream
 import java.nio.MappedByteBuffer
@@ -16,19 +17,27 @@ class TFLiteExerciseClassifier(private val context: Context) : ExerciseClassifie
     private val MAX_LEN = 10
 
     init {
-        // 1. Carrega o modelo puro na memória
+// 1. Carrega o modelo puro na memória
         interpreter = Interpreter(loadModelFile("model_v3.tflite"))
 
-        // 2. Carrega o dicionário de palavras (Tokenização)
-        context.assets.open("vocab.txt").bufferedReader().useLines { lines ->
-            lines.forEachIndexed { index, word ->
-                vocab[word] = index
+        // 2. Carrega o dicionário (Forçando UTF-8 e ignorando linhas vazias)
+        context.assets.open("vocab.txt").bufferedReader(Charsets.UTF_8).useLines { lines ->
+            var realIndex = 0
+            lines.forEach { line ->
+                if (line.isNotBlank()) {
+                    vocab[line.trim()] = realIndex
+                    realIndex++
+                }
             }
         }
 
-        // 3. Carrega a lista de músculos possíveis
-        context.assets.open("labels.txt").bufferedReader().useLines { lines ->
-            lines.forEach { labels.add(it) }
+        // 3. Carrega a lista de músculos (Forçando UTF-8 e ignorando linhas vazias)
+        context.assets.open("labels.txt").bufferedReader(Charsets.UTF_8).useLines { lines ->
+            lines.forEach { line ->
+                if (line.isNotBlank()) {
+                    labels.add(line.trim())
+                }
+            }
         }
     }
 
@@ -51,11 +60,27 @@ class TFLiteExerciseClassifier(private val context: Context) : ExerciseClassifie
 
         val outputArray = Array(1) { FloatArray(labels.size) }
 
+         for (word in words) {
+             val wordId = vocab[word]
+             Log.d("IA_DEBUG", "Palavra: '$word' -> ID no Vocab: $wordId") // LOG 1
+
+             if (wordId != null && validIndex < MAX_LEN) {
+                 inputArray[0][validIndex] = wordId.toFloat()
+                 validIndex++
+             }
+         }
+
+
         // 3. Roda a inferência
         interpreter?.run(inputArray, outputArray)
 
+
+
         // 4. Analisa o resultado
         val probabilities = outputArray[0]
+
+         Log.d("IA_DEBUG", "Probabilidades brutas: ${probabilities.joinToString()}")
+
         var maxIndex = -1
         var maxConfidence = -1f
 
@@ -67,6 +92,10 @@ class TFLiteExerciseClassifier(private val context: Context) : ExerciseClassifie
         }
 
         val label = if (maxIndex != -1) labels[maxIndex].trim() else null
+
+         Log.d("IA_DEBUG", "Índice vencedor: $maxIndex")
+// LOG 3: Qual foi a resposta final que o Kotlin montou
+         Log.d("IA_DEBUG", "Resultado final: Músculo = '$label', Confiança = $maxConfidence")
         
         return ClassificationResult(label, maxConfidence)
     }

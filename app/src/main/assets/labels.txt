@@ -1,7 +1,10 @@
-abdomen
-biceps
-costas
-ombro
-peito
-perna
-triceps
+CHEST
+BACK
+QUADRICEPS
+HAMSTRINGS
+CALF
+GLUTE
+SHOULDERS
+BICEPS
+TRICEPS
+ABS
