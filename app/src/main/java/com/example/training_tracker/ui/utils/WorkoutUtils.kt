@@ -9,6 +9,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.forEach
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -86,11 +87,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.graphics.values
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.training_tracker.R
 import com.example.training_tracker.data.models.Exercise
 import com.example.training_tracker.data.models.MuscleGroups
+import com.example.training_tracker.data.models.Technique
 import com.example.training_tracker.data.models.Workout
 import com.example.training_tracker.data.models.extensions.isValidToComplete
 import com.example.training_tracker.ui.screens.registered_workouts.TextGray
@@ -99,6 +102,8 @@ import com.example.training_tracker.ui.theme.CyanAccent
 import com.example.training_tracker.ui.theme.CyanGradient
 import com.example.training_tracker.ui.theme.Dimens
 import com.example.training_tracker.ui.theme.Typography
+import kotlin.text.take
+import kotlin.text.uppercase
 
 @Composable
 fun ExerciseCardUtils(
@@ -111,6 +116,7 @@ fun ExerciseCardUtils(
     onWeightChange: (Int, String) -> Unit,
     onAddSetClick: (String) -> Unit,
     onRemoveSet: (String, Int) -> Unit,
+    onTechniqueChange: (Int, Technique) -> Unit,
     onCompleteExercise: () -> Unit,
     onReopenExercise: () -> Unit,
     onRemoveExercise: (String) -> Unit = {},
@@ -315,6 +321,8 @@ fun ExerciseCardUtils(
                                 onRepsChange = { _, _ -> },
                                 onWeightChange = { _, _ -> },
                                 onDeleteClick = { },
+                                selectedTechnique = set.technique,
+                                onTechniqueChange = {},
                                 setNumber = set.set,
                             )
                         }
@@ -521,6 +529,8 @@ fun ExerciseCardUtils(
                             },
                             onDeleteClick = { onRemoveSet(exercise.id, set.set) },
                             setNumber = set.set,
+                            selectedTechnique = set.technique,
+                            onTechniqueChange = { technique -> onTechniqueChange( set.set,technique)},
                         )
                     }
 
@@ -662,6 +672,8 @@ fun SetLine(
     inputValueReps: String,
     previousWeight: String = "",
     previousReps: String = "",
+    selectedTechnique: Technique = Technique.NORMAL,
+    onTechniqueChange: (Technique) -> Unit,
     isErrorWeight: Boolean = false,
     isErrorReps: Boolean = false,
     onRepsChange: (Int, String) -> Unit,
@@ -672,6 +684,7 @@ fun SetLine(
     var errorText by remember { mutableStateOf("") }
 
     val defaultErrorText = stringResource(id = R.string.workout_screen_default_error_message)
+    var showTechniqueMenu by remember { mutableStateOf(false) }
     val removeSavedSetError = stringResource(id = R.string.workout_screen_error_remove_saved_set)
 
     LaunchedEffect(Unit) {
@@ -772,6 +785,77 @@ fun SetLine(
                 placeholder = previousReps,
                 onValueChange = { onRepsChange(setNumber, it) },
             )
+
+            // NOVO ELEMENTO: Ícone de Técnica
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Bottom,
+                modifier = Modifier.padding(bottom = 4.dp) // Alinha com o centro visual dos inputs
+            ) {
+                Text(
+                    text = "TEC",
+                    fontSize = 10.sp,
+                    color = TextGray,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(Modifier.height(8.dp))
+
+                Box {
+                    Box(
+                        modifier = Modifier
+                            .size(48.dp)
+                            .clip(CircleShape)
+                            .background(
+                                if (selectedTechnique == Technique.NORMAL)
+                                    MaterialTheme.colorScheme.surfaceVariant
+                                else
+                                    CyanAccent.copy(alpha = 0.3f)
+                            )
+                            .border(
+                                width = 2.dp,
+                                color = if (selectedTechnique == Technique.NORMAL)
+                                    Color.Transparent
+                                else CyanAccent,
+                                shape = CircleShape
+                            )
+                            .clickable(enabled = !isCompleted) {
+                                showTechniqueMenu = true
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        // Ícone ou Letra Inicial da técnica
+                        Text(
+                            text = if (selectedTechnique == Technique.NORMAL) "—"
+                            else selectedTechnique.name.take(1).uppercase(),
+                            color = if (selectedTechnique == Technique.NORMAL)
+                                TextGray
+                            else Color.White,
+                            fontWeight = FontWeight.Black
+                        )
+                    }
+
+                    DropdownMenu(
+                        expanded = showTechniqueMenu,
+                        onDismissRequest = { showTechniqueMenu = false },
+                        modifier = Modifier.background(MaterialTheme.colorScheme.surface)
+                    ) {
+                        Technique.values().forEach { technique ->
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        text = technique.name,
+                                        color = if (technique == selectedTechnique) CyanAccent else Color.Unspecified
+                                    )
+                                },
+                                onClick = {
+                                    onTechniqueChange(technique)
+                                    showTechniqueMenu = false
+                                }
+                            )
+                        }
+                    }
+                }
+            }
         }
 
         if (isDeleteMode && !isCompleted) {

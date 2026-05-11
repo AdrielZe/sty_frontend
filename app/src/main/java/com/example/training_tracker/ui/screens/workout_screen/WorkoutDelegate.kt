@@ -3,6 +3,7 @@ package com.example.training_tracker.ui.screens.workout_screen
 import com.example.training_tracker.data.models.Exercise
 import com.example.training_tracker.data.models.ExerciseSet
 import com.example.training_tracker.data.models.Records
+import com.example.training_tracker.data.models.Technique
 import com.example.training_tracker.data.models.Workout
 import com.example.training_tracker.data.models.WorkoutHistory
 import com.example.training_tracker.domain.repository.RecordsRepository
@@ -21,11 +22,25 @@ interface WorkoutDelegate {
     suspend fun addNewSetLine(workout: Workout, exerciseId: String)
     suspend fun removeSetLine(workout: Workout, exerciseId: String, setNumber: Int)
     suspend fun completeSet(workout: Workout, exerciseId: String, setNumber: Int)
-    suspend fun updateExercise(workout: Workout, exerciseId: String, setNumber: Int, newReps: String? = null, newWeight: String? = null)
+    suspend fun updateExercise(
+        workout: Workout,
+        exerciseId: String,
+        setNumber: Int,
+        newReps: String? = null,
+        newWeight: String? = null
+    )
+
     suspend fun completeExercise(workout: Workout, exerciseId: String)
     suspend fun reopenExercise(workout: Workout, exerciseId: String)
     suspend fun updateExerciseRecords(workout: Workout): MutableMap<String, MutableList<Double>>
     suspend fun updateVolumeRecord(workout: Workout): MutableList<Double>?
+    suspend fun updateSetTechnique(
+        workout: Workout,
+        exerciseId: String,
+        setNumber: Int,
+        technique: Technique
+    )
+
     fun enrichWorkoutWithHistory(workout: Workout, histories: List<WorkoutHistory>): Workout
 
     suspend fun completeWorkout(
@@ -64,6 +79,31 @@ class WorkoutDelegateImpl(
         workoutRepository.updateWorkout(updatedWorkout)
     }
 
+    override suspend fun updateSetTechnique(
+        workout: Workout,
+        exerciseId: String,
+        setNumber: Int,
+        technique: Technique
+    ) {
+        val updatedExercises = workout.exercises.map { exercise ->
+            if (exercise.id == exerciseId) {
+                val updatedSets = exercise.exerciseSets.map { set ->
+                    if (set.set == setNumber) {
+                        set.copy(technique = technique)
+                    } else {
+                        set
+                    }
+                }
+                exercise.copy(exerciseSets = updatedSets)
+            } else {
+                exercise
+            }
+        }
+
+        val updatedWorkout = workout.copy(exercises = updatedExercises)
+        workoutRepository.updateWorkout(updatedWorkout)
+    }
+
     override suspend fun addNewSetLine(workout: Workout, exerciseId: String) {
         val updatedExercises = workout.exercises.map { exercise ->
             if (exercise.id == exerciseId) {
@@ -72,7 +112,13 @@ class WorkoutDelegateImpl(
             } else exercise
         }
         val updatedWorkout = workout.copy(exercises = updatedExercises)
-        workoutRepository.updateWorkout(updatedWorkout.copy(progress = calculateProgress(updatedWorkout)))
+        workoutRepository.updateWorkout(
+            updatedWorkout.copy(
+                progress = calculateProgress(
+                    updatedWorkout
+                )
+            )
+        )
     }
 
     override suspend fun removeSetLine(workout: Workout, exerciseId: String, setNumber: Int) {
@@ -82,7 +128,13 @@ class WorkoutDelegateImpl(
             } else exercise
         }
         val updatedWorkout = workout.copy(exercises = updatedExercises)
-        workoutRepository.updateWorkout(updatedWorkout.copy(progress = calculateProgress(updatedWorkout)))
+        workoutRepository.updateWorkout(
+            updatedWorkout.copy(
+                progress = calculateProgress(
+                    updatedWorkout
+                )
+            )
+        )
     }
 
     override suspend fun completeSet(workout: Workout, exerciseId: String, setNumber: Int) {
@@ -95,7 +147,13 @@ class WorkoutDelegateImpl(
             } else exercise
         }
         val updatedWorkout = workout.copy(exercises = updatedExercises)
-        workoutRepository.updateWorkout(updatedWorkout.copy(progress = calculateProgress(updatedWorkout)))
+        workoutRepository.updateWorkout(
+            updatedWorkout.copy(
+                progress = calculateProgress(
+                    updatedWorkout
+                )
+            )
+        )
     }
 
     override suspend fun updateExercise(
@@ -103,7 +161,7 @@ class WorkoutDelegateImpl(
         exerciseId: String,
         setNumber: Int,
         newReps: String?,
-        newWeight: String?
+        newWeight: String?,
     ) {
         val updatedExercises = workout.exercises.map { exercise ->
             if (exercise.id == exerciseId) {
@@ -127,7 +185,13 @@ class WorkoutDelegateImpl(
             } else exercise
         }
         val updatedWorkout = workout.copy(exercises = updatedExercises)
-        workoutRepository.updateWorkout(updatedWorkout.copy(progress = calculateProgress(updatedWorkout)))
+        workoutRepository.updateWorkout(
+            updatedWorkout.copy(
+                progress = calculateProgress(
+                    updatedWorkout
+                )
+            )
+        )
     }
 
     override suspend fun reopenExercise(workout: Workout, exerciseId: String) {
@@ -139,7 +203,13 @@ class WorkoutDelegateImpl(
             } else exercise
         }
         val updatedWorkout = workout.copy(exercises = updatedExercises)
-        workoutRepository.updateWorkout(updatedWorkout.copy(progress = calculateProgress(updatedWorkout)))
+        workoutRepository.updateWorkout(
+            updatedWorkout.copy(
+                progress = calculateProgress(
+                    updatedWorkout
+                )
+            )
+        )
     }
 
     private fun String.parseToDouble(): Double {
@@ -231,17 +301,20 @@ class WorkoutDelegateImpl(
         }
     }
 
-    override fun enrichWorkoutWithHistory(workout: Workout, histories: List<WorkoutHistory>): Workout {
+    override fun enrichWorkoutWithHistory(
+        workout: Workout,
+        histories: List<WorkoutHistory>
+    ): Workout {
         val sortedHistories = histories.sortedWith(
             compareByDescending<WorkoutHistory> { it.completionDate }
                 .thenByDescending { it.completionTime ?: LocalTime.MIN }
         )
-        
+
         val updatedExercises = workout.exercises.map { exercise ->
             val lastPerformance = sortedHistories.firstOrNull { history ->
                 history.exercises.any { it.name.equals(exercise.name, ignoreCase = true) }
             }?.exercises?.find { it.name.equals(exercise.name, ignoreCase = true) }
-            
+
             val updatedSets = exercise.exerciseSets.map { set ->
                 val lastSet = lastPerformance?.exerciseSets?.find { it.set == set.set }
                 set.copy(
@@ -288,7 +361,13 @@ class WorkoutDelegateImpl(
             progress = 1f
         )
 
-        val newHistoryEntry = generateHistoryEntry(workout, completionDate, completionTime, completedExercises, duration)
+        val newHistoryEntry = generateHistoryEntry(
+            workout,
+            completionDate,
+            completionTime,
+            completedExercises,
+            duration
+        )
         val historyId = newHistoryEntry.id
 
         onWorkoutFinished(completedWorkout)
@@ -313,8 +392,15 @@ class WorkoutDelegateImpl(
         }
     }
 
-    private fun generateHistoryEntry(workout: Workout, completionDate: LocalDate, completionTime: LocalTime, completedExercises: List<Exercise>, duration: Long) : WorkoutHistory {
-        val workoutId = if (workout.id == "freestyle_workout_id") "freestyle_workout_id" else workout.id
+    private fun generateHistoryEntry(
+        workout: Workout,
+        completionDate: LocalDate,
+        completionTime: LocalTime,
+        completedExercises: List<Exercise>,
+        duration: Long
+    ): WorkoutHistory {
+        val workoutId =
+            if (workout.id == "freestyle_workout_id") "freestyle_workout_id" else workout.id
 
         return WorkoutHistory(
             name = workout.name,

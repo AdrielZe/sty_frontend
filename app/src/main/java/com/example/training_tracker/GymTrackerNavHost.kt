@@ -86,7 +86,7 @@ fun GymTrackerNavHost() {
                     navController.navigate("${Routes.WorkoutReport.name}/$historyId") {
                         popUpTo("MAIN_TABS") { inclusive = false }
                     }
-                }
+                },
             )
         }
 
@@ -169,6 +169,9 @@ fun GymTrackerNavHost() {
                 onBackClick = { navController.popBackStack() },
                 onCompleteWorkout = { workoutViewModel.completeWorkout() },
                 onTogglePause = { workoutViewModel.togglePauseWorkout() },
+                onTechniqueChange = { exerciseId, setNumber, technique ->
+                    workoutViewModel.updateSetTechnique(exerciseId, setNumber, technique)
+                }
             )
         }
 

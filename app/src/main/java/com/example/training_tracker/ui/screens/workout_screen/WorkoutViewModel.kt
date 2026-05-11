@@ -9,6 +9,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.training_tracker.GymTrackerApplication
 import com.example.training_tracker.data.models.ExerciseSet
+import com.example.training_tracker.data.models.Technique
 import com.example.training_tracker.data.models.Workout
 import com.example.training_tracker.domain.repository.RecordsRepository
 import com.example.training_tracker.domain.repository.WorkoutHistoryRepository
@@ -88,6 +89,15 @@ class WorkoutViewModel(
     fun reopenExercise(exerciseId: String) {
         viewModelScope.launch {
             uiState.value.workout?.let { reopenExercise(it, exerciseId) }
+        }
+    }
+
+    fun updateSetTechnique(exerciseId: String, setNumber: Int, technique: Technique) {
+        viewModelScope.launch {
+            uiState.value.workout?.let {
+                // Chamamos a função no delegate para tratar a lógica de atualização do objeto
+                updateSetTechnique(it, exerciseId, setNumber, technique)
+            }
         }
     }
 

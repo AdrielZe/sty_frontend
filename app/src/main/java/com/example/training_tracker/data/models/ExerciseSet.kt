@@ -6,5 +6,6 @@ data class ExerciseSet(
     val weight: String = "",
     val isCompleted: Boolean = false,
     val previousReps: String = "",
-    val previousWeight: String = ""
+    val previousWeight: String = "",
+    val technique: Technique = Technique.NORMAL
 )

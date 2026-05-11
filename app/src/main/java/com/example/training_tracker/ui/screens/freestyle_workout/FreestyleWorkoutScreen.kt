@@ -32,6 +32,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.training_tracker.R
+import com.example.training_tracker.data.models.Technique
 import com.example.training_tracker.ui.components.MuscleGroupPickerDialog
 import com.example.training_tracker.ui.screens.workout_details.AddExerciseSelectionDialog
 import com.example.training_tracker.ui.theme.CyanAccent
@@ -160,7 +161,14 @@ fun FreestyleWorkoutScreen(
                         onCompleteExercise = { viewModel.completeExercise(exercise.id) },
                         onReopenExercise = { viewModel.reopenExercise(exercise.id) },
                         onRemoveExercise = { viewModel.removeExercise(exercise.id) },
-                        workout = uiState.workout
+                        workout = uiState.workout,
+                        onTechniqueChange = { setNum, technique ->
+                            viewModel.updateSetTechnique(
+                                exerciseId = exercise.id,
+                                setNumber = setNum,
+                                technique = technique
+                            )
+                        }
                     )
                 }
 

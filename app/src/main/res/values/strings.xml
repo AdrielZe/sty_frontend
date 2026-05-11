@@ -496,5 +496,15 @@
     <string name="posteriores">POSTERIORES</string>
     <string name="panturrilha">PANTURRILHA</string>
     <string name="gluteo">GLÚTEO</string>
+    <string name="normal">Normal</string>
+    <string name="pico_de_contracao">Pico de Contração</string>
+    <string name="drop_set">Drop-Set</string>
+    <string name="rest_pause">Rest-Pause</string>
+    <string name="bi_set_super_set">Bi-Set / Super-Set</string>
+    <string name="isometria">Isometria</string>
+    <string name="excentrica_lenta">Excêntrica Lenta</string>
+    <string name="repeticoes_parciais">Repetições Parciais</string>
+    <string name="cluster_set">Cluster Set</string>
+    <string name="myo_reps">Myo-Reps</string>
 
 </resources>

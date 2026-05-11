@@ -61,10 +61,8 @@ fun UserProfileScreen(
             val uri = result.uriContent
             uri?.let {
                 try {
-                    // Copiar a imagem cortada para o armazenamento interno para não perder
                     val inputStream = context.contentResolver.openInputStream(it)
                     
-                    // Remover qualquer imagem de perfil anterior para evitar acumulo
                     context.filesDir.listFiles()?.forEach { file ->
                         if (file.name.startsWith("profile_pic")) {
                             file.delete()

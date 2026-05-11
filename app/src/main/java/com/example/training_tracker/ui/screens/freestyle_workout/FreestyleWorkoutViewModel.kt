@@ -9,6 +9,7 @@ import com.example.training_tracker.GymTrackerApplication
 import com.example.training_tracker.data.models.Exercise
 import com.example.training_tracker.data.models.ExerciseSet
 import com.example.training_tracker.data.models.MuscleGroups
+import com.example.training_tracker.data.models.Technique
 import com.example.training_tracker.data.models.Workout
 import com.example.training_tracker.domain.repository.ExerciseRepository
 import com.example.training_tracker.domain.repository.WorkoutHistoryRepository
@@ -275,6 +276,15 @@ class FreestyleWorkoutViewModel(
     fun reopenExercise(exerciseId: String) {
         viewModelScope.launch {
             reopenExercise(uiState.value.workout, exerciseId)
+        }
+    }
+
+    fun updateSetTechnique(exerciseId: String, setNumber: Int, technique: Technique) {
+        viewModelScope.launch {
+            uiState.value.workout?.let {
+                // Chamamos a função no delegate para tratar a lógica de atualização do objeto
+                updateSetTechnique(it, exerciseId, setNumber, technique)
+            }
         }
     }
 

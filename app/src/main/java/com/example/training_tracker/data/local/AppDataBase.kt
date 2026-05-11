@@ -24,8 +24,7 @@ import kotlinx.coroutines.launch
 
 @Database(
     entities = [Workout::class, Exercise::class, WorkoutHistory::class, Records::class, User::class],
-    version = 33,
-    exportSchema = true,
+    version = 32,
 )
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
@@ -39,13 +38,6 @@ abstract class AppDatabase : RoomDatabase() {
         @Volatile
         private var INSTANCE: AppDatabase? = null
 
-        private val MIGRATION_32_33 = object : Migration(32, 33) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                // Substitua 'exercise_sets' pelo nome real da sua tabela na anotação @Entity
-                database.execSQL("ALTER TABLE exercises ADD COLUMN technique TEXT NOT NULL DEFAULT 'NONE'")
-            }
-        }
-
         fun getDatabase(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -53,7 +45,6 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "app_database"
                 )
-                    .addMigrations(MIGRATION_32_33)
                     .build()
                 INSTANCE = instance
                 instance

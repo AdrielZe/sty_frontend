@@ -24,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.example.training_tracker.R
+import com.example.training_tracker.data.models.Technique
 import com.example.training_tracker.ui.utils.ExerciseCardUtils
 import com.example.training_tracker.ui.utils.FinishWorkoutButton
 import com.example.training_tracker.ui.utils.WorkoutTopBar
@@ -46,6 +47,7 @@ fun WorkoutScreen(
     onCompleteExercise: (String) -> Unit,
     onReopenExercise: (String) -> Unit,
     onCompleteWorkout: () -> Unit,
+    onTechniqueChange: (String, Int, Technique) -> Unit,
     onRemoveExercise: (String) -> Unit = {},
     onTogglePause: () -> Unit = {}
 ) {
@@ -162,6 +164,11 @@ fun WorkoutScreen(
                             currentOnRepsChange(exercise.id, setNumber, newValue)
                         }
                     }
+                    val onTechniqueChangeLambda = remember(exercise.id) {
+                        { setNumber: Int, newTechnique: Technique ->
+                            onTechniqueChange(exercise.id, setNumber, newTechnique)
+                        }
+                    }
                     val onWeightChangeLambda = remember(exercise.id) {
                         { setNumber: Int, newValue: String ->
                             currentOnWeightChange(exercise.id, setNumber, newValue)
@@ -211,7 +218,8 @@ fun WorkoutScreen(
                         onReopenExercise = onReopenExerciseLambda,
                         onExpandedChange = onExpandedChangeLambda,
                         onRemoveExercise = onRemoveExerciseLambda,
-                        workout = workout
+                        workout = workout,
+                        onTechniqueChange = onTechniqueChangeLambda
                     )
                 }
 
