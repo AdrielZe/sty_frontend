@@ -9,6 +9,9 @@ enum class MuscleGroups(@StringRes val resId: Int) {
     TRICEPS(R.string.muscle_triceps),
     BICEPS(R.string.muscle_biceps),
     SHOULDERS(R.string.muscle_shoulders),
-    LEGS(R.string.muscle_legs),
+    QUADRICEPS(R.string.quadriceps),
+    HAMSTRINGS(R.string.posteriores),
+    CALF(R.string.panturrilha),
+    GLUTE(R.string.gluteo),
     ABS(R.string.muscle_abs)
 }
