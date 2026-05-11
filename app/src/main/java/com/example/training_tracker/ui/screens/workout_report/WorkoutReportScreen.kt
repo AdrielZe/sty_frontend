@@ -86,6 +86,7 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.training_tracker.R
 import com.example.training_tracker.data.models.Exercise
+import com.example.training_tracker.ui.screens.home.MomentumCard
 import com.example.training_tracker.ui.theme.CyanAccent
 import com.example.training_tracker.ui.theme.CyanGradient
 import kotlinx.coroutines.launch
@@ -158,14 +159,13 @@ fun WorkoutReportScreen(
                         }
                         drawContent()
                     }
-                    .background(MaterialTheme.colorScheme.background)
-                    .defaultMinSize(minHeight = targetMinHeight),
+                    .background(MaterialTheme.colorScheme.background),
+                 //   .defaultMinSize(minHeight = targetMinHeight),
                 contentAlignment = Alignment.TopCenter
             ) {
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        // Padding farto para a imagem gerada ter um respiro nas laterais
                         .padding(horizontal = 32.dp, vertical = 20.dp),
                     verticalArrangement = Arrangement.spacedBy(24.dp)
                 ) {
@@ -208,7 +208,11 @@ fun WorkoutReportScreen(
                     MetricsGrid(uiState = uiState)
 
                     // 3. Novos Recordes
-                    RecordsSection(uiState.records)
+                    if (uiState.records?.exercisesRecordMap?.isNotEmpty() == true ||
+                        uiState.records?.volumeRecords?.isNotEmpty() == true) {
+                        println("report debug entrou no if")
+                        RecordsSection(uiState.records)
+                    }
                 }
             }
 

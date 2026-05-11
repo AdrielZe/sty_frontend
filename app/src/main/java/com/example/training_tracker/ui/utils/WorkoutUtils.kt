@@ -500,9 +500,7 @@ fun ExerciseCardUtils(
                     Spacer(Modifier.height(16.dp))
 
                     exercise.exerciseSets.forEach { set ->
-                        val isWeightError =
-                            showErrors && (set.weight.replace(',', '.').toDoubleOrNull()
-                                ?: 0.0) <= 0.0
+                        val isWeightError = showErrors && set.weight.isBlank()
                         val isRepsError = showErrors && (set.reps.toIntOrNull() ?: 0) <= 0
 
                         SetLine(
@@ -806,7 +804,7 @@ fun FinishWorkoutButton(
             val hasMinimumExercises = exercises.count { it.isCompleted } >= 3
             val allSetsFilled = exercises.all { ex ->
                 ex.exerciseSets.all { set ->
-                    set.weight.isNotBlank() && set.weight != "0" && set.reps.isNotBlank() && set.reps != "0"
+                    set.weight.isNotBlank() && set.reps.isNotBlank() && set.reps != "0"
                 }
             }
             hasMinimumExercises && allSetsFilled
