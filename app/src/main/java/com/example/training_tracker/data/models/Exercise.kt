@@ -12,6 +12,7 @@ data class Exercise (
     @ColumnInfo(name = "exerciseSets") val exerciseSets: List<ExerciseSet> = listOf(ExerciseSet(1, "", "")),
     @ColumnInfo(name = "isDefault") val isDefault: Boolean = false,
     @ColumnInfo(name = "isCompleted") val isCompleted: Boolean = false,
+    @ColumnInfo(name = "technique") val technique: String = "NONE",
     @ColumnInfo(name = "setsCompleted") val setsCompleted: Int = 1,
     @ColumnInfo(name = "weightRecord") val weightRecord: Int = 0
 )

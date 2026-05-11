@@ -17,6 +17,10 @@ android {
         versionName = "1.0.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+//        ksp {
+//            arg("room.schemaLocation", "$projectDir/schemas")
+//        }
     }
 
     buildTypes {
@@ -45,6 +49,8 @@ android {
         compose = true
     }
 }
+
+
 
 dependencies {
 
@@ -80,4 +86,5 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
     implementation(libs.coil.compose)
+    implementation("com.vanniktech:android-image-cropper:4.7.0")
 }

@@ -90,6 +90,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import coil.size.Size
 import com.example.training_tracker.R
 import com.example.training_tracker.data.models.MuscleGroups
 import com.example.training_tracker.data.models.User
@@ -329,13 +330,11 @@ fun HomeContent(
                     .clickable { isProfileExpanded = false },
                 contentAlignment = Alignment.Center
             ) {
-                // CORREÇÃO AQUI: Se NÃO estiver vazio, mostra a foto.
-                // Antes estava verificando se estava vazio para mostrar a foto.
                 if (!homeUiState.user?.profilePicture.isNullOrEmpty()) {
                     AsyncImage(
                         model = ImageRequest.Builder(LocalContext.current)
                             .data(homeUiState.user?.profilePicture)
-                            .crossfade(true)
+                            .size(Size.ORIGINAL)
                             .build(),
                         contentDescription = stringResource(R.string.foto_de_perfil_expandida),
                         modifier = Modifier.fillMaxSize(),
@@ -682,7 +681,6 @@ fun SetWeeklyGoalCard(onClick: () -> Unit) {
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
                     .data(R.drawable.strong_3k)
-                    .crossfade(true)
                     .build(),
                 contentDescription = null,
                 modifier = Modifier.fillMaxSize(),
@@ -907,7 +905,6 @@ fun WeeklyProgressCard(
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
                     .data(R.drawable.count_backround)
-                    .crossfade(true)
                     .build(),
                 contentDescription = stringResource(R.string.fundo_do_card),
                 contentScale = ContentScale.Crop,
@@ -1068,7 +1065,7 @@ fun CustomTopBar(
                 AsyncImage(
                     model = ImageRequest.Builder(LocalContext.current)
                         .data(user.profilePicture)
-                        .crossfade(true)
+                        .size(Size.ORIGINAL)
                         .build(),
                     contentDescription = stringResource(id = R.string.content_description_profile),
                     modifier = Modifier.fillMaxSize(),
@@ -1161,7 +1158,6 @@ fun WorkoutCard(modifier: Modifier = Modifier, workout: Workout?, onClick: () ->
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
                     .data(getWorkoutImageRes(workout))
-                    .crossfade(true)
                     .build(),
                 contentDescription = null,
                 modifier = Modifier.matchParentSize(),
@@ -1391,7 +1387,6 @@ fun EmptyWorkoutCard(modifier: Modifier = Modifier) {
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
                     .data(R.drawable.relax_no_workout)
-                    .crossfade(true)
                     .build(),
                 contentDescription = null,
                 modifier = Modifier.matchParentSize(),
@@ -1472,7 +1467,6 @@ fun MomentumCard(count: Int) {
         AsyncImage(
             model = ImageRequest.Builder(LocalContext.current)
                 .data(R.drawable.gym)
-                .crossfade(true)
                 .build(),
             contentDescription = null,
             // 👇 2. matchParentSize() para a imagem preencher o fundo independentemente da altura que o Box assumir
@@ -1537,7 +1531,6 @@ fun EmptyMomentumCard() {
         AsyncImage(
             model = ImageRequest.Builder(LocalContext.current)
                 .data(R.drawable.start_today)
-                .crossfade(true)
                 .build(),
             contentDescription = null,
             modifier = Modifier.fillMaxSize(),

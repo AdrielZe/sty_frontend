@@ -21,4 +21,3 @@ dependencyResolutionManagement {
 
 rootProject.name = "training_tracker"
 include(":app")
- 

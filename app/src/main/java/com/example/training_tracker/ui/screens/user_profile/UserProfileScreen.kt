@@ -1,6 +1,7 @@
 package com.example.training_tracker.ui.screens.user_profile
 
 import android.content.Intent
+import android.net.Uri
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -32,15 +33,18 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import coil.size.Size
 import com.example.training_tracker.data.models.User
 import com.example.training_tracker.ui.theme.CyanAccent
 import com.example.training_tracker.R
+import java.io.File
+import java.io.FileOutputStream
 import java.util.Locale
 
+@Suppress("DEPRECATION")
 @Composable
 fun UserProfileScreen(
     onBackClick: () -> Unit,
@@ -50,6 +54,44 @@ fun UserProfileScreen(
     val context = LocalContext.current
     var showEditNameDialog by remember { mutableStateOf(false) }
 
+    val imageCropperLauncher = rememberLauncherForActivityResult(
+        contract = com.canhub.cropper.CropImageContract()
+    ) { result ->
+        if (result.isSuccessful) {
+            val uri = result.uriContent
+            uri?.let {
+                try {
+                    // Copiar a imagem cortada para o armazenamento interno para não perder
+                    val inputStream = context.contentResolver.openInputStream(it)
+                    
+                    // Remover qualquer imagem de perfil anterior para evitar acumulo
+                    context.filesDir.listFiles()?.forEach { file ->
+                        if (file.name.startsWith("profile_pic")) {
+                            file.delete()
+                        }
+                    }
+                    
+                    // Gerar um nome unico com timestamp para forcar a recomposicao da imagem no Coil
+                    val timestamp = System.currentTimeMillis()
+                    val profilePicFile = File(context.filesDir, "profile_pic_$timestamp.jpg")
+                    val outputStream = FileOutputStream(profilePicFile)
+
+                    inputStream?.use { input ->
+                        outputStream.use { output ->
+                            input.copyTo(output)
+                        }
+                    }
+                    viewModel.updateProfilePicture(Uri.fromFile(profilePicFile).toString())
+                } catch (e: Exception) {
+                    Log.e("UserProfileScreen", "Erro ao salvar imagem cortada", e)
+                }
+            }
+        } else {
+            val error = result.error
+            error?.printStackTrace()
+        }
+    }
+
     val photoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()
     ) { uri ->
@@ -58,7 +100,18 @@ fun UserProfileScreen(
                 val contentResolver = context.contentResolver
                 val takeFlags: Int = Intent.FLAG_GRANT_READ_URI_PERMISSION
                 contentResolver.takePersistableUriPermission(it, takeFlags)
-                viewModel.updateProfilePicture(it.toString())
+                
+                val cropOptions = com.canhub.cropper.CropImageContractOptions(
+                    it, 
+                    com.canhub.cropper.CropImageOptions(
+                        aspectRatioX = 1,
+                        aspectRatioY = 1,
+                        fixAspectRatio = true,
+                        guidelines = com.canhub.cropper.CropImageView.Guidelines.ON,
+                        imageSourceIncludeCamera = false
+                    )
+                )
+                imageCropperLauncher.launch(cropOptions)
             } catch (e: Exception) {
                 Log.e("PhotoPicker", "Erro ao obter permissão persistente", e)
             }
@@ -154,13 +207,13 @@ fun ProfileContent(
                         AsyncImage(
                             model = ImageRequest.Builder(LocalContext.current)
                                 .data(user.profilePicture)
-                                .crossfade(true)
+                                .size(Size.ORIGINAL) // Força o Coil a não pré-escalar baseado num bounding box temporário
                                 .build(),
                             contentDescription = stringResource(R.string.foto_de_perfil),
                             modifier = Modifier.fillMaxSize(),
                             contentScale = ContentScale.Crop,
-                            error = painterResource(id = R.drawable.gym),
-                            placeholder = painterResource(id = R.drawable.gym)
+                            error = painterResource(id = R.drawable.gym)
+                            // Removemos o placeholder para evitar que ele interfira no cálculo de proporção enquanto a imagem real carrega
                         )
                     } else {
                         Image(
@@ -384,8 +437,6 @@ fun StatCard(
     modifier: Modifier = Modifier
 ) {
     Card(
-        // 👇 1. Usamos o defaultMinSize para garantir que o card tenha um tamanho base,
-        // mas permitimos que ele cresça se o texto interno precisar de mais espaço.
         modifier = modifier.defaultMinSize(minHeight = 110.dp),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
@@ -417,8 +468,6 @@ fun StatCard(
                 text = value,
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
-                // 👇 3. Proteção para valores grandes (ex: "1.250.000")
-                // Se não couber na largura, ele diminui ou coloca reticências em vez de empurrar tudo
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
