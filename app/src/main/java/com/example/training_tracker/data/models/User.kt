@@ -9,6 +9,6 @@ data class User(
     val id: String = "default_user",
     val name: String,
     val profilePicture: String? = null,
-    val nameDisplay: String? = null, // Opcional: nome completo ou apelido
+    val nameDisplay: String? = null,
     val weeklyGoal: Int? = null
 )

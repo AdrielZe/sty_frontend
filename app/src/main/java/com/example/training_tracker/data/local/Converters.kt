@@ -50,6 +50,7 @@ class Converters {
         val listType = object : TypeToken<MutableList<Int>>() {}.type
         return gson.fromJson(value, listType) ?: mutableListOf()
     }
+
     @TypeConverter
     fun fromExerciseList(value: List<Exercise>): String = gson.toJson(value)
 

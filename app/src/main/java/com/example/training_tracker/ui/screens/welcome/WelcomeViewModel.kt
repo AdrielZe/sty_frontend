@@ -3,7 +3,7 @@ package com.example.training_tracker.ui.screens.welcome
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.training_tracker.data.models.User
-import com.example.training_tracker.data.repository.UserRepository
+import com.example.training_tracker.domain.repository.UserRepository
 import kotlinx.coroutines.launch
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory

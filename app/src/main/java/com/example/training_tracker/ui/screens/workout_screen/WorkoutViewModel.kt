@@ -10,9 +10,9 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.training_tracker.GymTrackerApplication
 import com.example.training_tracker.data.models.ExerciseSet
 import com.example.training_tracker.data.models.Workout
-import com.example.training_tracker.data.repository.RecordsRepository
-import com.example.training_tracker.data.repository.WorkoutHistoryRepository
-import com.example.training_tracker.data.repository.WorkoutRepository
+import com.example.training_tracker.domain.repository.RecordsRepository
+import com.example.training_tracker.domain.repository.WorkoutHistoryRepository
+import com.example.training_tracker.domain.repository.WorkoutRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow

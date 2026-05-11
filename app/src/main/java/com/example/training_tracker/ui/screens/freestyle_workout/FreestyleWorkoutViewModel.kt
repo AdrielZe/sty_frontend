@@ -10,9 +10,9 @@ import com.example.training_tracker.data.models.Exercise
 import com.example.training_tracker.data.models.ExerciseSet
 import com.example.training_tracker.data.models.MuscleGroups
 import com.example.training_tracker.data.models.Workout
-import com.example.training_tracker.data.repository.ExerciseRepository
-import com.example.training_tracker.data.repository.WorkoutHistoryRepository
-import com.example.training_tracker.data.repository.WorkoutRepository
+import com.example.training_tracker.domain.repository.ExerciseRepository
+import com.example.training_tracker.domain.repository.WorkoutHistoryRepository
+import com.example.training_tracker.domain.repository.WorkoutRepository
 import com.example.training_tracker.domain.classifiers.ExerciseClassifier
 import com.example.training_tracker.ui.screens.workout_screen.WorkoutDelegate
 import com.example.training_tracker.ui.screens.workout_screen.WorkoutDelegateImpl

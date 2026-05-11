@@ -1,14 +1,13 @@
-package com.example.training_tracker.domain.repository
+package com.example.training_tracker.data.repository
 
 import com.example.training_tracker.data.local.dao.RecordsDao
 import com.example.training_tracker.data.models.Records
-import com.example.training_tracker.data.repository.RecordsRepository
+import com.example.training_tracker.domain.repository.RecordsRepository
 import kotlinx.coroutines.flow.Flow
 
 class RecordsRepositoryImpl(
     private val recordsDao: RecordsDao
 ) : RecordsRepository {
-
     override val records: Flow<Records?> = recordsDao.getRecordFlow()
 
     override suspend fun getRecord(): Records? {

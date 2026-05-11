@@ -11,12 +11,12 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface WorkoutDao{
-
     @Query("SELECT * FROM workouts")
     fun getAllWorkouts(): Flow<List<Workout>>
 
     @Query("SELECT * FROM workouts WHERE dayOfWeek = :day AND isCompleted = 0")
     suspend fun getActiveWorkoutForDay(day: Int): Workout?
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(workout: Workout)
 

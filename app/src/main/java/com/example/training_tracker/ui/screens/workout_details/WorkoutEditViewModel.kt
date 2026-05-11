@@ -10,8 +10,8 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.training_tracker.GymTrackerApplication
 import com.example.training_tracker.data.models.Exercise
 import com.example.training_tracker.data.models.MuscleGroups
-import com.example.training_tracker.data.repository.ExerciseRepository
-import com.example.training_tracker.data.repository.WorkoutRepository
+import com.example.training_tracker.domain.repository.ExerciseRepository
+import com.example.training_tracker.domain.repository.WorkoutRepository
 import com.example.training_tracker.domain.classifiers.ExerciseClassifier
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
