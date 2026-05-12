@@ -49,6 +49,7 @@ import com.example.training_tracker.R
 import com.example.training_tracker.data.models.MuscleGroups
 import com.example.training_tracker.data.models.Workout
 import com.example.training_tracker.ui.screens.home.MuscleBadge
+import com.example.training_tracker.ui.screens.home.getWorkoutImageRes
 import com.example.training_tracker.ui.theme.CyanAccent
 import com.example.training_tracker.ui.theme.CyanGradient
 import kotlinx.coroutines.delay
@@ -315,7 +316,7 @@ fun ActiveWorkoutCard(
                 ) {
                     AsyncImage(
                         model = ImageRequest.Builder(LocalContext.current)
-                            .data(getWorkoutImage(workout))
+                            .data(getWorkoutImageRes(workout))
                             .crossfade(true)
                             .build(),
                         contentDescription = null,
@@ -433,33 +434,6 @@ fun MuscleBadgeRegistered(muscle: MuscleGroups) {
             fontWeight = FontWeight.Bold,
             letterSpacing = 0.5.sp
         )
-    }
-}
-/**
- * Retorna o drawable ID baseado no MuscleGroup predominante do treino.
- */
-fun getWorkoutImage(workout: Workout): Int {
-    if (workout.exercises.isEmpty()) return R.drawable.workout
-
-    // Encontra o grupo muscular mais frequente nos exercícios do treino
-    val mostFrequentMuscleGroup = workout.exercises
-        .mapNotNull { it.muscleGroup }
-        .groupingBy { it }
-        .eachCount()
-        .maxByOrNull { it.value }?.key
-
-    return when (mostFrequentMuscleGroup) {
-        MuscleGroups.CHEST -> R.drawable.chest_workout
-        MuscleGroups.BACK -> R.drawable.back_workout
-        MuscleGroups.QUADRICEPS -> R.drawable.leg_workout
-        MuscleGroups.HAMSTRINGS -> R.drawable.hamstrings_workout_home
-        MuscleGroups.CALF -> R.drawable.calf_workout_home
-        MuscleGroups.GLUTE -> R.drawable.glute_workout_home
-        MuscleGroups.SHOULDERS -> R.drawable.shoulder_workout
-        MuscleGroups.BICEPS -> R.drawable.biceps_workout
-        MuscleGroups.TRICEPS -> R.drawable.triceps_workout
-        MuscleGroups.ABS -> R.drawable.abs_workout
-        else -> R.drawable.biceps_workout
     }
 }
 

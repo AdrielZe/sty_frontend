@@ -1,12 +1,15 @@
 package com.example.training_tracker.ui.screens.create_workout
 
+import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.training_tracker.GymTrackerApplication
+import com.example.training_tracker.R
 import com.example.training_tracker.data.models.Exercise
+import com.example.training_tracker.data.models.ExerciseType
 import com.example.training_tracker.data.models.MuscleGroups
 import com.example.training_tracker.data.models.Workout
 import com.example.training_tracker.domain.repository.ExerciseRepository
@@ -118,7 +121,30 @@ class CreateWorkoutViewModel(
     }
 
     fun addCardioExercise(exerciseName: String) {
+        if (exerciseName.isBlank()) return
 
+        val nameFormatted = exerciseName
+            .trim()
+            .split("\\s+".toRegex())
+            .joinToString(" ") { word ->
+                word.lowercase().replaceFirstChar { it.uppercase() }
+            }
+
+        val cardioExercises = uiState.value.availableExercises.filter { it.type == ExerciseType.CARDIO }
+        val existingExercise = cardioExercises.find {
+            it.name.equals(nameFormatted, ignoreCase = true)
+        }
+
+        if (existingExercise == null) {
+            viewModelScope.launch(Dispatchers.Default) {
+                    saveNewExercise(nameFormatted, MuscleGroups.CARDIO)
+                }
+        } else {
+            val exerciseToAdd = existingExercise.copy(id = java.util.UUID.randomUUID().toString())
+            _draftState.update {
+                it.copy(exercises = it.exercises + exerciseToAdd)
+            }
+        }
     }
 
     fun onMuscleGroupSelected(muscleGroup: MuscleGroups) {

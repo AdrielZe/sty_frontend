@@ -648,6 +648,7 @@ private fun getHistoryWorkoutImage(workout: WorkoutHistory): Int {
         MuscleGroups.BICEPS -> R.drawable.biceps_workout
         MuscleGroups.TRICEPS -> R.drawable.triceps_workout
         MuscleGroups.ABS -> R.drawable.abs_workout
+        MuscleGroups.CARDIO -> R.drawable.cardio_workout
         else -> R.drawable.biceps_workout
     }
 }

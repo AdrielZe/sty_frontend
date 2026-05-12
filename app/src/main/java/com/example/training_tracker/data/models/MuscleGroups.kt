@@ -14,4 +14,5 @@ enum class MuscleGroups(@StringRes val resId: Int) {
     CALF(R.string.panturrilha),
     GLUTE(R.string.gluteo),
     ABS(R.string.muscle_abs),
+    CARDIO(R.string.cardio)
 }

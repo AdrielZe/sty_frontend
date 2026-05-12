@@ -388,7 +388,7 @@
     <string name="voce_nao_completou_nenhum_treino_ainda">Você não completou nenhum treino ainda.</string>
     <string name="comece_hoje_para_acompanhar_seu_progresso">Comece hoje para acompanhar seu progresso.</string>
     <string name="adicione_pelo_menos_3_exercicios_para_salvar_seu_treino">Adicione pelo menos 3 exercícios para salvar seu treino</string>
-    <string name="adicione_pelo_menos_3_exercicios">Adicione pelo menos 3 exercícios</string>
+    <string name="adicione_pelo_menos_1_exercicios">Adicione pelo menos 1 exercício</string>
     <string name="adicionar_exercicio">ADICIONAR EXERCÍCIO</string>
     <string name="maior_recorde_pessoal">Maior recorde pessoal</string>
     <string name="nenhum_recorde_registrado">Nenhum recorde registrado</string>
@@ -451,7 +451,7 @@
     <string name="peso_kg">PESO (KG)</string>
     <string name="deletar_serie">Deletar série</string>
     <string name="comece_adicionando_um_exerc_cio">Comece adicionando um exercício</string>
-    <string name="finalize_pelo_menos_3_exerc_cios">Finalize pelo menos 3 exercícios</string>
+    <string name="finalize_pelo_menos_1_exerc_cio">Finalize pelo menos 1 exercício</string>
     <string name="de_exercicios_completos">%1$d de %2$d exercícios completos</string>
     <string name="resume">Resumir</string>
     <string name="pause">Pausar</string>
@@ -508,7 +508,7 @@
     <string name="myo_reps">Myo-Reps</string>
     <string name="adicionar_cardio">Adicionar Cardio</string>
     <string name="clique_aqui_para_selecionar_o_cardio">Clique aqui para selecionar o cardio</string>
-    <string name="cardio">Cardio</string>
+    <string name="cardio">CARDIO</string>
     <string name="selecionar_cardio">Selecionar Cardio</string>
     <string name="buscar_cardio">Buscar Cardio...</string>
 

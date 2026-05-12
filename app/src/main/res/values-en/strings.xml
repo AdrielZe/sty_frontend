@@ -338,8 +338,8 @@
     <string name="comece_hoje">START\nTODAY.</string>
     <string name="voce_nao_completou_nenhum_treino_ainda">You haven\'t completed any workout yet.</string>
     <string name="comece_hoje_para_acompanhar_seu_progresso">Start today to check your progress.</string>
-    <string name="adicione_pelo_menos_3_exercicios_para_salvar_seu_treino">Add at least 3 exercises to save your workout</string>
-    <string name="adicione_pelo_menos_3_exercicios">Add at least 3 exercises</string>
+    <string name="adicione_pelo_menos_1_exercicios_para_salvar_seu_treino">Add at least 1 exercise to save your workout</string>
+    <string name="adicione_pelo_menos_1_exercicios">Add at least 1 exercise</string>
     <string name="adicionar_exercicio">ADD EXERCISE</string>
     <string name="maior_recorde_pessoal">Personal best</string>
     <string name="nenhum_recorde_registrado">No records found</string>
@@ -402,7 +402,7 @@
     <string name="peso_kg">WEIGHT (KG)</string>
     <string name="deletar_serie">Delete set</string>
     <string name="comece_adicionando_um_exerc_cio">Start by adding an exercise</string>
-    <string name="finalize_pelo_menos_3_exerc_cios">Finish at least 3 exercises</string>
+    <string name="finalize_pelo_menos_1_exerc_cio">Finish at least 1 exercise</string>
     <string name="de_exercicios_completos">%1$d of %2$d completed exercises</string>
     <string name="resume">Resume</string>
     <string name="pause">Pause</string>

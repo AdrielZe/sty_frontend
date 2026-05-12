@@ -54,6 +54,7 @@ import com.example.training_tracker.data.models.ExerciseType
 import com.example.training_tracker.data.models.MuscleGroups
 import com.example.training_tracker.data.models.Workout
 import com.example.training_tracker.ui.components.MuscleGroupPickerDialog
+import com.example.training_tracker.ui.screens.create_workout.ExerciseBadge
 import com.example.training_tracker.ui.screens.home.MainGradientButton
 import com.example.training_tracker.ui.theme.CyanAccent
 import com.example.training_tracker.ui.theme.Dimens
@@ -485,19 +486,43 @@ fun ExerciseDetailItem(
 
                 Spacer(modifier = Modifier.height(4.dp))
 
-                // Tag de Músculo (Pequena e discreta)
-                Surface(
-                    color = CyanAccent,
-                    shape = RoundedCornerShape(4.dp)
-                ) {
-                    Text(
-                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                        text = stringResource(exercise.muscleGroup?.resId ?: R.string.detalhes_do_treino_desconhecido).uppercase(),
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.Black,
-                        fontSize = 9.sp,
-                        color = Color.Black
-                    )
+                val exerciseType = exercise.type ?: ExerciseType.STRENGTH
+
+                when (exerciseType) {
+                    ExerciseType.STRENGTH -> {
+                        exercise.muscleGroup?.let { muscle ->
+                            ExerciseBadge(
+                                text = stringResource(muscle.resId).uppercase(),
+                                backgroundColor = CyanAccent
+                            )
+                        }
+                    }
+                    ExerciseType.CARDIO -> {
+                        ExerciseBadge(
+                            text = "CARDIO",
+                            backgroundColor = Color(0xFFFF9800) // Laranja para cardio
+                        )
+
+//                        val cardioDetails = listOfNotNull(
+//                            exercise.time?.takeIf { it.isNotBlank() }?.let { "$it min" },
+//                            exercise.distance?.takeIf { it.isNotBlank() }?.let { "$it km" }
+//                        ).joinToString(" • ")
+
+//                        if (cardioDetails.isNotEmpty()) {
+//                            Text(
+//                                text = cardioDetails,
+//                                style = MaterialTheme.typography.labelSmall,
+//                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+//                                fontWeight = FontWeight.Bold
+//                            )
+//                        }
+                    }
+                    ExerciseType.STRETCHING -> {
+                        ExerciseBadge(
+                            text = "ALONGAMENTO",
+                            backgroundColor = Color(0xFF4CAF50)
+                        )
+                    }
                 }
             }
 
@@ -515,6 +540,23 @@ fun ExerciseDetailItem(
                 }
             }
         }
+    }
+}
+
+@Composable
+fun ExerciseBadge(text: String, backgroundColor: Color) {
+    Surface(
+        color = backgroundColor,
+        shape = RoundedCornerShape(4.dp)
+    ) {
+        Text(
+            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+            text = text,
+            style = MaterialTheme.typography.labelSmall,
+            fontWeight = FontWeight.Black,
+            fontSize = 9.sp,
+            color = Color.Black
+        )
     }
 }
 
@@ -700,7 +742,7 @@ fun AddCardioSelectionDialog(
     var searchQuery by remember { mutableStateOf("") }
 
     val filteredExercises = remember(searchQuery, availableExercises) {
-        val availableCardioExercises = availableExercises.filter { it.type == ExerciseType.CARDIO }
+        val availableCardioExercises = availableExercises.filter { it.muscleGroup == MuscleGroups.CARDIO }
         val query = searchQuery.trim()
         if (query.isEmpty()) availableCardioExercises
         else availableCardioExercises.filter { it.name.contains(query, ignoreCase = true) }
@@ -775,7 +817,7 @@ fun AddCardioSelectionDialog(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Lista de Cardio
+                // Lista de Exercícios
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxWidth()

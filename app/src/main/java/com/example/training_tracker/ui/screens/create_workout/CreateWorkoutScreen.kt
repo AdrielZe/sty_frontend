@@ -12,19 +12,24 @@ import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.FitnessCenter
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -35,7 +40,9 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -58,9 +65,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.training_tracker.R
 import com.example.training_tracker.data.models.Exercise
+import com.example.training_tracker.data.models.ExerciseType
 import com.example.training_tracker.ui.components.MuscleGroupPickerDialog
 import com.example.training_tracker.ui.screens.workout_details.AddCardioSelectionDialog
 import com.example.training_tracker.ui.screens.workout_details.AddExerciseSelectionDialog
@@ -85,7 +94,7 @@ fun CreateWorkoutScreen(
     var showAddExerciseDialog by remember { mutableStateOf(false) }
     var showAddCardioDialog by remember { mutableStateOf(false) }
     val isButtonEnabled by remember {
-        derivedStateOf { uiState.exercises.size >= 3 }
+        derivedStateOf { uiState.exercises.size >= 1 }
     }
     val scrollState = rememberScrollState()
 
@@ -364,7 +373,7 @@ fun CreateWorkoutScreen(
                     viewModel.addExercise(name)
                     showAddExerciseDialog = false
                 },
-                availableExercises = uiState.availableExercises
+                availableExercises = uiState.availableExercises.filter { it.type == ExerciseType.STRENGTH }
             )
         }
 
@@ -375,7 +384,7 @@ fun CreateWorkoutScreen(
                     viewModel.addCardioExercise(name)
                     showAddCardioDialog = false
                 },
-                availableExercises= uiState.availableExercises
+                availableExercises = uiState.availableExercises.filter { it.type == ExerciseType.CARDIO }
             )
         }
     }
@@ -434,16 +443,72 @@ fun ExerciseItem(exercise: Exercise, onDelete: () -> Unit) {
     ) {
         Row(
             modifier = Modifier
+                .fillMaxWidth()
                 .padding(Dimens.paddingMedium),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text(
-                text = exercise.name,
+            // A Column recebe o weight(1f) para empurrar a lixeira para o canto,
+            // garantindo que textos grandes quebrem de linha sem sobrepor o botão.
+            Column(
                 modifier = Modifier.weight(1f),
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurface
-            )
+                verticalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                Text(
+                    text = exercise.name,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+
+                // Renderiza as tags dependendo do tipo de exercício
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    when (exercise.type) {
+                        ExerciseType.STRENGTH -> {
+                            exercise.muscleGroup?.let { muscle ->
+                                ExerciseBadge(
+                                    text = stringResource(muscle.resId).uppercase(),
+                                    backgroundColor = CyanAccent
+                                )
+                            }
+                        }
+                        ExerciseType.CARDIO -> {
+                            ExerciseBadge(
+                                text = "CARDIO",
+                                backgroundColor = Color(0xFFFF9800) // Laranja para cardio
+                            )
+
+                            val cardioDetails = listOfNotNull(
+                                exercise.time?.takeIf { it.isNotBlank() }?.let { "$it min" },
+                                exercise.distance?.takeIf { it.isNotBlank() }?.let { "$it km" }
+                            ).joinToString(" • ")
+
+                            if (cardioDetails.isNotEmpty()) {
+                                Text(
+                                    text = cardioDetails,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+                        ExerciseType.STRETCHING -> {
+                            ExerciseBadge(
+                                text = "ALONGAMENTO",
+                                backgroundColor = Color(0xFF4CAF50) // Verde para alongamento
+                            )
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.width(12.dp))
+
+            // A lixeira sem weight() assume apenas o tamanho do próprio ícone
             IconButton(onClick = onDelete) {
                 Icon(
                     imageVector = Icons.Default.Delete,
@@ -452,6 +517,24 @@ fun ExerciseItem(exercise: Exercise, onDelete: () -> Unit) {
                 )
             }
         }
+    }
+}
+
+
+@Composable
+fun ExerciseBadge(text: String, backgroundColor: Color) {
+    Surface(
+        color = backgroundColor,
+        shape = RoundedCornerShape(4.dp)
+    ) {
+        Text(
+            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+            text = text,
+            style = MaterialTheme.typography.labelSmall,
+            fontWeight = FontWeight.Black,
+            fontSize = 9.sp,
+            color = Color.Black
+        )
     }
 }
 
@@ -497,7 +580,7 @@ fun SaveWorkoutButton(
             Spacer(modifier = Modifier.width(12.dp))
 
             Text(
-                text = if (isEnabled) text else stringResource(R.string.adicione_pelo_menos_3_exercicios),
+                text = if (isEnabled) text else stringResource(R.string.adicione_pelo_menos_1_exercicios),
                 color = Color.White,
                 fontWeight = FontWeight.Bold,
                 fontSize = 16.sp,

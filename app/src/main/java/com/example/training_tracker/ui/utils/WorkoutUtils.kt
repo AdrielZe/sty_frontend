@@ -883,7 +883,7 @@ fun FinishWorkoutButton(
     val canCompleteWorkout by remember {
         derivedStateOf {
             val exercises = currentWorkout?.exercises ?: emptyList()
-            val hasMinimumExercises = exercises.count { it.isCompleted } >= 3
+            val hasMinimumExercises = exercises.count { it.isCompleted } >= 1
             val allSetsFilled = exercises.all { ex ->
                 ex.exerciseSets.all { set ->
                     set.weight.isNotBlank() && set.reps.isNotBlank() && set.reps != "0"
@@ -966,7 +966,7 @@ fun FinishWorkoutButton(
             text = when {
                 workout?.isCompleted == true -> stringResource(id = R.string.workout_screen_finish_button_completed)
                 (workout?.exercises?.size ?: 0) < 1 -> stringResource(R.string.comece_adicionando_um_exerc_cio)
-                (workout?.exercises?.count { it.isCompleted } ?: 0) < 3 -> stringResource(R.string.finalize_pelo_menos_3_exerc_cios)
+                (workout?.exercises?.count { it.isCompleted } ?: 0) < 1 -> stringResource(R.string.finalize_pelo_menos_1_exerc_cio)
                 !canCompleteWorkout -> stringResource(id = R.string.workout_screen_finish_button_fill_sets)
                 else -> stringResource(id = R.string.workout_screen_finish_button_hold)
             },
