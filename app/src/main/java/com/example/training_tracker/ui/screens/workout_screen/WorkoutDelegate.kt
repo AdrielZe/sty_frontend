@@ -319,7 +319,8 @@ class WorkoutDelegateImpl(
                 val lastSet = lastPerformance?.exerciseSets?.find { it.set == set.set }
                 set.copy(
                     previousWeight = lastSet?.weight ?: "",
-                    previousReps = lastSet?.reps ?: ""
+                    previousReps = lastSet?.reps ?: "",
+                    technique = set.technique ?: Technique.NORMAL,
                 )
             }
             exercise.copy(exerciseSets = updatedSets)

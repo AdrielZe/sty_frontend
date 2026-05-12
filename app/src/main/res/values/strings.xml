@@ -469,8 +469,8 @@
     <string name="plano_semanal">PLANO SEMANAL</string>
     <string name="nenhuma_atividade">Nenhuma atividade</string>
     <string name="historico">HISTÓRICO</string>
-    <string name="selecione_o_grupo_muscular_para">Selecione o grupo muscular para \"%1$s\"</string>
     <string name="n_o_temos_certeza_do_grupamento_muscular_desse_exerc_cio_por_favor_ajude_nos_a_categoriz_lo">Não temos certeza do grupamento muscular desse exercício. Por favor, ajude-nos a categorizá-lo.</string>
+    <string name="selecione_o_grupo_muscular_para">Selecione o grupo muscular para \"%1$s\"</string>
     <string name="recorde_pessoal">RECORDE</string>
     <string name="recordes_pessoais">RECORDES PESSOAIS</string>
     <string name="top_exercicios">TOP PESOS</string>
@@ -511,5 +511,7 @@
     <string name="cardio">CARDIO</string>
     <string name="selecionar_cardio">Selecionar Cardio</string>
     <string name="buscar_cardio">Buscar Cardio...</string>
+    <string name="distancia_km">DISTÂNCIA (KM)</string>
+    <string name="tempo_min">TEMPO (MIN)</string>
 
 </resources>

@@ -92,6 +92,7 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.training_tracker.R
 import com.example.training_tracker.data.models.Exercise
+import com.example.training_tracker.data.models.ExerciseType
 import com.example.training_tracker.data.models.MuscleGroups
 import com.example.training_tracker.data.models.Technique
 import com.example.training_tracker.data.models.Workout
@@ -312,6 +313,7 @@ fun ExerciseCardUtils(
                         exercise.exerciseSets.forEach { set ->
                             SetLine(
                                 modifier = Modifier.fillMaxWidth(),
+                                exercise = exercise,
                                 inputValueReps = set.reps,
                                 inputValueWeight = set.weight,
                                 previousReps = set.previousReps,
@@ -411,7 +413,8 @@ fun ExerciseCardUtils(
                                                 )
                                             },
                                             onClick = {
-                                                onRemoveExercise(exercise.id); isMenuExpanded = false
+                                                onRemoveExercise(exercise.id); isMenuExpanded =
+                                                false
                                             },
                                             leadingIcon = {
                                                 Icon(
@@ -474,7 +477,8 @@ fun ExerciseCardUtils(
                             shape = RoundedCornerShape(8.dp),
                         ) {
                             val activeSet =
-                                exercise.exerciseSets.lastOrNull() { !(it.weight.isEmpty() && it.reps.isEmpty()) }?.set ?: 1
+                                exercise.exerciseSets.lastOrNull() { !(it.weight.isEmpty() && it.reps.isEmpty()) }?.set
+                                    ?: 1
                             Text(
                                 text = stringResource(R.string.serie_atual, activeSet),
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
@@ -511,8 +515,12 @@ fun ExerciseCardUtils(
                         val isWeightError = showErrors && set.weight.isBlank()
                         val isRepsError = showErrors && (set.reps.toIntOrNull() ?: 0) <= 0
 
+                        //val isTimeError =
+                        //val isDistanceError =
+
                         SetLine(
                             modifier = Modifier.fillMaxWidth(),
+                            exercise = exercise,
                             inputValueReps = set.reps,
                             inputValueWeight = set.weight,
                             previousReps = set.previousReps,
@@ -530,7 +538,12 @@ fun ExerciseCardUtils(
                             onDeleteClick = { onRemoveSet(exercise.id, set.set) },
                             setNumber = set.set,
                             selectedTechnique = set.technique,
-                            onTechniqueChange = { technique -> onTechniqueChange( set.set,technique)},
+                            onTechniqueChange = { technique ->
+                                onTechniqueChange(
+                                    set.set,
+                                    technique
+                                )
+                            },
                         )
                     }
 
@@ -580,6 +593,7 @@ fun ExerciseCardUtils(
 @Composable
 fun InputTextBox(
     modifier: Modifier = Modifier,
+    exercise: Exercise,
     label: String,
     isLocked: Boolean = false,
     isError: Boolean = false,
@@ -602,7 +616,13 @@ fun InputTextBox(
     }
 
     Column(modifier = modifier) {
-        Text(label, fontSize = 10.sp, color = if (isError) Color.Red else TextGray, fontWeight = FontWeight.Bold, maxLines = 1)
+        Text(
+            label,
+            fontSize = 10.sp,
+            color = if (isError) Color.Red else TextGray,
+            fontWeight = FontWeight.Bold,
+            maxLines = 1
+        )
         Spacer(Modifier.height(8.dp))
         Box(
             modifier = Modifier
@@ -664,6 +684,7 @@ fun InputTextBox(
 @Composable
 fun SetLine(
     modifier: Modifier = Modifier,
+    exercise: Exercise,
     isDeleteMode: Boolean,
     isCompleted: Boolean = false,
     onDeleteClick: () -> Unit,
@@ -740,16 +761,147 @@ fun SetLine(
         )
     }
 
-    Column(
-        modifier = modifier
-            .padding(vertical = Dimens.paddingSmall)
-            .clickable(enabled = !isCompleted) {
-                if (isDeleteMode) {
-                    showDeleteDialog = true
+    when (exercise.type) {
+        ExerciseType.STRENGTH -> Column(
+            modifier = modifier
+                .padding(vertical = Dimens.paddingSmall)
+                .clickable(enabled = !isCompleted) {
+                    if (isDeleteMode) {
+                        showDeleteDialog = true
+                    }
+                }
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.Bottom
+            ) {
+                InputTextBox(
+                    label = stringResource(R.string.serie_upper),
+                    modifier = Modifier.weight(1f),
+                    isLocked = true,
+                    inputValue = setNumber.toString(),
+                    onValueChange = {},
+                    exercise = exercise
+                )
+
+                InputTextBox(
+                    label = stringResource(R.string.peso_kg),
+                    modifier = Modifier.weight(2f),
+                    maxLength = 4,
+                    isLocked = isCompleted,
+                    isError = isErrorWeight,
+                    inputValue = inputValueWeight,
+                    placeholder = previousWeight,
+                    onValueChange = {
+                        onWeightChange(setNumber, it)
+                    },
+                    exercise = exercise
+                )
+
+                InputTextBox(
+                    label = "REPS",
+                    modifier = Modifier.weight(2f),
+                    isLocked = isCompleted,
+                    isError = isErrorReps,
+                    maxLength = 3,
+                    inputValue = inputValueReps,
+                    placeholder = previousReps,
+                    onValueChange = { onRepsChange(setNumber, it) },
+                    exercise = exercise
+                )
+
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Bottom,
+                    modifier = Modifier.padding(bottom = 4.dp)
+                ) {
+                    Text(
+                        text = "TEC",
+                        fontSize = 10.sp,
+                        color = TextGray,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(Modifier.height(8.dp))
+
+                    Box {
+                        Box(
+                            modifier = Modifier
+                                .size(48.dp)
+                                .clip(CircleShape)
+                                .background(
+                                    if (selectedTechnique == Technique.NORMAL)
+                                        MaterialTheme.colorScheme.surfaceVariant
+                                    else
+                                        CyanAccent.copy(alpha = 0.3f)
+                                )
+                                .border(
+                                    width = 2.dp,
+                                    color = if (selectedTechnique == Technique.NORMAL)
+                                        Color.Transparent
+                                    else CyanAccent,
+                                    shape = CircleShape
+                                )
+                                .clickable(enabled = !isCompleted) {
+                                    showTechniqueMenu = true
+                                },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = if (selectedTechnique == Technique.NORMAL) "—"
+                                else stringResource(selectedTechnique.label).take(2).uppercase(),
+                                color = if (selectedTechnique == Technique.NORMAL)
+                                    TextGray
+                                else Color.White,
+                                fontWeight = FontWeight.Black
+                            )
+                        }
+
+                        DropdownMenu(
+                            expanded = showTechniqueMenu,
+                            onDismissRequest = { showTechniqueMenu = false },
+                            modifier = Modifier.background(MaterialTheme.colorScheme.surface)
+                        ) {
+                            Technique.values().forEach { technique ->
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(
+                                            text = stringResource(technique.label),
+                                            color = if (technique == selectedTechnique) CyanAccent else Color.Unspecified
+                                        )
+                                    },
+                                    onClick = {
+                                        onTechniqueChange(technique)
+                                        showTechniqueMenu = false
+                                    }
+                                )
+                            }
+                        }
+                    }
                 }
             }
-    ) {
-        Row(
+
+            if (isDeleteMode && !isCompleted) {
+                TextButton(
+                    onClick = {
+                        showDeleteDialog = true
+                    },
+                    modifier = Modifier.align(Alignment.End)
+                ) {
+                    Text(
+                        stringResource(R.string.deletar_serie),
+                        color = MaterialTheme.colorScheme.error,
+                        fontSize = 12.sp
+                    )
+                }
+            }
+        }
+
+        ExerciseType.CARDIO ->
+            // CARDIO----
+
+
+            Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.Bottom
@@ -760,10 +912,12 @@ fun SetLine(
                 isLocked = true,
                 inputValue = setNumber.toString(),
                 onValueChange = {},
+                exercise = exercise
             )
 
             InputTextBox(
-                label = stringResource(R.string.peso_kg),
+                label = stringResource(R.string.distancia_km),
+                exercise = exercise,
                 modifier = Modifier.weight(2f),
                 maxLength = 4,
                 isLocked = isCompleted,
@@ -776,11 +930,12 @@ fun SetLine(
             )
 
             InputTextBox(
-                label = "REPS",
+                label = stringResource(R.string.tempo_min),
                 modifier = Modifier.weight(2f),
+                exercise = exercise,
                 isLocked = isCompleted,
                 isError = isErrorReps,
-                maxLength = 3,
+                maxLength = 5,
                 inputValue = inputValueReps,
                 placeholder = previousReps,
                 onValueChange = { onRepsChange(setNumber, it) },
@@ -853,21 +1008,31 @@ fun SetLine(
                         }
                     }
                 }
+
+                if (isDeleteMode && !isCompleted) {
+                    TextButton(
+                        onClick = {
+                            showDeleteDialog = true
+                        },
+                        modifier = Modifier.align(Alignment.End)
+                    ) {
+                        Text(
+                            stringResource(R.string.deletar_serie),
+                            color = MaterialTheme.colorScheme.error,
+                            fontSize = 12.sp
+                        )
+                    }
+                }
             }
+
+        }
+        ExerciseType.STRETCHING -> {
+
         }
 
-        if (isDeleteMode && !isCompleted) {
-            TextButton(
-                onClick = {
-                    showDeleteDialog = true
-                },
-                modifier = Modifier.align(Alignment.End)
-            ) {
-                Text(stringResource(R.string.deletar_serie), color = MaterialTheme.colorScheme.error, fontSize = 12.sp)
-            }
-        }
     }
 }
+
 
 @Composable
 fun FinishWorkoutButton(
@@ -965,8 +1130,12 @@ fun FinishWorkoutButton(
         Text(
             text = when {
                 workout?.isCompleted == true -> stringResource(id = R.string.workout_screen_finish_button_completed)
-                (workout?.exercises?.size ?: 0) < 1 -> stringResource(R.string.comece_adicionando_um_exerc_cio)
-                (workout?.exercises?.count { it.isCompleted } ?: 0) < 1 -> stringResource(R.string.finalize_pelo_menos_1_exerc_cio)
+                (workout?.exercises?.size
+                    ?: 0) < 1 -> stringResource(R.string.comece_adicionando_um_exerc_cio)
+
+                (workout?.exercises?.count { it.isCompleted }
+                    ?: 0) < 1 -> stringResource(R.string.finalize_pelo_menos_1_exerc_cio)
+
                 !canCompleteWorkout -> stringResource(id = R.string.workout_screen_finish_button_fill_sets)
                 else -> stringResource(id = R.string.workout_screen_finish_button_hold)
             },
@@ -1096,7 +1265,9 @@ fun WorkoutTopBar(
                             // que desalinha os textos e força a barra a crescer sem necessidade.
                             Icon(
                                 imageVector = if (isPaused) Icons.Default.PlayArrow else Icons.Default.Pause,
-                                contentDescription = if (isPaused) stringResource(R.string.resume) else stringResource(R.string.pause),
+                                contentDescription = if (isPaused) stringResource(R.string.resume) else stringResource(
+                                    R.string.pause
+                                ),
                                 tint = CyanAccent,
                                 modifier = Modifier
                                     .size(24.dp) // Tamanho agradável para clique
