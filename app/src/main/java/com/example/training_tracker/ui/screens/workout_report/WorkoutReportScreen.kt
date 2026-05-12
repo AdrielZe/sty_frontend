@@ -86,6 +86,7 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.training_tracker.R
 import com.example.training_tracker.data.models.Exercise
+import com.example.training_tracker.data.models.Technique
 import com.example.training_tracker.ui.screens.home.MomentumCard
 import com.example.training_tracker.ui.theme.CyanAccent
 import com.example.training_tracker.ui.theme.CyanGradient
@@ -160,7 +161,7 @@ fun WorkoutReportScreen(
                         drawContent()
                     }
                     .background(MaterialTheme.colorScheme.background),
-                 //   .defaultMinSize(minHeight = targetMinHeight),
+                //   .defaultMinSize(minHeight = targetMinHeight),
                 contentAlignment = Alignment.TopCenter
             ) {
                 Column(
@@ -209,15 +210,13 @@ fun WorkoutReportScreen(
 
                     // 3. Novos Recordes
                     if (uiState.records?.exercisesRecordMap?.isNotEmpty() == true ||
-                        uiState.records?.volumeRecords?.isNotEmpty() == true) {
-                        println("report debug entrou no if")
+                        uiState.records?.volumeRecords?.isNotEmpty() == true
+                    ) {
                         RecordsSection(uiState.records)
                     }
                 }
             }
 
-            // Itens fora do print para manter a imagem limpa
-            // Adicionamos o padding lateral nesses itens isoladamente
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -228,7 +227,6 @@ fun WorkoutReportScreen(
 
                 ExercisesSummarySection(uiState = uiState)
 
-                // Botão de Compartilhar
                 Button(
                     onClick = {
                         coroutineScope.launch {
@@ -488,7 +486,13 @@ fun MetricsGrid(uiState: WorkoutReportUiState) {
 }
 
 @Composable
-fun MetricCard(modifier: Modifier = Modifier, value: String, label: String, icon: ImageVector, color: Color) {
+fun MetricCard(
+    modifier: Modifier = Modifier,
+    value: String,
+    label: String,
+    icon: ImageVector,
+    color: Color
+) {
     Card(
         // 👇 1. defaultMinSize libera o card para crescer se a fonte do celular for gigante
         modifier = modifier.defaultMinSize(minHeight = 130.dp),
@@ -543,6 +547,7 @@ fun MetricCard(modifier: Modifier = Modifier, value: String, label: String, icon
         }
     }
 }
+
 @Composable
 fun MuscleIntensitySection(exercises: List<Exercise>) {
     val muscleGroupsData = remember(exercises) {
@@ -812,6 +817,7 @@ fun RecordsSection(records: com.example.training_tracker.data.models.Records?) {
         }
     }
 }
+
 @Composable
 fun NewRecordCard(title: String, value: String, subValue: String, icon: ImageVector, color: Color) {
     Card(
@@ -959,7 +965,7 @@ fun ExerciseSummaryCard(exercise: Exercise) {
                         .fillMaxWidth()
                         .padding(vertical = 6.dp),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
+                    horizontalArrangement = Arrangement.Center
                 ) {
                     // BLOCO DA ESQUERDA (Bolinha + Texto)
                     Row(
@@ -990,41 +996,48 @@ fun ExerciseSummaryCard(exercise: Exercise) {
                             }
                         }
 
-                        Spacer(Modifier.width(12.dp))
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center,
+                            modifier = Modifier
+                                .padding(start = 8.dp)
+                                .fillMaxWidth()
+                        ) {
+                            Text(
+                                text = "${set.weight} kg",
+                                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.ExtraBold),
+                                color = MaterialTheme.colorScheme.onSurface,
+                                maxLines = 1
+                            )
+                            Text(
+                                text = "  ×  ",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                text = "${set.reps} reps",
+                                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.ExtraBold),
+                                color = CyanAccent,
+                                maxLines = 1
+                            )
 
-                        Text(
-                            text = stringResource(R.string.serie_num, index + 1),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.weight(1f, fill = false)
-                        )
+                            if (set.technique != Technique.NORMAL) {
+                                Text(
+                                    text = "  -  ",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+
+                                Text(
+                                    text = stringResource(set.technique.label),
+                                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.ExtraBold),
+                                    color = CyanAccent,
+                                    maxLines = 1
+                                )
+                            }
+                        }
                     }
 
-                    // BLOCO DA DIREITA (Peso x Reps)
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(start = 8.dp)
-                    ) {
-                        Text(
-                            text = "${set.weight} kg",
-                            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.ExtraBold),
-                            color = MaterialTheme.colorScheme.onSurface,
-                            maxLines = 1
-                        )
-                        Text(
-                            text = "  ×  ",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Text(
-                            text = "${set.reps} reps",
-                            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.ExtraBold),
-                            color = CyanAccent,
-                            maxLines = 1
-                        )
-                    }
                 }
 
                 if (index < exercise.exerciseSets.size - 1) {
@@ -1034,6 +1047,7 @@ fun ExerciseSummaryCard(exercise: Exercise) {
                     )
                 }
             }
+
         }
     }
 }

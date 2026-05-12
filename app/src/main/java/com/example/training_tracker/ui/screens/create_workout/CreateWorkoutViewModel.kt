@@ -117,6 +117,10 @@ class CreateWorkoutViewModel(
         }
     }
 
+    fun addCardioExercise(exerciseName: String) {
+
+    }
+
     fun onMuscleGroupSelected(muscleGroup: MuscleGroups) {
         val name = uiState.value.pendingExerciseName ?: return
         viewModelScope.launch(Dispatchers.Default) {

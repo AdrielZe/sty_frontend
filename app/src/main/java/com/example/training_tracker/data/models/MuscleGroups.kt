@@ -13,5 +13,5 @@ enum class MuscleGroups(@StringRes val resId: Int) {
     HAMSTRINGS(R.string.posteriores),
     CALF(R.string.panturrilha),
     GLUTE(R.string.gluteo),
-    ABS(R.string.muscle_abs)
+    ABS(R.string.muscle_abs),
 }

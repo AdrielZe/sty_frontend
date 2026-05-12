@@ -19,6 +19,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.FitnessCenter
+import androidx.compose.material.icons.filled.RunCircle
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.filled.Warning
@@ -49,6 +50,8 @@ import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.training_tracker.R
 import com.example.training_tracker.data.models.Exercise
+import com.example.training_tracker.data.models.ExerciseType
+import com.example.training_tracker.data.models.MuscleGroups
 import com.example.training_tracker.data.models.Workout
 import com.example.training_tracker.ui.components.MuscleGroupPickerDialog
 import com.example.training_tracker.ui.screens.home.MainGradientButton
@@ -687,6 +690,181 @@ fun AddExerciseSelectionDialog(
         }
     }
 }
+
+@Composable
+fun AddCardioSelectionDialog(
+    onDismiss: () -> Unit,
+    onSelect: (String) -> Unit,
+    availableExercises: List<Exercise>
+) {
+    var searchQuery by remember { mutableStateOf("") }
+
+    val filteredExercises = remember(searchQuery, availableExercises) {
+        val availableCardioExercises = availableExercises.filter { it.type == ExerciseType.CARDIO }
+        val query = searchQuery.trim()
+        if (query.isEmpty()) availableCardioExercises
+        else availableCardioExercises.filter { it.name.contains(query, ignoreCase = true) }
+    }
+
+    val showCreateOption = remember(searchQuery, filteredExercises) {
+        searchQuery.isNotBlank() && filteredExercises.isEmpty()
+    }
+
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(max = 700.dp) // Limita a altura para não sumir com os botões
+                .padding(vertical = 16.dp)
+                .border(1.dp, CyanAccent.copy(alpha = 0.2f), RoundedCornerShape(28.dp)),
+            shape = RoundedCornerShape(28.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                // Ícone de Topo (Contexto Visual)
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .background(CyanAccent.copy(alpha = 0.1f), CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.RunCircle, // Ícone de corrida
+                        contentDescription = null,
+                        tint = CyanAccent,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Text(
+                    text = stringResource(R.string.selecionar_cardio),
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                // Campo de Pesquisa Moderno
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = { searchQuery = it },
+                    placeholder = {
+                        Text(
+                            text = stringResource(R.string.buscar_cardio),
+                            color = Color.Gray.copy(alpha = 0.6f)
+                        )
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    shape = RoundedCornerShape(16.dp),
+                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = CyanAccent) },
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = CyanAccent,
+                        unfocusedBorderColor = Color.Gray.copy(alpha = 0.3f),
+                        cursorColor = CyanAccent,
+                        focusedContainerColor = CyanAccent.copy(alpha = 0.02f)
+                    )
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Lista de Cardio
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    if (showCreateOption) {
+                        item {
+                            Surface(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { onSelect(searchQuery.trim()) },
+                                shape = RoundedCornerShape(12.dp),
+                                color = CyanAccent.copy(alpha = 0.05f)
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(16.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(Icons.Default.Add, contentDescription = null, tint = CyanAccent)
+                                    Spacer(Modifier.width(12.dp))
+                                    Text(
+                                        text = "${stringResource(R.string.criar)} \"${searchQuery.trim()}\"",
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        color = CyanAccent,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    items(filteredExercises) { exercise ->
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { onSelect(exercise.name) },
+                            shape = RoundedCornerShape(12.dp),
+                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(
+                                    text = exercise.name,
+                                    modifier = Modifier.weight(1f),
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    fontWeight = FontWeight.Medium
+                                )
+
+                                // Tag de Grupo Muscular (Localizada)
+                                Surface(
+                                    color = CyanAccent,
+                                    shape = RoundedCornerShape(6.dp)
+                                ) {
+                                    Text(
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                        text = stringResource(exercise.muscleGroup?.resId ?: R.string.detalhes_do_treino_desconhecido),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.Black,
+                                        color = Color.Black
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // Botão Cancelar
+                TextButton(
+                    onClick = onDismiss,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(14.dp)
+                ) {
+                    Text(
+                        stringResource(id = R.string.workout_details_cancel_button),
+                        color = Color.Gray,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+            }
+        }
+    }
+}
+
 
 
 @Composable

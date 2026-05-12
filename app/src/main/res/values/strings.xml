@@ -506,5 +506,10 @@
     <string name="repeticoes_parciais">Repetições Parciais</string>
     <string name="cluster_set">Cluster Set</string>
     <string name="myo_reps">Myo-Reps</string>
+    <string name="adicionar_cardio">Adicionar Cardio</string>
+    <string name="clique_aqui_para_selecionar_o_cardio">Clique aqui para selecionar o cardio</string>
+    <string name="cardio">Cardio</string>
+    <string name="selecionar_cardio">Selecionar Cardio</string>
+    <string name="buscar_cardio">Buscar Cardio...</string>
 
 </resources>

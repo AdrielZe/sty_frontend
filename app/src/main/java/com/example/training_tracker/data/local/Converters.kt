@@ -3,6 +3,7 @@ package com.example.training_tracker.data.local
 import androidx.room.TypeConverter
 import com.example.training_tracker.data.models.Exercise
 import com.example.training_tracker.data.models.ExerciseSet
+import com.example.training_tracker.data.models.ExerciseType
 import com.example.training_tracker.data.models.Records
 import com.example.training_tracker.data.models.WorkoutHistory
 import com.google.gson.reflect.TypeToken
@@ -12,6 +13,12 @@ import java.time.LocalTime
 
 class Converters {
     private val gson = com.google.gson.Gson()
+
+    @TypeConverter
+    fun fromExerciseType(value: ExerciseType) = value.name
+
+    @TypeConverter
+    fun toExerciseType(value: String) = ExerciseType.valueOf(value)
 
     // Converte o Mapa com histórico de listas para String (JSON)
     @TypeConverter

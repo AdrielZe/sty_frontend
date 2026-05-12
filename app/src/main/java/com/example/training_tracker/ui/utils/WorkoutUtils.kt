@@ -786,11 +786,10 @@ fun SetLine(
                 onValueChange = { onRepsChange(setNumber, it) },
             )
 
-            // NOVO ELEMENTO: Ícone de Técnica
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Bottom,
-                modifier = Modifier.padding(bottom = 4.dp) // Alinha com o centro visual dos inputs
+                modifier = Modifier.padding(bottom = 4.dp)
             ) {
                 Text(
                     text = "TEC",
@@ -823,10 +822,9 @@ fun SetLine(
                             },
                         contentAlignment = Alignment.Center
                     ) {
-                        // Ícone ou Letra Inicial da técnica
                         Text(
                             text = if (selectedTechnique == Technique.NORMAL) "—"
-                            else selectedTechnique.name.take(1).uppercase(),
+                            else stringResource(selectedTechnique.label).take(2).uppercase(),
                             color = if (selectedTechnique == Technique.NORMAL)
                                 TextGray
                             else Color.White,
@@ -843,7 +841,7 @@ fun SetLine(
                             DropdownMenuItem(
                                 text = {
                                     Text(
-                                        text = technique.name,
+                                        text = stringResource(technique.label),
                                         color = if (technique == selectedTechnique) CyanAccent else Color.Unspecified
                                     )
                                 },
