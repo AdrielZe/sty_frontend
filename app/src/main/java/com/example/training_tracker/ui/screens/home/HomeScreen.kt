@@ -20,10 +20,12 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -82,7 +84,6 @@ import androidx.compose.ui.text.PlatformTextStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -92,6 +93,8 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import coil.size.Size
 import com.example.training_tracker.R
+import com.example.training_tracker.ui.components.StyLogo
+import com.example.training_tracker.ui.components.StyLogoLayout
 import com.example.training_tracker.data.models.MuscleGroups
 import com.example.training_tracker.data.models.User
 import com.example.training_tracker.data.models.Workout
@@ -212,51 +215,49 @@ fun HomeContent(
     ) { innerPadding ->
         Column(
             modifier = modifier
-                .padding(horizontal = 24.dp)
+                .padding(horizontal = 20.dp)
                 .padding(innerPadding)
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.Start,
         ) {
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(4.dp))
 
+            // Greeting block
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(
-                    text = stringResource(
-                        id = R.string.home_greeting,
-                        homeUiState.user?.name
-                            ?: stringResource(id = R.string.home_default_user_name)
-                    ),
-                    fontSize = 24.sp,
-                    color = MaterialTheme.colorScheme.onBackground
-                )
-            }
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center
-            ) {
-                homeUiState.currentDate?.let { date ->
+                Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = date,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        text = stringResource(
+                            id = R.string.home_greeting,
+                            homeUiState.user?.name
+                                ?: stringResource(id = R.string.home_default_user_name)
+                        ),
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onBackground,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
+                    homeUiState.currentDate?.let { date ->
+                        Text(
+                            text = date,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
             }
 
             Spacer(modifier = Modifier.height(24.dp))
-            Text(
-                text = stringResource(id = R.string.home_scheduled_workout_today),
-                style = Typography.titleMedium.copy(
-                    brush = CyanGradient,
-                    fontWeight = FontWeight.Bold
-                ),
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onBackground
+
+            HomeSectionHeader(
+                title = stringResource(id = R.string.home_scheduled_workout_today),
+                actionLabel = stringResource(R.string.home_browse_workouts),
+                onActionClick = onClickBrowseWorkouts
             )
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -265,44 +266,34 @@ fun HomeContent(
                 homeUiState.todayWorkouts.forEach { workout ->
                     WorkoutCard(
                         workout = workout,
-                        onClick = {
-                            onClickWorkoutCard(workout.id)
-                        }
+                        onClick = { onClickWorkoutCard(workout.id) }
                     )
                 }
             } else {
                 EmptyWorkoutCard()
             }
 
-            Spacer(modifier = Modifier.height(2.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
-            Text(
-                modifier = Modifier
-                    .clickable {
-                        onClickBrowseWorkouts()
-                    }
-                    .fillMaxWidth(),
-                text = stringResource(R.string.home_browse_workouts),
-                textAlign = TextAlign.Center,
-                textDecoration = TextDecoration.Underline,
-                style = Typography.labelLarge
-            )
+            HomeSectionHeader(title = stringResource(R.string.treino_livre))
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             FreestyleWorkoutCard(
                 activeWorkout = homeUiState.activeFreestyleWorkout,
-                onClick = {
-                    showFreestyleNameDialog = true
-                },
+                onClick = { showFreestyleNameDialog = true },
                 viewModel = homeViewModel
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(24.dp))
+
+            HomeSectionHeader(title = stringResource(R.string.progresso))
+
+            Spacer(modifier = Modifier.height(12.dp))
 
             if (homeUiState.totalWorkoutsCompleted > 0) MomentumCard(count = homeUiState.totalWorkoutsCompleted) else EmptyMomentumCard()
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             val weeklyGoal = homeUiState.user?.weeklyGoal
             if (weeklyGoal != null && weeklyGoal > 0) {
@@ -315,7 +306,7 @@ fun HomeContent(
                 SetWeeklyGoalCard(onClick = { showGoalDialog = true })
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(32.dp))
         }
     }
 
@@ -660,6 +651,7 @@ fun getWorkoutImageRes(workout: Workout?): Int {
         MuscleGroups.TRICEPS -> R.drawable.triceps_workout
         MuscleGroups.ABS -> R.drawable.abs_workout
         MuscleGroups.CARDIO -> R.drawable.cardio_workout
+        MuscleGroups.STRETCHING -> R.drawable.stretching_workout
         else -> R.drawable.biceps_workout
     }
 }
@@ -1034,33 +1026,29 @@ fun CustomTopBar(
         modifier = Modifier
             .statusBarsPadding()
             .fillMaxWidth()
-            .padding(horizontal = 24.dp, vertical = 18.dp),
+            .padding(horizontal = 20.dp, vertical = 14.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-
-        Text(
-            text = stringResource(id = R.string.home_app_title),
-            style = TextStyle(
-                brush = CyanGradient
-            ),
-            fontSize = 20.sp,
-            fontWeight = FontWeight.ExtraBold,
-            letterSpacing = 2.sp
+        StyLogo(
+            titleSize = 22.sp,
+            layout = StyLogoLayout.VERTICAL
         )
 
-
-        Surface(
-            shape = CircleShape,
-            color = MaterialTheme.colorScheme.surfaceVariant,
-            border = BorderStroke(
-                2.dp,
-                CyanAccent.copy(alpha = 0.5f)
-            ),
+        Box(
             modifier = Modifier
-                .size(40.dp)
+                .size(44.dp)
                 .clip(CircleShape)
-                .clickable { onProfileClick() }
+                .background(
+                    Brush.linearGradient(
+                        listOf(
+                            com.example.training_tracker.ui.theme.CyanDark.copy(alpha = 0.6f),
+                            com.example.training_tracker.ui.theme.CyanAccent.copy(alpha = 0.3f)
+                        )
+                    )
+                )
+                .clickable { onProfileClick() },
+            contentAlignment = Alignment.Center
         ) {
             if (user?.profilePicture != null) {
                 AsyncImage(
@@ -1069,16 +1057,66 @@ fun CustomTopBar(
                         .size(Size.ORIGINAL)
                         .build(),
                     contentDescription = stringResource(id = R.string.content_description_profile),
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop // Garante que a foto preencha o círculo
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clip(CircleShape),
+                    contentScale = ContentScale.Crop
                 )
             } else {
                 Image(
                     painter = painterResource(id = R.drawable.gym),
                     contentDescription = stringResource(R.string.foto_de_perfil_padr_o),
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clip(CircleShape),
                     contentScale = ContentScale.Crop
                 )
+            }
+        }
+    }
+}
+
+@Composable
+fun HomeSectionHeader(
+    title: String,
+    actionLabel: String? = null,
+    onActionClick: (() -> Unit)? = null,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            text = title,
+            style = Typography.titleMedium.copy(brush = CyanGradient),
+            fontWeight = FontWeight.Bold
+        )
+        if (actionLabel != null && onActionClick != null) {
+            Surface(
+                shape = RoundedCornerShape(20.dp),
+                color = CyanAccent.copy(alpha = 0.12f),
+                modifier = Modifier.clickable { onActionClick() }
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(2.dp)
+                ) {
+                    Text(
+                        text = actionLabel.trim(),
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.SemiBold,
+                        color = CyanAccent
+                    )
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                        contentDescription = null,
+                        tint = CyanAccent,
+                        modifier = Modifier.size(14.dp)
+                    )
+                }
             }
         }
     }

@@ -85,10 +85,11 @@ import androidx.core.content.FileProvider
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.training_tracker.R
+import com.example.training_tracker.ui.components.StyLogo
+import com.example.training_tracker.ui.components.StyLogoLayout
 import com.example.training_tracker.data.models.Exercise
 import com.example.training_tracker.data.models.ExerciseType
 import com.example.training_tracker.data.models.Technique
-import com.example.training_tracker.ui.screens.home.MomentumCard
 import com.example.training_tracker.ui.theme.CyanAccent
 import com.example.training_tracker.ui.theme.CyanGradient
 import kotlinx.coroutines.launch
@@ -168,39 +169,36 @@ fun WorkoutReportScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(horizontal = 32.dp, vertical = 20.dp),
-                    verticalArrangement = Arrangement.spacedBy(24.dp)
+                        .padding(horizontal = 20.dp, vertical = 20.dp),
+                    verticalArrangement = Arrangement.spacedBy(20.dp)
                 ) {
-
-                    Column() {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.Start,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        StyLogo(
+                            titleSize = 18.sp,
+                            layout = StyLogoLayout.VERTICAL
+                        )
+                        uiState.completionDate?.let { date ->
                             Text(
-                                text = stringResource(id = R.string.home_app_title),
-                                style = TextStyle(
-                                    brush = CyanGradient
-                                ),
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.ExtraBold,
-                                letterSpacing = 2.sp
+                                text = date.toString(),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
-                            Spacer(modifier = Modifier.height(24.dp))
                         }
                     }
 
                     Text(
                         text = uiState.workoutName.ifEmpty { stringResource(R.string.relatorio_do_treino) },
                         modifier = Modifier.fillMaxWidth(),
-                        color = MaterialTheme.colorScheme.onPrimary,
-                        fontSize = 24.sp,
+                        color = MaterialTheme.colorScheme.onBackground,
+                        fontSize = 26.sp,
                         fontWeight = FontWeight.Black,
-                        letterSpacing = 1.sp,
+                        letterSpacing = 0.5.sp,
                         maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
-                        textAlign = TextAlign.Center
+                        overflow = TextOverflow.Ellipsis
                     )
 
                     // 1. Gamification Card
@@ -221,7 +219,7 @@ fun WorkoutReportScreen(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 24.dp),
+                    .padding(horizontal = 20.dp),
                 verticalArrangement = Arrangement.spacedBy(24.dp)
             ) {
                 MuscleIntensitySection(uiState.exercises)
@@ -561,14 +559,7 @@ fun MuscleIntensitySection(exercises: List<Exercise>) {
     if (muscleGroupsData.isEmpty()) return
 
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        Text(
-            text = stringResource(R.string.intensidade_muscular),
-            style = MaterialTheme.typography.labelMedium.copy(
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                letterSpacing = 2.sp,
-                fontWeight = FontWeight.ExtraBold
-            )
-        )
+        ReportSectionLabel(stringResource(R.string.intensidade_muscular))
 
         Card(
             modifier = Modifier.fillMaxWidth(),
@@ -763,33 +754,18 @@ fun RecordsSection(records: com.example.training_tracker.data.models.Records?) {
 
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
         Row(
-            // 👇 1. fillMaxWidth() garante que a Row ocupe tudo
             modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text(
-                stringResource(R.string.new_achievements),
-                style = MaterialTheme.typography.labelMedium.copy(
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    letterSpacing = 2.sp,
-                    fontWeight = FontWeight.ExtraBold
-                ),
-                // 👇 2. weight(1f) impede que o título empurre o contador para fora da tela
-                modifier = Modifier.weight(1f),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-
-            Spacer(Modifier.width(8.dp))
-
-            // O selo do contador está protegido agora!
+            ReportSectionLabel(stringResource(R.string.new_achievements))
             Surface(
-                color = CyanAccent.copy(alpha = 0.2f),
-                shape = CircleShape
+                color = CyanAccent.copy(alpha = 0.15f),
+                shape = RoundedCornerShape(20.dp)
             ) {
                 Text(
                     text = sortedRecords.size.toString(),
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 3.dp),
                     style = MaterialTheme.typography.labelSmall.copy(
                         color = CyanAccent,
                         fontWeight = FontWeight.Bold
@@ -920,16 +896,32 @@ fun NewRecordCard(title: String, value: String, subValue: String, icon: ImageVec
 }
 
 @Composable
+private fun ReportSectionLabel(text: String, modifier: Modifier = Modifier) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.titleSmall.copy(
+            brush = CyanGradient,
+            fontWeight = FontWeight.Bold
+        ),
+        modifier = modifier
+    )
+}
+
+@Composable
+private fun SetDot() {
+    Box(
+        modifier = Modifier
+            .padding(horizontal = 6.dp)
+            .size(4.dp)
+            .clip(CircleShape)
+            .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f))
+    )
+}
+
+@Composable
 fun ExercisesSummarySection(uiState: WorkoutReportUiState) {
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        Text(
-            stringResource(R.string.resumo_dos_exercicios),
-            style = MaterialTheme.typography.labelMedium.copy(
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                letterSpacing = 2.sp,
-                fontWeight = FontWeight.ExtraBold
-            )
-        )
+        ReportSectionLabel(stringResource(R.string.resumo_dos_exercicios))
         uiState.exercises.forEach { exercise ->
             ExerciseSummaryCard(exercise)
         }
@@ -946,19 +938,31 @@ fun ExerciseSummaryCard(exercise: Exercise) {
         ),
         border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
     ) {
-        Column(modifier = Modifier.padding(20.dp)) {
-            Text(
-                text = exercise.name.uppercase(),
-                style = MaterialTheme.typography.titleMedium.copy(
-                    fontWeight = FontWeight.Black,
-                    color = CyanAccent,
-                    letterSpacing = 1.sp
-                ),
-                // 👇 Blindagem contra nomes de exercícios gigantes
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis
-            )
-            Spacer(Modifier.height(16.dp))
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = exercise.name,
+                    style = MaterialTheme.typography.titleSmall.copy(
+                        fontWeight = FontWeight.Bold,
+                        brush = CyanGradient
+                    ),
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f)
+                )
+                Text(
+                    text = "${exercise.exerciseSets.size} ${if (exercise.exerciseSets.size == 1) stringResource(R.string.serie) else stringResource(R.string.series_min)}",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Spacer(Modifier.height(12.dp))
+            HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.1f))
+            Spacer(Modifier.height(8.dp))
 
             exercise.exerciseSets.forEachIndexed { index, set ->
                 Row(
@@ -1007,59 +1011,46 @@ fun ExerciseSummaryCard(exercise: Exercise) {
                             if (exercise.type == ExerciseType.CARDIO) {
                                 Text(
                                     text = "${set.distance ?: set.weight} km",
-                                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.ExtraBold),
+                                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
                                     color = MaterialTheme.colorScheme.onSurface,
                                     maxLines = 1
                                 )
-                                Text(
-                                    text = stringResource(R.string.em),
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
+                                SetDot()
                                 Text(
                                     text = set.time ?: set.reps,
-                                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.ExtraBold),
+                                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
                                     color = CyanAccent,
                                     maxLines = 1
                                 )
                             } else if (exercise.type == ExerciseType.STRETCHING) {
                                 Text(
                                     text = set.time ?: "--:--",
-                                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.ExtraBold),
+                                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
                                     color = CyanAccent,
                                     maxLines = 1
                                 )
                             } else {
-                            Text(
-                                text = "${set.weight} kg",
-                                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.ExtraBold),
-                                color = MaterialTheme.colorScheme.onSurface,
-                                maxLines = 1
-                            )
-                            Text(
-                                text = "  ×  ",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            Text(
-                                text = "${set.reps} reps",
-                                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.ExtraBold),
-                                color = CyanAccent,
-                                maxLines = 1
-                            )
+                                Text(
+                                    text = "${set.weight} kg",
+                                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    maxLines = 1
+                                )
+                                SetDot()
+                                Text(
+                                    text = "${set.reps} reps",
+                                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                                    color = CyanAccent,
+                                    maxLines = 1
+                                )
                             }
 
                             if (set.technique != Technique.NORMAL) {
-                                Text(
-                                    text = "  -  ",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-
+                                SetDot()
                                 Text(
                                     text = stringResource(set.technique.label),
-                                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.ExtraBold),
-                                    color = CyanAccent,
+                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     maxLines = 1
                                 )
                             }
