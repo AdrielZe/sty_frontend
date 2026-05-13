@@ -147,6 +147,33 @@ class CreateWorkoutViewModel(
         }
     }
 
+    fun addStretchingExercise(exerciseName: String) {
+        if (exerciseName.isBlank()) return
+
+        val nameFormatted = exerciseName
+            .trim()
+            .split("\\s+".toRegex())
+            .joinToString(" ") { word ->
+                word.lowercase().replaceFirstChar { it.uppercase() }
+            }
+
+        val stretchingExercises = uiState.value.availableExercises.filter { it.type == ExerciseType.STRETCHING }
+        val existingExercise = stretchingExercises.find {
+            it.name.equals(nameFormatted, ignoreCase = true)
+        }
+
+        if (existingExercise == null) {
+            viewModelScope.launch(Dispatchers.Default) {
+                saveNewExercise(nameFormatted, MuscleGroups.STRETCHING)
+            }
+        } else {
+            val exerciseToAdd = existingExercise.copy(id = java.util.UUID.randomUUID().toString())
+            _draftState.update {
+                it.copy(exercises = it.exercises + exerciseToAdd)
+            }
+        }
+    }
+
     fun onMuscleGroupSelected(muscleGroup: MuscleGroups) {
         val name = uiState.value.pendingExerciseName ?: return
         viewModelScope.launch(Dispatchers.Default) {
@@ -164,9 +191,15 @@ class CreateWorkoutViewModel(
     }
 
     private suspend fun saveNewExercise(name: String, muscleGroup: MuscleGroups) {
+        val type = when (muscleGroup) {
+            MuscleGroups.CARDIO -> ExerciseType.CARDIO
+            MuscleGroups.STRETCHING -> ExerciseType.STRETCHING
+            else -> ExerciseType.STRENGTH
+        }
         val newExerciseToDB = Exercise(
             name = name,
-            muscleGroup = muscleGroup
+            muscleGroup = muscleGroup,
+            type = type
         )
         exerciseRepository.addExercise(newExerciseToDB)
 

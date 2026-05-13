@@ -168,10 +168,10 @@ class WorkoutDelegateImpl(
             if (exercise.id == exerciseId) {
                 val updatedSets = exercise.exerciseSets.map { set ->
                     if (set.set == setNumber) {
-                        if (exercise.type == ExerciseType.CARDIO) {
-                            set.copy(distance = newWeight ?: set.distance, time = newReps ?: set.time)
-                        } else {
-                            set.copy(reps = newReps ?: set.reps, weight = newWeight ?: set.weight)
+                        when (exercise.type) {
+                            ExerciseType.CARDIO -> set.copy(distance = newWeight ?: set.distance, time = newReps ?: set.time)
+                            ExerciseType.STRETCHING -> set.copy(time = newReps ?: set.time)
+                            else -> set.copy(reps = newReps ?: set.reps, weight = newWeight ?: set.weight)
                         }
                     } else set
                 }
@@ -234,7 +234,7 @@ class WorkoutDelegateImpl(
 
             var recordsUpdated = false
 
-            workout.exercises.filter { it.type != ExerciseType.CARDIO }.forEach { exercise ->
+            workout.exercises.filter { it.type == ExerciseType.STRENGTH }.forEach { exercise ->
                 val maxWeightThisWorkout = exercise.exerciseSets.maxOfOrNull {
                     it.weight.parseToDouble()
                 }
@@ -276,7 +276,7 @@ class WorkoutDelegateImpl(
             }
 
             val totalVolumeWorkout = workout.exercises
-                .filter { it.type != ExerciseType.CARDIO }
+                .filter { it.type == ExerciseType.STRENGTH }
                 .sumOf { exercise ->
                     exercise.exerciseSets.sumOf { set ->
                         val weight = set.weight.parseToDouble()
@@ -324,14 +324,17 @@ class WorkoutDelegateImpl(
 
             val updatedSets = exercise.exerciseSets.map { set ->
                 val lastSet = lastPerformance?.exerciseSets?.find { it.set == set.set }
-                if (exercise.type == ExerciseType.CARDIO) {
-                    set.copy(
+                when (exercise.type) {
+                    ExerciseType.CARDIO -> set.copy(
                         previousDistance = lastSet?.distance ?: "",
                         previousTime = lastSet?.time ?: "",
                         technique = set.technique ?: Technique.NORMAL,
                     )
-                } else {
-                    set.copy(
+                    ExerciseType.STRETCHING -> set.copy(
+                        previousTime = lastSet?.time ?: "",
+                        technique = set.technique ?: Technique.NORMAL,
+                    )
+                    else -> set.copy(
                         previousWeight = lastSet?.weight ?: "",
                         previousReps = lastSet?.reps ?: "",
                         technique = set.technique ?: Technique.NORMAL,

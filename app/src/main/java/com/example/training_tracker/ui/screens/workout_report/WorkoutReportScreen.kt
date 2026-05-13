@@ -1022,6 +1022,13 @@ fun ExerciseSummaryCard(exercise: Exercise) {
                                     color = CyanAccent,
                                     maxLines = 1
                                 )
+                            } else if (exercise.type == ExerciseType.STRETCHING) {
+                                Text(
+                                    text = set.time ?: "--:--",
+                                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.ExtraBold),
+                                    color = CyanAccent,
+                                    maxLines = 1
+                                )
                             } else {
                             Text(
                                 text = "${set.weight} kg",

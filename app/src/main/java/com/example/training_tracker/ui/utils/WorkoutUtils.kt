@@ -321,12 +321,19 @@ fun ExerciseCardUtils(
                         Spacer(Modifier.height(16.dp)) // Respiro após a imagem
                         exercise.exerciseSets.forEach { set ->
                             val isCardio = exercise.type == ExerciseType.CARDIO
+                            val isStretching = exercise.type == ExerciseType.STRETCHING
                             SetLine(
                                 modifier = Modifier.fillMaxWidth(),
                                 exercise = exercise,
-                                inputValueReps = if (isCardio) set.time ?: "" else set.reps,
+                                inputValueReps = when {
+                                    isCardio || isStretching -> set.time ?: ""
+                                    else -> set.reps
+                                },
                                 inputValueWeight = if (isCardio) set.distance ?: "" else set.weight,
-                                previousReps = if (isCardio) set.previousTime ?: "" else set.previousReps,
+                                previousReps = when {
+                                    isCardio || isStretching -> set.previousTime ?: ""
+                                    else -> set.previousReps
+                                },
                                 previousWeight = if (isCardio) set.previousDistance ?: "" else set.previousWeight,
                                 isDeleteMode = false,
                                 isCompleted = true,
@@ -523,15 +530,22 @@ fun ExerciseCardUtils(
 
                     exercise.exerciseSets.forEach { set ->
                         val isCardio = exercise.type == ExerciseType.CARDIO
-                        val isWeightError = showErrors && if (isCardio) (set.distance ?: "").replace(',', '.').toDoubleOrNull() == null else set.weight.isBlank()
-                        val isRepsError = showErrors && if (isCardio) !(set.time ?: "").contains(":") else (set.reps.toIntOrNull() ?: 0) <= 0
+                        val isStretching = exercise.type == ExerciseType.STRETCHING
+                        val isWeightError = showErrors && if (isCardio) (set.distance ?: "").replace(',', '.').toDoubleOrNull() == null else if (isStretching) false else set.weight.isBlank()
+                        val isRepsError = showErrors && if (isCardio || isStretching) !(set.time ?: "").contains(":") else (set.reps.toIntOrNull() ?: 0) <= 0
 
                         SetLine(
                             modifier = Modifier.fillMaxWidth(),
                             exercise = exercise,
-                            inputValueReps = if (isCardio) set.time ?: "" else set.reps,
+                            inputValueReps = when {
+                                isCardio || isStretching -> set.time ?: ""
+                                else -> set.reps
+                            },
                             inputValueWeight = if (isCardio) set.distance ?: "" else set.weight,
-                            previousReps = if (isCardio) set.previousTime ?: "" else set.previousReps,
+                            previousReps = when {
+                                isCardio || isStretching -> set.previousTime ?: ""
+                                else -> set.previousReps
+                            },
                             previousWeight = if (isCardio) set.previousDistance ?: "" else set.previousWeight,
                             isDeleteMode = isDeleteMode,
                             isCompleted = set.isCompleted,
@@ -1199,7 +1213,150 @@ fun SetLine(
         } // closes outer Column
         } // closes ExerciseType.CARDIO block
         ExerciseType.STRETCHING -> {
+            var showTimePicker by remember { mutableStateOf(false) }
 
+            if (showTimePicker) {
+                CardioTimePickerDialog(
+                    initialTime = inputValueReps,
+                    onDismiss = { showTimePicker = false },
+                    onConfirm = { time ->
+                        onRepsChange(setNumber, time)
+                        showTimePicker = false
+                    }
+                )
+            }
+
+            Column(
+                modifier = modifier
+                    .padding(vertical = Dimens.paddingSmall)
+                    .clickable(enabled = !isCompleted) {
+                        if (isDeleteMode) showDeleteDialog = true
+                    }
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.Bottom
+                ) {
+                    InputTextBox(
+                        label = stringResource(R.string.serie_upper),
+                        modifier = Modifier.weight(1f),
+                        isLocked = true,
+                        inputValue = setNumber.toString(),
+                        onValueChange = {},
+                        exercise = exercise
+                    )
+
+                    Column(modifier = Modifier.weight(3f)) {
+                        Text(
+                            stringResource(R.string.tempo_min),
+                            fontSize = 10.sp,
+                            color = if (isErrorReps) Color.Red else TextGray,
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1
+                        )
+                        Spacer(Modifier.height(8.dp))
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(56.dp)
+                                .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(12.dp))
+                                .border(
+                                    width = 1.dp,
+                                    color = when {
+                                        isErrorReps -> Color.Red
+                                        isCompleted -> Color.Transparent
+                                        else -> CyanAccent.copy(alpha = 0.2f)
+                                    },
+                                    shape = RoundedCornerShape(12.dp)
+                                )
+                                .clickable(enabled = !isCompleted) { showTimePicker = true },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = inputValueReps.ifEmpty { previousReps.ifEmpty { "--:--" } },
+                                style = MaterialTheme.typography.titleLarge.copy(
+                                    color = if (inputValueReps.isEmpty())
+                                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                                    else if (isCompleted) Color.Gray
+                                    else MaterialTheme.colorScheme.onSurface,
+                                    textAlign = TextAlign.Center,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 18.sp
+                                )
+                            )
+                        }
+                    }
+
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Bottom,
+                        modifier = Modifier.padding(bottom = 4.dp)
+                    ) {
+                        Text("TEC", fontSize = 10.sp, color = TextGray, fontWeight = FontWeight.Bold)
+                        Spacer(Modifier.height(8.dp))
+                        Box {
+                            Box(
+                                modifier = Modifier
+                                    .size(48.dp)
+                                    .clip(CircleShape)
+                                    .background(
+                                        if (selectedTechnique == Technique.NORMAL)
+                                            MaterialTheme.colorScheme.surfaceVariant
+                                        else CyanAccent.copy(alpha = 0.3f)
+                                    )
+                                    .border(
+                                        width = 2.dp,
+                                        color = if (selectedTechnique == Technique.NORMAL) Color.Transparent else CyanAccent,
+                                        shape = CircleShape
+                                    )
+                                    .clickable(enabled = !isCompleted) { showTechniqueMenu = true },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = if (selectedTechnique == Technique.NORMAL) "—"
+                                    else stringResource(selectedTechnique.label).take(2).uppercase(),
+                                    color = if (selectedTechnique == Technique.NORMAL) TextGray else Color.White,
+                                    fontWeight = FontWeight.Black
+                                )
+                            }
+                            DropdownMenu(
+                                expanded = showTechniqueMenu,
+                                onDismissRequest = { showTechniqueMenu = false },
+                                modifier = Modifier.background(MaterialTheme.colorScheme.surface)
+                            ) {
+                                Technique.values().filter { !it.isCardio }.forEach { technique ->
+                                    DropdownMenuItem(
+                                        text = {
+                                            Text(
+                                                text = stringResource(technique.label),
+                                                color = if (technique == selectedTechnique) CyanAccent else Color.Unspecified
+                                            )
+                                        },
+                                        onClick = {
+                                            onTechniqueChange(technique)
+                                            showTechniqueMenu = false
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (isDeleteMode && !isCompleted) {
+                    TextButton(
+                        onClick = { showDeleteDialog = true },
+                        modifier = Modifier.align(Alignment.End)
+                    ) {
+                        Text(
+                            stringResource(R.string.deletar_serie),
+                            color = MaterialTheme.colorScheme.error,
+                            fontSize = 12.sp
+                        )
+                    }
+                }
+            }
         }
 
     }

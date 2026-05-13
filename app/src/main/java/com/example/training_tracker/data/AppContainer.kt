@@ -1065,6 +1065,128 @@ class DefaultAppContainer(
                     type = ExerciseType.CARDIO,
                     isDefault = true
                 ),
+
+                // ALONGAMENTO
+                Exercise(
+                    name = "Alongamento de Quadríceps",
+                    muscleGroup = MuscleGroups.STRETCHING,
+                    type = ExerciseType.STRETCHING,
+                    isDefault = true
+                ),
+                Exercise(
+                    name = "Alongamento de Isquiotibiais",
+                    muscleGroup = MuscleGroups.STRETCHING,
+                    type = ExerciseType.STRETCHING,
+                    isDefault = true
+                ),
+                Exercise(
+                    name = "Alongamento de Glúteo (Pombo)",
+                    muscleGroup = MuscleGroups.STRETCHING,
+                    type = ExerciseType.STRETCHING,
+                    isDefault = true
+                ),
+                Exercise(
+                    name = "Alongamento de Peito",
+                    muscleGroup = MuscleGroups.STRETCHING,
+                    type = ExerciseType.STRETCHING,
+                    isDefault = true
+                ),
+                Exercise(
+                    name = "Alongamento de Costas (Gato-Vaca)",
+                    muscleGroup = MuscleGroups.STRETCHING,
+                    type = ExerciseType.STRETCHING,
+                    isDefault = true
+                ),
+                Exercise(
+                    name = "Alongamento de Ombro",
+                    muscleGroup = MuscleGroups.STRETCHING,
+                    type = ExerciseType.STRETCHING,
+                    isDefault = true
+                ),
+                Exercise(
+                    name = "Alongamento de Tríceps",
+                    muscleGroup = MuscleGroups.STRETCHING,
+                    type = ExerciseType.STRETCHING,
+                    isDefault = true
+                ),
+                Exercise(
+                    name = "Alongamento de Bíceps",
+                    muscleGroup = MuscleGroups.STRETCHING,
+                    type = ExerciseType.STRETCHING,
+                    isDefault = true
+                ),
+                Exercise(
+                    name = "Alongamento de Panturrilha",
+                    muscleGroup = MuscleGroups.STRETCHING,
+                    type = ExerciseType.STRETCHING,
+                    isDefault = true
+                ),
+                Exercise(
+                    name = "Alongamento de Flexor de Quadril",
+                    muscleGroup = MuscleGroups.STRETCHING,
+                    type = ExerciseType.STRETCHING,
+                    isDefault = true
+                ),
+                Exercise(
+                    name = "Alongamento de Adutores (Borboleta)",
+                    muscleGroup = MuscleGroups.STRETCHING,
+                    type = ExerciseType.STRETCHING,
+                    isDefault = true
+                ),
+                Exercise(
+                    name = "Alongamento Lombar (Joelhos ao Peito)",
+                    muscleGroup = MuscleGroups.STRETCHING,
+                    type = ExerciseType.STRETCHING,
+                    isDefault = true
+                ),
+                Exercise(
+                    name = "Alongamento Cervical",
+                    muscleGroup = MuscleGroups.STRETCHING,
+                    type = ExerciseType.STRETCHING,
+                    isDefault = true
+                ),
+                Exercise(
+                    name = "Rotação de Coluna",
+                    muscleGroup = MuscleGroups.STRETCHING,
+                    type = ExerciseType.STRETCHING,
+                    isDefault = true
+                ),
+                Exercise(
+                    name = "Alongamento de IT Band",
+                    muscleGroup = MuscleGroups.STRETCHING,
+                    type = ExerciseType.STRETCHING,
+                    isDefault = true
+                ),
+                Exercise(
+                    name = "Postura da Criança (Child's Pose)",
+                    muscleGroup = MuscleGroups.STRETCHING,
+                    type = ExerciseType.STRETCHING,
+                    isDefault = true
+                ),
+                Exercise(
+                    name = "Cobra (Abertura de Peito)",
+                    muscleGroup = MuscleGroups.STRETCHING,
+                    type = ExerciseType.STRETCHING,
+                    isDefault = true
+                ),
+                Exercise(
+                    name = "Downward Dog",
+                    muscleGroup = MuscleGroups.STRETCHING,
+                    type = ExerciseType.STRETCHING,
+                    isDefault = true
+                ),
+                Exercise(
+                    name = "Pigeon Pose",
+                    muscleGroup = MuscleGroups.STRETCHING,
+                    type = ExerciseType.STRETCHING,
+                    isDefault = true
+                ),
+                Exercise(
+                    name = "World's Greatest Stretch",
+                    muscleGroup = MuscleGroups.STRETCHING,
+                    type = ExerciseType.STRETCHING,
+                    isDefault = true
+                ),
             )
 
             val currentExercises = exerciseRepository.exercises.first()

@@ -11,6 +11,9 @@ fun Exercise.isValidToComplete(): Boolean {
             val hasTime = (set.time ?: "").contains(":")
             distance != null && hasTime
         }
+        ExerciseType.STRETCHING -> exerciseSets.all { set ->
+            (set.time ?: "").contains(":")
+        }
         else -> exerciseSets.all { set ->
             val weight = set.weight.replace(',', '.').toDoubleOrNull() ?: 424242
             val reps = set.reps.toIntOrNull() ?: 0

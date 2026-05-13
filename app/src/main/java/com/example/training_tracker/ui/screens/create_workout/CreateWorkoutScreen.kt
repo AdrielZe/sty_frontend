@@ -73,6 +73,7 @@ import com.example.training_tracker.data.models.ExerciseType
 import com.example.training_tracker.ui.components.MuscleGroupPickerDialog
 import com.example.training_tracker.ui.screens.workout_details.AddCardioSelectionDialog
 import com.example.training_tracker.ui.screens.workout_details.AddExerciseSelectionDialog
+import com.example.training_tracker.ui.screens.workout_details.AddStretchingSelectionDialog
 import com.example.training_tracker.ui.theme.AppTheme
 import com.example.training_tracker.ui.theme.CyanAccent
 import com.example.training_tracker.ui.theme.Dimens
@@ -93,6 +94,7 @@ fun CreateWorkoutScreen(
     var snackbarHostState = remember { SnackbarHostState() }
     var showAddExerciseDialog by remember { mutableStateOf(false) }
     var showAddCardioDialog by remember { mutableStateOf(false) }
+    var showAddStretchingDialog by remember { mutableStateOf(false) }
     val isButtonEnabled by remember {
         derivedStateOf { uiState.exercises.size >= 1 }
     }
@@ -215,6 +217,58 @@ fun CreateWorkoutScreen(
             Spacer(modifier = Modifier.height(Dimens.paddingExtraLarge))
 
             // CARDIO
+            Text(
+                text = stringResource(R.string.adicionar_alongamento),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = if (uiState.showErrors && !uiState.isDayValid) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onBackground
+            )
+
+            Spacer(modifier = Modifier.height(Dimens.paddingSmall))
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .defaultMinSize(minHeight = 56.dp)
+                    .background(
+                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                        shape = RoundedCornerShape(Dimens.cornerRadius)
+                    )
+                    .border(
+                        width = 1.dp,
+                        color = if (uiState.showErrors && !uiState.isExercisesValid)
+                            MaterialTheme.colorScheme.error
+                        else
+                            MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
+                        shape = RoundedCornerShape(Dimens.cornerRadius)
+                    )
+                    .clickable { showAddStretchingDialog = true }
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                contentAlignment = Alignment.CenterStart
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = null,
+                        tint = CyanAccent,
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text(
+                        text = stringResource(R.string.clique_aqui_para_selecionar_o_alongamento),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontSize = 14.sp,
+                        modifier = Modifier.weight(1f),
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(Dimens.paddingExtraLarge))
 
             Text(
                 text = stringResource(R.string.adicionar_cardio),
@@ -385,6 +439,17 @@ fun CreateWorkoutScreen(
                     showAddCardioDialog = false
                 },
                 availableExercises = uiState.availableExercises.filter { it.type == ExerciseType.CARDIO }
+            )
+        }
+
+        if (showAddStretchingDialog) {
+            AddStretchingSelectionDialog(
+                onDismiss = { showAddStretchingDialog = false },
+                onSelect = { name ->
+                    viewModel.addStretchingExercise(name)
+                    showAddStretchingDialog = false
+                },
+                availableExercises = uiState.availableExercises.filter { it.type == ExerciseType.STRETCHING }
             )
         }
     }

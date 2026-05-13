@@ -25,7 +25,7 @@ fun WorkoutDifficulty?.generateHeroTitle(context: Context): String {
 }
 
 fun generateTotalWeightedInfo(context: Context, exercises: List<Exercise>): TotalWeightLiftedInfo {
-    val totalWeight = exercises.filter { it.type != ExerciseType.CARDIO }.sumOf { exercise ->
+    val totalWeight = exercises.filter { it.type == ExerciseType.STRENGTH }.sumOf { exercise ->
         exercise.exerciseSets.sumOf { set ->
             val reps = set.reps.toDoubleOrNull() ?: 0.0
             val weight = set.weight.parseToDouble()
@@ -103,7 +103,7 @@ fun countTotalSets(exercises: List<Exercise>): Int {
 
 fun countTotalReps(exercises: List<Exercise>): Int {
     val totalReps = exercises
-        .filter { it.type != ExerciseType.CARDIO }
+        .filter { it.type == ExerciseType.STRENGTH }
         .sumOf { exercise -> exercise.exerciseSets.sumOf { it.reps.toIntOrNull() ?: 0 } }
 
     return totalReps
