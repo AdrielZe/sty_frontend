@@ -8,6 +8,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.training_tracker.GymTrackerApplication
 import com.example.training_tracker.data.models.Exercise
 import com.example.training_tracker.data.models.ExerciseSet
+    import com.example.training_tracker.data.models.ExerciseType
 import com.example.training_tracker.data.models.MuscleGroups
 import com.example.training_tracker.data.models.Records
 import com.example.training_tracker.data.models.Workout
@@ -231,7 +232,7 @@ class FreestyleWorkoutViewModel(
                 exercise.copy(isCompleted = true, exerciseSets = exercise.exerciseSets.map { it.copy(isCompleted = true) })
             }
 
-            val exerciseRecords = updateExerciseRecords(completedExercises)
+            val (exerciseRecords, cardioRecords) = updateExerciseRecords(completedExercises)
             val volumeRecords = updateVolumeRecord(completedExercises)
 
             val newHistoryEntry = WorkoutHistory(
@@ -241,7 +242,7 @@ class FreestyleWorkoutViewModel(
                 workoutId = "freestyle",
                 difficulty = WorkoutDifficulty.MEDIUM,
                 durationMillis = duration,
-                records = Records(exercisesRecordMap = exerciseRecords, volumeRecords = volumeRecords)
+                records = Records(exercisesRecordMap = exerciseRecords, volumeRecords = volumeRecords, cardioRecordsMap = cardioRecords)
             )
 
             workoutHistoryRepository.addWorkoutHistory(newHistoryEntry)
@@ -250,26 +251,49 @@ class FreestyleWorkoutViewModel(
         }
     }
 
-    private suspend fun updateExerciseRecords(completedExercises: List<Exercise>): MutableMap<String, MutableList<Int>> {
+    private suspend fun updateExerciseRecords(completedExercises: List<Exercise>): Pair<MutableMap<String, MutableList<Double>>, MutableMap<String, MutableList<Double>>> {
         return withContext(Dispatchers.IO) {
-            val mapOfRecords: MutableMap<String, MutableList<Int>> = mutableMapOf()
+            val strengthNewRecords: MutableMap<String, MutableList<Double>> = mutableMapOf()
+            val cardioNewRecords: MutableMap<String, MutableList<Double>> = mutableMapOf()
             var records = recordsRepository.getRecord() ?: Records()
             var recordsUpdated = false
 
-            completedExercises.forEach { exercise ->
-                val maxWeight = exercise.exerciseSets.maxOfOrNull { it.weight.toDoubleOrNull() ?: 0.0 }?.toInt() ?: 0
-                if (maxWeight > 0) {
+            completedExercises.filter { it.type == ExerciseType.STRENGTH }.forEach { exercise ->
+                val maxWeight = exercise.exerciseSets.maxOfOrNull { it.weight.toDoubleOrNull() ?: 0.0 } ?: 0.0
+                if (maxWeight > 0.0) {
                     val exerciseRecords = records.exercisesRecordMap.getOrPut(exercise.name) { mutableListOf() }
                     if (exerciseRecords.isEmpty() || maxWeight > exerciseRecords.first()) {
                         exerciseRecords.add(0, maxWeight)
-                        mapOfRecords[exercise.name] = mutableListOf(maxWeight)
+                        strengthNewRecords[exercise.name] = mutableListOf(maxWeight)
+                        recordsUpdated = true
+                    }
+                }
+            }
+
+            completedExercises.filter { it.type == ExerciseType.CARDIO }.forEach { exercise ->
+                val maxTime = exercise.exerciseSets.maxOfOrNull { it.time.parseTimeToSeconds() } ?: 0.0
+                if (maxTime > 0.0) {
+                    val exerciseRecords = records.cardioRecordsMap.getOrPut(exercise.name) { mutableListOf() }
+                    if (exerciseRecords.isEmpty() || maxTime > exerciseRecords.first()) {
+                        exerciseRecords.add(0, maxTime)
+                        cardioNewRecords[exercise.name] = mutableListOf(maxTime)
                         recordsUpdated = true
                     }
                 }
             }
 
             if (recordsUpdated) recordsRepository.updateRecord(records)
-            mapOfRecords
+            strengthNewRecords to cardioNewRecords
+        }
+    }
+
+    private fun String?.parseTimeToSeconds(): Double {
+        if (this.isNullOrBlank()) return 0.0
+        val parts = this.split(":").map { it.toDoubleOrNull() ?: 0.0 }
+        return when (parts.size) {
+            2 -> parts[0] * 60 + parts[1]
+            3 -> parts[0] * 3600 + parts[1] * 60 + parts[2]
+            else -> 0.0
         }
     }
 
