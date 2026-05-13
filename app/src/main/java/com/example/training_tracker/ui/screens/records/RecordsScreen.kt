@@ -83,8 +83,13 @@ fun RecordsScreen(
             }
         } else {
             val exerciseRecordsMap = uiState.records?.exercisesRecordMap ?: emptyMap()
-            val sortedRecords = exerciseRecordsMap.toList()
+            val sortedStrengthRecords = exerciseRecordsMap.toList()
                 .sortedByDescending { it.second.maxOrNull() ?: 0.0 }
+
+            val sortedCardioRecords = uiState.cardioRecords.toList()
+                .sortedByDescending { it.second.maxOrNull() ?: 0.0 }
+
+            val allEmpty = sortedStrengthRecords.isEmpty() && sortedCardioRecords.isEmpty()
 
             LazyColumn(
                 modifier = Modifier
@@ -102,7 +107,7 @@ fun RecordsScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(240.dp),
-                            topExercises = sortedRecords.take(3)
+                            topExercises = sortedStrengthRecords.take(3)
                         )
 
                         RecordOverviewCard(
@@ -125,7 +130,7 @@ fun RecordsScreen(
                             ),
                             modifier = Modifier.padding(start = 24.dp, end = 24.dp, bottom = 12.dp)
                         )
-                        
+
                         LazyRow(
                             contentPadding = PaddingValues(horizontal = 24.dp),
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -138,11 +143,14 @@ fun RecordsScreen(
                                 )
                             }
                             items(MuscleGroups.entries.toTypedArray()) { group ->
-                                MuscleGroupChip(
-                                    label = stringResource(group.resId),
-                                    isSelected = uiState.selectedMuscleGroup == group,
-                                    onClick = { onMuscleGroupSelected(group) }
-                                )
+                                if (group.resId != R.string.stretching) {
+                                    MuscleGroupChip(
+                                        label = stringResource(group.resId).lowercase()
+                                            .replaceFirstChar { it.titlecase() },
+                                        isSelected = uiState.selectedMuscleGroup == group,
+                                        onClick = { onMuscleGroupSelected(group) }
+                                    )
+                                }
                             }
                         }
                     }
@@ -160,18 +168,31 @@ fun RecordsScreen(
                     )
                 }
 
-                if (exerciseRecordsMap.isEmpty()) {
+                if (allEmpty) {
                     item {
                         EmptyRecordsPlaceholder()
                     }
                 } else {
-                    items(sortedRecords) { (exerciseName, weights) ->
+                    items(sortedStrengthRecords) { (exerciseName, weights) ->
                         Box(modifier = Modifier.padding(horizontal = 24.dp)) {
                             ExerciseRecordCard(
                                 exerciseName = exerciseName,
-                                bestWeight = weights.maxOrNull() ?: 0.0,
+                                bestValue = weights.maxOrNull() ?: 0.0,
                                 history = weights,
+                                isCardio = false,
                                 onClick = { onExerciseClick(exerciseName, weights) }
+                            )
+                        }
+                    }
+
+                    items(sortedCardioRecords) { (exerciseName, times) ->
+                        Box(modifier = Modifier.padding(horizontal = 24.dp)) {
+                            ExerciseRecordCard(
+                                exerciseName = exerciseName,
+                                bestValue = times.maxOrNull() ?: 0.0,
+                                history = times,
+                                isCardio = true,
+                                onClick = { onExerciseClick(exerciseName, times) }
                             )
                         }
                     }
@@ -189,17 +210,28 @@ fun RecordsScreen(
             ) {
                 ExerciseHistoryContent(
                     exerciseName = name,
-                    history = history
+                    history = history,
+                    isCardio = uiState.selectedExerciseIsCardio
                 )
             }
         }
     }
 }
 
+private fun Double.toTimeString(): String {
+    val total = this.toLong()
+    val hours = total / 3600
+    val minutes = (total % 3600) / 60
+    val seconds = total % 60
+    return if (hours > 0) "%d:%02d:%02d".format(hours, minutes, seconds)
+    else "%d:%02d".format(minutes, seconds)
+}
+
 @Composable
 fun ExerciseHistoryContent(
     exerciseName: String,
-    history: List<Double>
+    history: List<Double>,
+    isCardio: Boolean = false,
 ) {
     Column(
         modifier = Modifier
@@ -268,7 +300,7 @@ fun ExerciseHistoryContent(
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            history.forEachIndexed { index, weight ->
+            history.forEachIndexed { index, value ->
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -290,7 +322,7 @@ fun ExerciseHistoryContent(
                         )
                     )
                     Text(
-                        text = "$weight kg",
+                        text = if (isCardio) value.toTimeString() else "$value kg",
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.Black
                         )
@@ -566,8 +598,9 @@ fun RecordOverviewCard(
 @Composable
 fun ExerciseRecordCard(
     exerciseName: String,
-    bestWeight: Double,
+    bestValue: Double,
     history: List<Double>,
+    isCardio: Boolean = false,
     onClick: () -> Unit
 ) {
     Card(
@@ -610,27 +643,27 @@ fun ExerciseRecordCard(
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = stringResource(R.string.maior_recorde_pessoal),
+                    text = if (isCardio) stringResource(R.string.maior_tempo_registrado)
+                           else stringResource(R.string.maior_recorde_pessoal),
                     style = MaterialTheme.typography.labelSmall.copy(
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
                     ),
-                    // 👇 2. Proteção de texto: Garante que fique em apenas 1 linha
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
             }
 
-            // 👇 3. O Campo de Força
-            // Garante que os textos da esquerda nunca vão tocar na caixa de peso da direita
             Spacer(modifier = Modifier.width(16.dp))
 
-            // --- BADGE DE PESO DA DIREITA ---
-            // 👇 4. Formatação Inteligente (Evita o "20.0 kg")
-            val formattedWeight = remember(bestWeight) {
-                java.text.NumberFormat.getInstance(Locale.getDefault()).apply {
-                    maximumFractionDigits = 1
-                    minimumFractionDigits = 0 // Remove os zeros desnecessários
-                }.format(bestWeight)
+            val displayValue = remember(bestValue, isCardio) {
+                if (isCardio) {
+                    bestValue.toTimeString()
+                } else {
+                    java.text.NumberFormat.getInstance(Locale.getDefault()).apply {
+                        maximumFractionDigits = 1
+                        minimumFractionDigits = 0
+                    }.format(bestValue) + " kg"
+                }
             }
 
             Column(horizontalAlignment = Alignment.End) {
@@ -640,12 +673,12 @@ fun ExerciseRecordCard(
                         .padding(horizontal = 12.dp, vertical = 6.dp)
                 ) {
                     Text(
-                        text = "$formattedWeight kg",
+                        text = displayValue,
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.Black,
                             color = Color.Black
                         ),
-                        maxLines = 1 // Garante que o peso não quebre o design do selo
+                        maxLines = 1
                     )
                 }
             }

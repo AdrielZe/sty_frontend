@@ -24,7 +24,7 @@ import kotlinx.coroutines.launch
 
 @Database(
     entities = [Workout::class, Exercise::class, WorkoutHistory::class, Records::class, User::class],
-    version = 33,
+    version = 34,
 )
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
@@ -40,14 +40,15 @@ abstract class AppDatabase : RoomDatabase() {
 
         private val MIGRATION_32_33 = object : Migration(32, 33) {
             override fun migrate(database: SupportSQLiteDatabase) {
-                // Coluna 'type': Não nula, padrão é 'STRENGTH'
                 database.execSQL("ALTER TABLE exercises ADD COLUMN type TEXT NOT NULL DEFAULT 'STRENGTH'")
-
-                // Coluna 'time': Permite nulo, padrão é NULL
                 database.execSQL("ALTER TABLE exercises ADD COLUMN time TEXT DEFAULT NULL")
-
-                // Coluna 'distance': Permite nulo, padrão é NULL
                 database.execSQL("ALTER TABLE exercises ADD COLUMN distance TEXT DEFAULT NULL")
+            }
+        }
+
+        private val MIGRATION_33_34 = object : Migration(33, 34) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("ALTER TABLE records ADD COLUMN cardioRecordsMap TEXT NOT NULL DEFAULT '{}'")
             }
         }
 
@@ -58,7 +59,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "app_database"
                 )
-                    .addMigrations(MIGRATION_32_33)
+                    .addMigrations(MIGRATION_32_33, MIGRATION_33_34)
                     .build()
                 INSTANCE = instance
                 instance

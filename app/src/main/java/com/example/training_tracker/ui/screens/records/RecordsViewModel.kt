@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.training_tracker.GymTrackerApplication
+import com.example.training_tracker.data.models.ExerciseType
 import com.example.training_tracker.data.models.MuscleGroups
 import com.example.training_tracker.domain.repository.ExerciseRepository
 import com.example.training_tracker.domain.repository.RecordsRepository
@@ -30,27 +31,44 @@ class RecordsViewModel(
         _exercises,
         _selectedExerciseHistory
     ) { records, selectedGroup, allExercises, selectedHistory ->
-        
-        val filteredRecords = if (selectedGroup == null) {
-            records
-        } else {
-            val muscleGroupExercises = allExercises
-                .filter { it.muscleGroup == selectedGroup }
-                .map { it.name.uppercase() }
-                .toSet()
 
-            records?.copy(
-                exercisesRecordMap = records.exercisesRecordMap.filterKeys { 
-                    muscleGroupExercises.contains(it.uppercase()) 
-                }.toMutableMap()
-            )
+        val cardioExerciseNames = allExercises
+            .filter { it.type == ExerciseType.CARDIO }
+            .map { it.name.uppercase() }
+            .toSet()
+
+        val filteredStrengthRecords = when {
+            selectedGroup == null -> records
+            selectedGroup == MuscleGroups.CARDIO -> records?.copy(exercisesRecordMap = mutableMapOf())
+            else -> {
+                val muscleGroupExercises = allExercises
+                    .filter { it.muscleGroup == selectedGroup }
+                    .map { it.name.uppercase() }
+                    .toSet()
+                records?.copy(
+                    exercisesRecordMap = records.exercisesRecordMap.filterKeys {
+                        muscleGroupExercises.contains(it.uppercase())
+                    }.toMutableMap()
+                )
+            }
         }
 
+        val filteredCardioRecords: Map<String, List<Double>> = when {
+            selectedGroup == null || selectedGroup == MuscleGroups.CARDIO ->
+                records?.cardioRecordsMap ?: emptyMap()
+            else -> emptyMap()
+        }
+
+        val selectedIsCardio = selectedHistory != null &&
+            cardioExerciseNames.contains(selectedHistory.first.uppercase())
+
         RecordsUiState(
-            records = filteredRecords,
+            records = filteredStrengthRecords,
             isLoading = false,
             selectedMuscleGroup = selectedGroup,
-            selectedExerciseHistory = selectedHistory
+            selectedExerciseHistory = selectedHistory,
+            selectedExerciseIsCardio = selectedIsCardio,
+            cardioRecords = filteredCardioRecords,
         )
     }.stateIn(
         scope = viewModelScope,

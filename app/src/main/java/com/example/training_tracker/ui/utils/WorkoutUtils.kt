@@ -149,6 +149,7 @@ fun ExerciseCardUtils(
         MuscleGroups.BICEPS -> R.drawable.biceps
         MuscleGroups.TRICEPS -> R.drawable.triceps
         MuscleGroups.CARDIO -> R.drawable.cardio
+        MuscleGroups.STRETCHING -> R.drawable.stretching
         else -> R.drawable.ic_launcher_background
     }
 

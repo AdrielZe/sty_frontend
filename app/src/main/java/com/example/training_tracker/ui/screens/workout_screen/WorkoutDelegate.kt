@@ -33,7 +33,7 @@ interface WorkoutDelegate {
 
     suspend fun completeExercise(workout: Workout, exerciseId: String)
     suspend fun reopenExercise(workout: Workout, exerciseId: String)
-    suspend fun updateExerciseRecords(workout: Workout): MutableMap<String, MutableList<Double>>
+    suspend fun updateExerciseRecords(workout: Workout): Pair<MutableMap<String, MutableList<Double>>, MutableMap<String, MutableList<Double>>>
     suspend fun updateVolumeRecord(workout: Workout): MutableList<Double>?
     suspend fun updateSetTechnique(
         workout: Workout,
@@ -221,9 +221,10 @@ class WorkoutDelegateImpl(
         return this.replace(",", ".").toDoubleOrNull() ?: 0.0
     }
 
-    override suspend fun updateExerciseRecords(workout: Workout): MutableMap<String, MutableList<Double>> {
+    override suspend fun updateExerciseRecords(workout: Workout): Pair<MutableMap<String, MutableList<Double>>, MutableMap<String, MutableList<Double>>> {
         return withContext(Dispatchers.IO) {
-            val mapOfRecords: MutableMap<String, MutableList<Double>> = mutableMapOf()
+            val strengthNewRecords: MutableMap<String, MutableList<Double>> = mutableMapOf()
+            val cardioNewRecords: MutableMap<String, MutableList<Double>> = mutableMapOf()
             var records = recordsRepository.getRecord()
             var isFirstTime = false
 
@@ -246,8 +247,27 @@ class WorkoutDelegateImpl(
 
                     if (currentBest == null || maxWeightThisWorkout > currentBest) {
                         exerciseRecords.add(0, maxWeightThisWorkout)
-                        mapOfRecords.getOrPut(exercise.name) { mutableListOf() }
+                        strengthNewRecords.getOrPut(exercise.name) { mutableListOf() }
                             .add(0, maxWeightThisWorkout)
+                        recordsUpdated = true
+                    }
+                }
+            }
+
+            workout.exercises.filter { it.type == ExerciseType.CARDIO }.forEach { exercise ->
+                val maxTimeThisWorkout = exercise.exerciseSets.maxOfOrNull {
+                    it.time.parseTimeToSeconds()
+                }
+
+                if (maxTimeThisWorkout != null && maxTimeThisWorkout > 0.0) {
+                    val exerciseRecords =
+                        records.cardioRecordsMap.getOrPut(exercise.name) { mutableListOf() }
+                    val currentBest = exerciseRecords.firstOrNull()
+
+                    if (currentBest == null || maxTimeThisWorkout > currentBest) {
+                        exerciseRecords.add(0, maxTimeThisWorkout)
+                        cardioNewRecords.getOrPut(exercise.name) { mutableListOf() }
+                            .add(0, maxTimeThisWorkout)
                         recordsUpdated = true
                     }
                 }
@@ -261,7 +281,17 @@ class WorkoutDelegateImpl(
                 }
             }
 
-            mapOfRecords
+            strengthNewRecords to cardioNewRecords
+        }
+    }
+
+    private fun String?.parseTimeToSeconds(): Double {
+        if (this.isNullOrBlank()) return 0.0
+        val parts = this.split(":").map { it.toDoubleOrNull() ?: 0.0 }
+        return when (parts.size) {
+            2 -> parts[0] * 60 + parts[1]
+            3 -> parts[0] * 3600 + parts[1] * 60 + parts[2]
+            else -> 0.0
         }
     }
 
@@ -392,13 +422,14 @@ class WorkoutDelegateImpl(
         onWorkoutFinished(completedWorkout)
 
         withContext(Dispatchers.IO) {
-            val exerciseRecords = updateExerciseRecords(completedWorkout)
+            val (strengthRecords, cardioRecords) = updateExerciseRecords(completedWorkout)
             val volumeRecords = updateVolumeRecord(completedWorkout)
 
             val newHistoryEntryRecords = newHistoryEntry.copy(
                 records = Records(
-                    exercisesRecordMap = exerciseRecords,
-                    volumeRecords = volumeRecords
+                    exercisesRecordMap = strengthRecords,
+                    volumeRecords = volumeRecords,
+                    cardioRecordsMap = cardioRecords
                 )
             )
 

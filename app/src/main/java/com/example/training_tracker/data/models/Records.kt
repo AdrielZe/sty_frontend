@@ -11,4 +11,5 @@ data class Records(
     @ColumnInfo("exercisesRecord") val exercisesRecordMap: MutableMap<String, MutableList<Double>> = mutableMapOf(),
     @ColumnInfo("volumeRecords") var volumeRecords: MutableList<Double>? = mutableListOf(),
     @ColumnInfo("strengthRecord") val strengthRecord: Double = 0.0,
+    @ColumnInfo("cardioRecordsMap") val cardioRecordsMap: MutableMap<String, MutableList<Double>> = mutableMapOf(),
 )
