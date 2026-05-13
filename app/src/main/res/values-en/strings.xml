@@ -342,6 +342,7 @@
     <string name="adicione_pelo_menos_1_exercicios">Add at least 1 exercise</string>
     <string name="adicionar_exercicio">ADD EXERCISE</string>
     <string name="maior_recorde_pessoal">Personal best</string>
+    <string name="maior_tempo_registrado">Best recorded time</string>
     <string name="nenhum_recorde_registrado">No records found</string>
     <string name="complete_treinos_para_ver_seu_progresso">Complete workouts to check your progress</string>
     <string name="agenda_de_treinos">WORKOUT SCHEDULE</string>
@@ -419,6 +420,11 @@
     <string name="muscle_abs">ABS</string>
     <string name="plano_semanal">WEEKLY SCHEDULE</string>
     <string name="nenhuma_atividade">No activities</string>
+    <string name="toque_para_adicionar_treino">Tap to add a workout</string>
+    <string name="duplicar_treino">Duplicate workout</string>
+    <string name="selecione_o_dia_para_duplicar">Select the day for the copy</string>
+    <string name="dia_atual_indicado">● Current workout day</string>
+    <string name="duplicar">Duplicate</string>
     <string name="historico">HISTORY</string>
     <string name="selecione_o_grupo_muscular_para">Select the muscle group for \"%1$s\"</string>
     <string name="n_o_temos_certeza_do_grupamento_muscular_desse_exerc_cio_por_favor_ajude_nos_a_categoriz_lo">We\'re not sure about this exercise\'s muscle group. Please help us categorize it.</string>
@@ -451,4 +457,10 @@
     <string name="clique_aqui_para_selecionar_o_alongamento">Click here to select a stretching exercise</string>
     <string name="selecionar_alongamento">Select Stretching</string>
     <string name="buscar_alongamento">Search stretching…</string>
+    <string name="stronger_than_yesterday">stronger than yesterday</string>
+    <string name="progresso">Progress</string>
+    <string name="editar_nome">Edit Name</string>
+    <string name="nome_de_usu_rio">Username</string>
+    <string name="estat_sticas">Statistics</string>
+    <string name="salvar">Save</string>
 </resources>

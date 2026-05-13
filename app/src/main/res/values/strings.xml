@@ -391,6 +391,7 @@
     <string name="adicione_pelo_menos_1_exercicios">Adicione pelo menos 1 exercício</string>
     <string name="adicionar_exercicio">ADICIONAR EXERCÍCIO</string>
     <string name="maior_recorde_pessoal">Maior recorde pessoal</string>
+    <string name="maior_tempo_registrado">Melhor tempo registrado</string>
     <string name="nenhum_recorde_registrado">Nenhum recorde registrado</string>
     <string name="complete_treinos_para_ver_seu_progresso">Complete treinos para ver o seu progresso</string>
     <string name="agenda_de_treinos">AGENDA DE TREINOS</string>
@@ -468,6 +469,11 @@
     <string name="muscle_abs">ABDÔMEN</string>
     <string name="plano_semanal">PLANO SEMANAL</string>
     <string name="nenhuma_atividade">Nenhuma atividade</string>
+    <string name="toque_para_adicionar_treino">Toque para adicionar um treino</string>
+    <string name="duplicar_treino">Duplicar treino</string>
+    <string name="selecione_o_dia_para_duplicar">Selecione o dia para a cópia</string>
+    <string name="dia_atual_indicado">● Dia atual do treino</string>
+    <string name="duplicar">Duplicar</string>
     <string name="historico">HISTÓRICO</string>
     <string name="n_o_temos_certeza_do_grupamento_muscular_desse_exerc_cio_por_favor_ajude_nos_a_categoriz_lo">Não temos certeza do grupamento muscular desse exercício. Por favor, ajude-nos a categorizá-lo.</string>
     <string name="selecione_o_grupo_muscular_para">Selecione o grupo muscular para \"%1$s\"</string>
@@ -523,5 +529,11 @@
     <string name="distancia_km">DISTÂNCIA (KM)</string>
     <string name="tempo_min">TEMPO (MIN)</string>
     <string name="em">"  em  "</string>
+    <string name="stronger_than_yesterday">stronger than yesterday</string>
+    <string name="progresso">Progresso</string>
+    <string name="editar_nome">Editar Nome</string>
+    <string name="nome_de_usu_rio">Nome de usuário</string>
+    <string name="estat_sticas">Estatísticas</string>
+    <string name="salvar">Salvar</string>
 
 </resources>
