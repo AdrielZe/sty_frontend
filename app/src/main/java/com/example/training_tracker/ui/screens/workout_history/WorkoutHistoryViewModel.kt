@@ -9,20 +9,30 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.training_tracker.GymTrackerApplication
 import com.example.training_tracker.data.models.MuscleGroups
+import com.example.training_tracker.data.models.Workout
 import com.example.training_tracker.data.models.WorkoutHistory
 import com.example.training_tracker.domain.repository.WorkoutHistoryRepository
+import com.example.training_tracker.domain.repository.WorkoutRepository
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import java.time.DayOfWeek
 import java.time.LocalDate
 
 class WorkoutHistoryViewModel(
     private val workoutHistoryRepository: WorkoutHistoryRepository,
+    private val workoutRepository: WorkoutRepository,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
+
+    private val _uiEvent = Channel<String>()
+    val uiEvent = _uiEvent.receiveAsFlow()
 
     private val _searchQuery = MutableStateFlow("")
     private val _sortOrder = MutableStateFlow(SortOrder.DATE_DESC)
@@ -98,13 +108,31 @@ class WorkoutHistoryViewModel(
         _currentCalendarMonth.update { it.plusMonths(delta) }
     }
 
+    fun duplicateFromHistory(history: WorkoutHistory, targetDay: DayOfWeek) {
+        val newWorkout = Workout(
+            id = java.util.UUID.randomUUID().toString(),
+            name = history.name,
+            exercises = history.exercises,
+            dayOfWeek = targetDay
+        )
+        viewModelScope.launch {
+            try {
+                workoutRepository.addWorkout(newWorkout)
+            } catch (e: Exception) {
+                _uiEvent.send("Erro ao duplicar: ${e.message}")
+            }
+        }
+    }
+
     companion object {
         val Factory = viewModelFactory {
             initializer {
                 val application = (this[APPLICATION_KEY] as GymTrackerApplication)
                 val workoutHistoryRepository = application.container.workoutHistoryRepository
+                val workoutRepository = application.container.workoutRepository
                 WorkoutHistoryViewModel(
                     workoutHistoryRepository = workoutHistoryRepository,
+                    workoutRepository = workoutRepository,
                     savedStateHandle = createSavedStateHandle()
                 )
             }

@@ -134,9 +134,10 @@ fun MainTabsScreen(
                     onSearchQueryChange = viewModel::onSearchQueryChange,
                     onSortOrderChange = viewModel::onSortOrderChange,
                     onNavigateBack = { tabsNavController.popBackStack() },
-                    onClickHistory = { id -> 
-                        rootNavController.navigate("${Routes.WorkoutReport.name}/$id") 
-                    }
+                    onClickHistory = { id ->
+                        rootNavController.navigate("${Routes.WorkoutReport.name}/$id")
+                    },
+                    onDuplicateFromHistory = viewModel::duplicateFromHistory
                 )
             }
 

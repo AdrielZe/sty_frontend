@@ -27,10 +27,14 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.HistoryToggleOff
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -42,7 +46,11 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -62,8 +70,10 @@ import com.example.training_tracker.R
 import com.example.training_tracker.data.models.MuscleGroups
 import com.example.training_tracker.data.models.WorkoutHistory
 import com.example.training_tracker.ui.screens.home.MuscleBadge
+import com.example.training_tracker.ui.screens.registered_workouts.DuplicateWorkoutDialog
 import com.example.training_tracker.ui.screens.registered_workouts.TextGray
 import com.example.training_tracker.ui.theme.CyanAccent
+import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -79,6 +89,7 @@ fun WorkoutHistoryScreen(
     onSortOrderChange: (SortOrder) -> Unit,
     onNavigateBack: () -> Unit,
     onClickHistory: (String) -> Unit,
+    onDuplicateFromHistory: (WorkoutHistory, DayOfWeek) -> Unit = { _, _ -> },
     modifier: Modifier = Modifier
 ) {
     Scaffold(
@@ -149,12 +160,14 @@ fun WorkoutHistoryScreen(
                             )
                         }
                         items(MuscleGroups.entries.toTypedArray()) { muscle ->
-                            FilterChip(
-                                selected = uiState.selectedMuscleGroup == muscle,
-                                label = stringResource(muscle.resId).lowercase()
-                                    .replaceFirstChar { it.titlecase() },
-                                onClick = { onMuscleGroupSelected(muscle) }
-                            )
+                            if (muscle.resId != R.string.stretching) {
+                                FilterChip(
+                                    selected = uiState.selectedMuscleGroup == muscle,
+                                    label = stringResource(muscle.resId).lowercase()
+                                        .replaceFirstChar { it.titlecase() },
+                                    onClick = { onMuscleGroupSelected(muscle) }
+                                )
+                            }
                         }
                     }
                 }
@@ -193,7 +206,8 @@ fun WorkoutHistoryScreen(
                 items(uiState.savedWorkouts, key = { it.id }) { workout ->
                     HistoryWorkoutCard(
                         workout = workout,
-                        onClick = { onClickHistory(workout.id) }
+                        onClick = { onClickHistory(workout.id) },
+                        onDuplicateToDay = { day -> onDuplicateFromHistory(workout, day) }
                     )
                 }
             }
@@ -419,10 +433,26 @@ fun FilterChip(selected: Boolean, label: String, onClick: () -> Unit) {
 }
 
 @Composable
-fun HistoryWorkoutCard(workout: WorkoutHistory, onClick: () -> Unit) {
+fun HistoryWorkoutCard(
+    workout: WorkoutHistory,
+    onClick: () -> Unit,
+    onDuplicateToDay: (DayOfWeek) -> Unit = {}
+) {
     val isDark = isSystemInDarkTheme()
+    var showMenu by remember { mutableStateOf(false) }
+    var showDuplicateDialog by rememberSaveable { mutableStateOf(false) }
 
-    // ... Seus formatadores de data, tempo, volume e músculos continuam iguais ...
+    if (showDuplicateDialog) {
+        DuplicateWorkoutDialog(
+            workoutName = workout.name,
+            currentDay = null,
+            onDismiss = { showDuplicateDialog = false },
+            onConfirm = { day ->
+                onDuplicateToDay(day)
+                showDuplicateDialog = false
+            }
+        )
+    }
     val dateText = remember(workout.completionDate) {
         workout.completionDate.format(
             DateTimeFormatter.ofPattern(
@@ -546,20 +576,50 @@ fun HistoryWorkoutCard(workout: WorkoutHistory, onClick: () -> Unit) {
                         }
                     }
 
-                    Spacer(modifier = Modifier.width(16.dp)) // Respiro seguro para o título não colar no volume
+                    Spacer(modifier = Modifier.width(8.dp))
 
-                    Surface(
-                        color = CyanAccent.copy(alpha = 0.2f),
-                        shape = CircleShape,
-                        border = BorderStroke(1.dp, CyanAccent.copy(alpha = 0.5f))
-                    ) {
-                        Text(
-                            text = volume,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-                            color = CyanAccent,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 12.sp
-                        )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Surface(
+                            color = CyanAccent.copy(alpha = 0.2f),
+                            shape = CircleShape,
+                            border = BorderStroke(1.dp, CyanAccent.copy(alpha = 0.5f))
+                        ) {
+                            Text(
+                                text = volume,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                                color = CyanAccent,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 12.sp
+                            )
+                        }
+                        Box {
+                            IconButton(
+                                onClick = { showMenu = true },
+                                modifier = Modifier.size(32.dp)
+                            ) {
+                                Icon(
+                                    Icons.Default.MoreVert,
+                                    contentDescription = null,
+                                    tint = Color.White.copy(alpha = 0.7f),
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                            DropdownMenu(
+                                expanded = showMenu,
+                                onDismissRequest = { showMenu = false }
+                            ) {
+                                DropdownMenuItem(
+                                    text = { Text(stringResource(R.string.duplicar_treino)) },
+                                    leadingIcon = {
+                                        Icon(Icons.Default.ContentCopy, contentDescription = null)
+                                    },
+                                    onClick = {
+                                        showMenu = false
+                                        showDuplicateDialog = true
+                                    }
+                                )
+                            }
+                        }
                     }
                 }
 
@@ -649,6 +709,7 @@ private fun getHistoryWorkoutImage(workout: WorkoutHistory): Int {
         MuscleGroups.TRICEPS -> R.drawable.triceps_workout
         MuscleGroups.ABS -> R.drawable.abs_workout
         MuscleGroups.CARDIO -> R.drawable.cardio_workout
+        MuscleGroups.STRETCHING -> R.drawable.stretching_workout
         else -> R.drawable.biceps_workout
     }
 }
