@@ -15,6 +15,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -188,7 +189,7 @@ fun RegisteredWorkoutsScreen(
                     },
                     navigationIcon = {
                         IconButton(onClick = onNavigateBack) {
-                            Icon(Icons.Default.ArrowBack, contentDescription = null, tint = CyanAccent)
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.content_description_back), tint = CyanAccent)
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
@@ -226,6 +227,7 @@ fun RegisteredWorkoutsScreen(
                                                 duration = "${workout.estimatedTime} min",
                                                 onWorkoutClick = onWorkoutClick,
                                                 onDeleteClick = { viewModel.deleteWorkout(workout) },
+                                                onDuplicateClick = { targetDay -> viewModel.duplicateWorkout(workout, targetDay) },
                                                 workout = workout
                                             )
                                         }
@@ -248,10 +250,12 @@ fun ActiveWorkoutCard(
     duration: String,
     onWorkoutClick: (String) -> Unit,
     onDeleteClick: () -> Unit = {},
+    onDuplicateClick: (DayOfWeek) -> Unit = {},
     workout: Workout
 ) {
     var showMenu by remember { mutableStateOf(false) }
-    var showDeleteDialog by remember {mutableStateOf(false)}
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    var showDuplicateDialog by remember { mutableStateOf(false) }
 
     val muscleGroups = remember(workout) {
         workout.exercises.mapNotNull { it.muscleGroup }.distinct()
@@ -282,139 +286,143 @@ fun ActiveWorkoutCard(
         )
     }
 
+    if (showDuplicateDialog) {
+        DuplicateWorkoutDialog(
+            workoutName = workout.name,
+            currentDay = workout.dayOfWeek,
+            onDismiss = { showDuplicateDialog = false },
+            onConfirm = { targetDay ->
+                onDuplicateClick(targetDay)
+                showDuplicateDialog = false
+            }
+        )
+    }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(24.dp))
+            .clip(RoundedCornerShape(20.dp))
             .border(
                 width = 1.dp,
                 brush = Brush.linearGradient(
-                    listOf(
-                        CyanAccent.copy(alpha = 0.3f),
-                        Color.Transparent
-                    )
+                    listOf(CyanAccent.copy(alpha = 0.25f), Color.Transparent)
                 ),
-                shape = RoundedCornerShape(24.dp)
+                shape = RoundedCornerShape(20.dp)
             ),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.8f)
+            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f)
         ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         onClick = { onWorkoutClick(workout.id) }
     ) {
-        Column(modifier = Modifier.padding(20.dp)) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // IMAGEM DO TREINO — rounded square with image + gradient overlay
+            Box(
+                modifier = Modifier
+                    .size(64.dp)
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
             ) {
-                // IMAGEM DO TREINO
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(getWorkoutImageRes(workout))
+                        .crossfade(true)
+                        .build(),
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                )
                 Box(
                     modifier = Modifier
-                        .size(56.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.surfaceVariant),
-                    contentAlignment = Alignment.Center
+                        .fillMaxSize()
+                        .background(
+                            Brush.verticalGradient(
+                                listOf(Color.Transparent, Color.Black.copy(alpha = 0.4f))
+                            )
+                        )
+                )
+            }
+
+            Spacer(Modifier.width(14.dp))
+
+            // TEXTOS
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleSmall.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    ),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Spacer(Modifier.height(4.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    AsyncImage(
-                        model = ImageRequest.Builder(LocalContext.current)
-                            .data(getWorkoutImageRes(workout))
-                            .crossfade(true)
-                            .build(),
-                        contentDescription = null,
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.fillMaxSize()
+                    WorkoutInfoChip(
+                        icon = Icons.AutoMirrored.Filled.List,
+                        label = stringResource(R.string.exercicios, exercises)
+                    )
+                    WorkoutInfoChip(
+                        icon = Icons.Default.Schedule,
+                        label = duration
                     )
                 }
-
-                Spacer(Modifier.width(16.dp))
-
-                // COLUNA DOS TEXTOS (Título + Infos)
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = title.uppercase(),
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            fontWeight = FontWeight.Black,
-                            letterSpacing = 0.5.sp,
-                            color = MaterialTheme.colorScheme.onSurface
-                        ),
-                        // 👇 1. PROTEÇÃO DO TÍTULO: Se for muito longo, corta com "..."
-                        maxLines = 1, // ou 2, se preferir que ocupe mais espaço
-                        overflow = TextOverflow.Ellipsis
-                    )
-
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(top = 4.dp).fillMaxWidth()
+                if (muscleGroups.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.List,
-                            contentDescription = null,
-                            tint = CyanAccent,
-                            modifier = Modifier.size(14.dp)
-                        )
-                        Text(
-                            text = stringResource(R.string.exercicios, exercises),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.outline,
-                            fontWeight = FontWeight.Bold,
-                            // 👇 2. PROTEÇÃO DO TEXTO 1: weight(1f, fill = false) permite que o texto encolha
-                            // e receba "..." caso a tela seja muito fina, sem destruir o ícone de tempo!
-                            modifier = Modifier.weight(1f, fill = false),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-
-                        Spacer(Modifier.width(12.dp))
-
-                        Icon(
-                            imageVector = Icons.Default.Schedule,
-                            contentDescription = null,
-                            tint = CyanAccent,
-                            modifier = Modifier.size(14.dp)
-                        )
-                        Text(
-                            text = " $duration",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.outline,
-                            fontWeight = FontWeight.Bold,
-                            // 👇 3. PROTEÇÃO DO TEXTO 2
-                            modifier = Modifier.weight(1f, fill = false),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-                }
-
-                // MENU DROPDOWN
-                Box {
-                    IconButton(onClick = { showMenu = true }) {
-                        Icon(Icons.Default.MoreVert, contentDescription = null, tint = MaterialTheme.colorScheme.outline)
-                    }
-                    DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
-                        DropdownMenuItem(
-                            text = { Text("Remover") },
-                            onClick = {
-                                showDeleteDialog = true
-                                showMenu = false
-                            },
-                            leadingIcon = { Icon(Icons.Default.Delete, contentDescription = null, tint = MaterialTheme.colorScheme.error) }
-                        )
+                        items(muscleGroups) { muscle ->
+                            MuscleBadgeRegistered(muscle = muscle)
+                        }
                     }
                 }
             }
 
-            // LISTA DE MÚSCULOS
-            if (muscleGroups.isNotEmpty()) {
-                Spacer(modifier = Modifier.height(12.dp))
-                LazyRow(
-                    horizontalArrangement = Arrangement.spacedBy(4.dp),
-                    modifier = Modifier.fillMaxWidth()
+            // MENU DROPDOWN
+            Box {
+                IconButton(
+                    onClick = { showMenu = true },
+                    modifier = Modifier.size(36.dp)
                 ) {
-                    items(muscleGroups) { muscle ->
-                        MuscleBadgeRegistered(muscle = muscle)
-                    }
+                    Icon(
+                        Icons.Default.MoreVert,
+                        contentDescription = stringResource(R.string.content_description_more_options),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+                DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.duplicar_treino)) },
+                        onClick = {
+                            showDuplicateDialog = true
+                            showMenu = false
+                        },
+                        leadingIcon = {
+                            Icon(Icons.Default.ContentCopy, contentDescription = null, tint = CyanAccent)
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.workout_details_remove_button)) },
+                        onClick = {
+                            showDeleteDialog = true
+                            showMenu = false
+                        },
+                        leadingIcon = {
+                            Icon(Icons.Default.Delete, contentDescription = null, tint = MaterialTheme.colorScheme.error)
+                        }
+                    )
                 }
             }
-            Spacer(Modifier.height(5.dp))
         }
     }
 }
@@ -422,19 +430,161 @@ fun ActiveWorkoutCard(
 @Composable
 fun MuscleBadgeRegistered(muscle: MuscleGroups) {
     Surface(
-        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.15f),
+        color = CyanAccent.copy(alpha = 0.08f),
         shape = RoundedCornerShape(4.dp),
-        border = BorderStroke(0.5.dp,  MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f))
+        border = BorderStroke(0.5.dp, CyanAccent.copy(alpha = 0.25f))
     ) {
         Text(
             text = stringResource(muscle.resId),
             modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-            color = MaterialTheme.colorScheme.onSurface,
+            color = CyanAccent,
             fontSize = 8.sp,
             fontWeight = FontWeight.Bold,
             letterSpacing = 0.5.sp
         )
     }
+}
+
+@Composable
+private fun WorkoutInfoChip(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.size(12.dp)
+        )
+        Spacer(Modifier.width(3.dp))
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+    }
+}
+
+@Composable
+fun DuplicateWorkoutDialog(
+    workoutName: String,
+    currentDay: DayOfWeek?,
+    onDismiss: () -> Unit,
+    onConfirm: (DayOfWeek) -> Unit
+) {
+    var selectedDay by remember { mutableStateOf<DayOfWeek?>(null) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Column {
+                Text(
+                    text = stringResource(R.string.duplicar_treino),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = workoutName,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = CyanAccent,
+                    fontWeight = FontWeight.Medium
+                )
+            }
+        },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(
+                    text = stringResource(R.string.selecione_o_dia_para_duplicar),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    DayOfWeek.entries.chunked(4).forEach { rowDays ->
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            rowDays.forEach { day ->
+                                val isSelected = day == selectedDay
+                                val isCurrent = day == currentDay
+                                val locale = java.util.Locale.getDefault()
+                                val label = day.getDisplayName(
+                                    java.time.format.TextStyle.SHORT,
+                                    locale
+                                ).replaceFirstChar { it.titlecase(locale) }
+
+                                Surface(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .clip(RoundedCornerShape(10.dp))
+                                        .clickable { selectedDay = day },
+                                    shape = RoundedCornerShape(10.dp),
+                                    color = when {
+                                        isSelected -> CyanAccent
+                                        isCurrent -> CyanAccent.copy(alpha = 0.12f)
+                                        else -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                                    },
+                                    border = if (isCurrent && !isSelected)
+                                        BorderStroke(1.dp, CyanAccent.copy(alpha = 0.4f))
+                                    else null
+                                ) {
+                                    Column(
+                                        modifier = Modifier.padding(vertical = 8.dp),
+                                        horizontalAlignment = Alignment.CenterHorizontally
+                                    ) {
+                                        Text(
+                                            text = label,
+                                            style = MaterialTheme.typography.labelSmall,
+                                            fontWeight = FontWeight.Bold,
+                                            color = when {
+                                                isSelected -> Color.White
+                                                isCurrent -> CyanAccent
+                                                else -> MaterialTheme.colorScheme.onSurfaceVariant
+                                            }
+                                        )
+                                        if (isCurrent) {
+                                            Spacer(Modifier.height(2.dp))
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(4.dp)
+                                                    .clip(CircleShape)
+                                                    .background(if (isSelected) Color.White else CyanAccent)
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                if (currentDay != null) {
+                    Text(
+                        text = stringResource(R.string.dia_atual_indicado),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = { selectedDay?.let { onConfirm(it) } },
+                enabled = selectedDay != null
+            ) {
+                Text(
+                    text = stringResource(R.string.duplicar),
+                    color = if (selectedDay != null) CyanAccent
+                            else MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.workout_details_cancel_button))
+            }
+        }
+    )
 }
 
 @Composable
@@ -444,39 +594,54 @@ fun DaySection(
     isHighlighted: Boolean = false,
     content: @Composable () -> Unit
 ) {
-    val backgroundColor by animateFloatAsState(if (isHighlighted) 0.15f else 0f)
+    val highlightAlpha by animateFloatAsState(if (isHighlighted) 0.12f else 0f, label = "highlight")
+    val hasWorkouts = count > 0
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .background(
-                color = CyanAccent.copy(alpha = backgroundColor),
+                color = CyanAccent.copy(alpha = highlightAlpha),
                 shape = RoundedCornerShape(16.dp)
             )
             .padding(if (isHighlighted) 8.dp else 0.dp)
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(bottom = 12.dp)
+            modifier = Modifier.padding(bottom = 12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text(
-                day,
-                style = MaterialTheme.typography.titleSmall.copy(
-                    fontWeight = FontWeight.Bold,
-                    color = if (isHighlighted) CyanAccent else MaterialTheme.colorScheme.onSurface,
-                    letterSpacing = 1.sp
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                if (hasWorkouts) {
+                    Box(
+                        modifier = Modifier
+                            .width(3.dp)
+                            .height(16.dp)
+                            .clip(RoundedCornerShape(2.dp))
+                            .background(CyanAccent)
+                    )
+                    Spacer(Modifier.width(8.dp))
+                }
+                Text(
+                    day,
+                    style = MaterialTheme.typography.titleSmall.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = if (isHighlighted || hasWorkouts) CyanAccent
+                                else MaterialTheme.colorScheme.onSurfaceVariant,
+                        letterSpacing = 0.5.sp
+                    )
                 )
-            )
-            Spacer(Modifier.width(8.dp))
+            }
             Surface(
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f),
+                color = if (hasWorkouts) CyanAccent.copy(alpha = 0.15f)
+                        else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f),
                 shape = CircleShape
             ) {
                 Text(
                     count.toString(),
                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
                     fontSize = 10.sp,
-                    color = TextGray,
+                    color = if (hasWorkouts) CyanAccent else TextGray,
                     fontWeight = FontWeight.Bold
                 )
             }
@@ -517,25 +682,49 @@ fun WeeklyPlanHeader() {
 
 @Composable
 fun NoActivityCard(onCreateWorkoutClick: () -> Unit) {
-    Box(
+    Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(100.dp)
+            .clip(RoundedCornerShape(16.dp))
             .border(
                 width = 1.dp,
-                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f),
-                shape = RoundedCornerShape(24.dp)
+                brush = Brush.linearGradient(
+                    listOf(CyanAccent.copy(alpha = 0.2f), CyanAccent.copy(alpha = 0.05f))
+                ),
+                shape = RoundedCornerShape(16.dp)
             )
-            .clip(RoundedCornerShape(24.dp))
-            .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.02f))
-            .clickable { onCreateWorkoutClick() },
-        contentAlignment = Alignment.Center
+            .background(CyanAccent.copy(alpha = 0.03f))
+            .clickable { onCreateWorkoutClick() }
+            .padding(horizontal = 16.dp, vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally
+        Box(
+            modifier = Modifier
+                .size(36.dp)
+                .clip(RoundedCornerShape(10.dp))
+                .background(CyanAccent.copy(alpha = 0.1f)),
+            contentAlignment = Alignment.Center
         ) {
-            Icon(Icons.Default.Add, contentDescription = null, tint = CyanAccent.copy(alpha = 0.5f))
-            Text(stringResource(R.string.nenhuma_atividade), fontWeight = FontWeight.Bold, color = TextGray.copy(alpha = 0.6f))
+            Icon(
+                Icons.Default.Add,
+                contentDescription = null,
+                tint = CyanAccent,
+                modifier = Modifier.size(20.dp)
+            )
+        }
+        Column {
+            Text(
+                text = stringResource(R.string.nenhuma_atividade),
+                style = MaterialTheme.typography.bodySmall,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Text(
+                text = stringResource(R.string.toque_para_adicionar_treino),
+                style = MaterialTheme.typography.labelSmall,
+                color = CyanAccent.copy(alpha = 0.7f)
+            )
         }
     }
 }

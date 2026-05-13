@@ -46,6 +46,29 @@ class RegisteredWorkoutsViewModel(
         }
     }
 
+    fun duplicateWorkout(workout: Workout, targetDay: DayOfWeek) {
+        val copy = workout.copy(
+            id = java.util.UUID.randomUUID().toString(),
+            dayOfWeek = targetDay,
+            isCompleted = false,
+            isOnGoing = false,
+            isPaused = false,
+            completionDate = null,
+            completionTime = null,
+            startTime = null,
+            accumulatedTime = 0L,
+            historyId = null,
+            progress = 0f
+        )
+        viewModelScope.launch {
+            try {
+                workoutRepository.addWorkout(copy)
+            } catch (e: Exception) {
+                _uiEvent.send("Erro ao duplicar: ${e.message}")
+            }
+        }
+    }
+
     fun deleteWorkout(workout: Workout) {
         viewModelScope.launch {
             try {
