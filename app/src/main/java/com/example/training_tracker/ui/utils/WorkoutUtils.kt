@@ -5,14 +5,17 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.forEach
+import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
@@ -23,6 +26,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -58,6 +63,9 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.window.Dialog
+import kotlinx.coroutines.launch
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -140,6 +148,7 @@ fun ExerciseCardUtils(
         MuscleGroups.ABS -> R.drawable.abs
         MuscleGroups.BICEPS -> R.drawable.biceps
         MuscleGroups.TRICEPS -> R.drawable.triceps
+        MuscleGroups.CARDIO -> R.drawable.cardio
         else -> R.drawable.ic_launcher_background
     }
 
@@ -311,13 +320,14 @@ fun ExerciseCardUtils(
                         )
                         Spacer(Modifier.height(16.dp)) // Respiro após a imagem
                         exercise.exerciseSets.forEach { set ->
+                            val isCardio = exercise.type == ExerciseType.CARDIO
                             SetLine(
                                 modifier = Modifier.fillMaxWidth(),
                                 exercise = exercise,
-                                inputValueReps = set.reps,
-                                inputValueWeight = set.weight,
-                                previousReps = set.previousReps,
-                                previousWeight = set.previousWeight,
+                                inputValueReps = if (isCardio) set.time ?: "" else set.reps,
+                                inputValueWeight = if (isCardio) set.distance ?: "" else set.weight,
+                                previousReps = if (isCardio) set.previousTime ?: "" else set.previousReps,
+                                previousWeight = if (isCardio) set.previousDistance ?: "" else set.previousWeight,
                                 isDeleteMode = false,
                                 isCompleted = true,
                                 onRepsChange = { _, _ -> },
@@ -512,19 +522,17 @@ fun ExerciseCardUtils(
                     Spacer(Modifier.height(16.dp))
 
                     exercise.exerciseSets.forEach { set ->
-                        val isWeightError = showErrors && set.weight.isBlank()
-                        val isRepsError = showErrors && (set.reps.toIntOrNull() ?: 0) <= 0
-
-                        //val isTimeError =
-                        //val isDistanceError =
+                        val isCardio = exercise.type == ExerciseType.CARDIO
+                        val isWeightError = showErrors && if (isCardio) (set.distance ?: "").replace(',', '.').toDoubleOrNull() == null else set.weight.isBlank()
+                        val isRepsError = showErrors && if (isCardio) !(set.time ?: "").contains(":") else (set.reps.toIntOrNull() ?: 0) <= 0
 
                         SetLine(
                             modifier = Modifier.fillMaxWidth(),
                             exercise = exercise,
-                            inputValueReps = set.reps,
-                            inputValueWeight = set.weight,
-                            previousReps = set.previousReps,
-                            previousWeight = set.previousWeight,
+                            inputValueReps = if (isCardio) set.time ?: "" else set.reps,
+                            inputValueWeight = if (isCardio) set.distance ?: "" else set.weight,
+                            previousReps = if (isCardio) set.previousTime ?: "" else set.previousReps,
+                            previousWeight = if (isCardio) set.previousDistance ?: "" else set.previousWeight,
                             isDeleteMode = isDeleteMode,
                             isCompleted = set.isCompleted,
                             isErrorWeight = isWeightError,
@@ -583,6 +591,124 @@ fun ExerciseCardUtils(
                                 textAlign = TextAlign.Center
                             )
                         }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun TimeScrollPicker(
+    range: IntRange,
+    selected: Int,
+    onSelect: (Int) -> Unit,
+    label: String
+) {
+    val items = range.toList()
+    val itemHeightDp = 48.dp
+    val initialIndex = items.indexOf(selected).coerceAtLeast(0)
+    val listState = rememberLazyListState(initialFirstVisibleItemIndex = initialIndex)
+    val scope = rememberCoroutineScope()
+
+    LaunchedEffect(listState.isScrollInProgress) {
+        if (!listState.isScrollInProgress) {
+            val idx = listState.firstVisibleItemIndex
+            if (idx < items.size) onSelect(items[idx])
+        }
+    }
+
+    val snappedIndex by remember { derivedStateOf { listState.firstVisibleItemIndex } }
+
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.width(64.dp)
+    ) {
+        Text(label, fontSize = 10.sp, color = TextGray, fontWeight = FontWeight.Bold)
+        Spacer(Modifier.height(4.dp))
+        Box(modifier = Modifier.width(64.dp)) {
+            LazyColumn(
+                state = listState,
+                modifier = Modifier
+                    .height(itemHeightDp * 3)
+                    .width(64.dp),
+                contentPadding = PaddingValues(vertical = itemHeightDp),
+                flingBehavior = rememberSnapFlingBehavior(lazyListState = listState)
+            ) {
+                items(items.size) { idx ->
+                    val item = items[idx]
+                    val isSelected = idx == snappedIndex
+                    Box(
+                        modifier = Modifier
+                            .height(itemHeightDp)
+                            .fillMaxWidth()
+                            .clickable {
+                                scope.launch { listState.animateScrollToItem(idx) }
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = item.toString().padStart(2, '0'),
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                            color = if (isSelected) CyanAccent else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.35f),
+                            fontSize = if (isSelected) 24.sp else 18.sp
+                        )
+                    }
+                }
+            }
+            Box(
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .height(itemHeightDp)
+                    .fillMaxWidth()
+                    .border(1.dp, CyanAccent.copy(alpha = 0.35f), RoundedCornerShape(8.dp))
+            )
+        }
+    }
+}
+
+@Composable
+fun CardioTimePickerDialog(
+    initialTime: String,
+    onDismiss: () -> Unit,
+    onConfirm: (String) -> Unit
+) {
+    val initialHours = initialTime.substringBefore(":", "0").toIntOrNull() ?: 0
+    val initialMinutes = initialTime.substringAfter(":", "0").toIntOrNull() ?: 0
+    var selectedHours by remember { mutableStateOf(initialHours) }
+    var selectedMinutes by remember { mutableStateOf(initialMinutes) }
+
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(shape = RoundedCornerShape(16.dp), color = MaterialTheme.colorScheme.surface) {
+            Column(
+                modifier = Modifier.padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text("Tempo", style = Typography.titleMedium, fontWeight = FontWeight.Bold)
+                Spacer(Modifier.height(20.dp))
+                Row(
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    TimeScrollPicker(range = 0..23, selected = selectedHours, onSelect = { selectedHours = it }, label = "HRS")
+                    Text(
+                        ":",
+                        style = MaterialTheme.typography.headlineLarge,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 24.dp)
+                    )
+                    TimeScrollPicker(range = 0..59, selected = selectedMinutes, onSelect = { selectedMinutes = it }, label = "MIN")
+                }
+                Spacer(Modifier.height(20.dp))
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                    TextButton(onClick = onDismiss) {
+                        Text("Cancelar", color = MaterialTheme.colorScheme.secondary)
+                    }
+                    TextButton(onClick = {
+                        onConfirm("${selectedHours.toString().padStart(2, '0')}:${selectedMinutes.toString().padStart(2, '0')}")
+                    }) {
+                        Text("OK", color = CyanAccent, fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -862,7 +988,7 @@ fun SetLine(
                             onDismissRequest = { showTechniqueMenu = false },
                             modifier = Modifier.background(MaterialTheme.colorScheme.surface)
                         ) {
-                            Technique.values().forEach { technique ->
+                            Technique.values().filter { !it.isCardio }.forEach { technique ->
                                 DropdownMenuItem(
                                     text = {
                                         Text(
@@ -897,15 +1023,32 @@ fun SetLine(
             }
         }
 
-        ExerciseType.CARDIO ->
-            // CARDIO----
+        ExerciseType.CARDIO -> {
+            var showTimePicker by remember { mutableStateOf(false) }
 
+            if (showTimePicker) {
+                CardioTimePickerDialog(
+                    initialTime = inputValueReps,
+                    onDismiss = { showTimePicker = false },
+                    onConfirm = { time ->
+                        onRepsChange(setNumber, time)
+                        showTimePicker = false
+                    }
+                )
+            }
 
+            Column(
+                modifier = modifier
+                    .padding(vertical = Dimens.paddingSmall)
+                    .clickable(enabled = !isCompleted) {
+                        if (isDeleteMode) showDeleteDialog = true
+                    }
+            ) {
             Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalAlignment = Alignment.Bottom
-        ) {
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.Bottom
+            ) {
             InputTextBox(
                 label = stringResource(R.string.serie_upper),
                 modifier = Modifier.weight(1f),
@@ -919,7 +1062,7 @@ fun SetLine(
                 label = stringResource(R.string.distancia_km),
                 exercise = exercise,
                 modifier = Modifier.weight(2f),
-                maxLength = 4,
+                maxLength = 3,
                 isLocked = isCompleted,
                 isError = isErrorWeight,
                 inputValue = inputValueWeight,
@@ -929,17 +1072,47 @@ fun SetLine(
                 },
             )
 
-            InputTextBox(
-                label = stringResource(R.string.tempo_min),
-                modifier = Modifier.weight(2f),
-                exercise = exercise,
-                isLocked = isCompleted,
-                isError = isErrorReps,
-                maxLength = 5,
-                inputValue = inputValueReps,
-                placeholder = previousReps,
-                onValueChange = { onRepsChange(setNumber, it) },
-            )
+            // Tempo — clickable box that opens scroll-wheel picker
+            Column(modifier = Modifier.weight(2f)) {
+                Text(
+                    stringResource(R.string.tempo_min),
+                    fontSize = 10.sp,
+                    color = if (isErrorReps) Color.Red else TextGray,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1
+                )
+                Spacer(Modifier.height(8.dp))
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp)
+                        .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(12.dp))
+                        .border(
+                            width = 1.dp,
+                            color = when {
+                                isErrorReps -> Color.Red
+                                isCompleted -> Color.Transparent
+                                else -> CyanAccent.copy(alpha = 0.2f)
+                            },
+                            shape = RoundedCornerShape(12.dp)
+                        )
+                        .clickable(enabled = !isCompleted) { showTimePicker = true },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = inputValueReps.ifEmpty { previousReps.ifEmpty { "--:--" } },
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            color = if (inputValueReps.isEmpty())
+                                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                            else if (isCompleted) Color.Gray
+                            else MaterialTheme.colorScheme.onSurface,
+                            textAlign = TextAlign.Center,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 18.sp
+                        )
+                    )
+                }
+            }
 
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -992,7 +1165,7 @@ fun SetLine(
                         onDismissRequest = { showTechniqueMenu = false },
                         modifier = Modifier.background(MaterialTheme.colorScheme.surface)
                     ) {
-                        Technique.values().forEach { technique ->
+                        Technique.values().filter { it == Technique.NORMAL || it.isCardio }.forEach { technique ->
                             DropdownMenuItem(
                                 text = {
                                     Text(
@@ -1008,24 +1181,23 @@ fun SetLine(
                         }
                     }
                 }
+            } // closes technique Column
 
-                if (isDeleteMode && !isCompleted) {
-                    TextButton(
-                        onClick = {
-                            showDeleteDialog = true
-                        },
-                        modifier = Modifier.align(Alignment.End)
-                    ) {
-                        Text(
-                            stringResource(R.string.deletar_serie),
-                            color = MaterialTheme.colorScheme.error,
-                            fontSize = 12.sp
-                        )
-                    }
+            } // closes Row
+            if (isDeleteMode && !isCompleted) {
+                TextButton(
+                    onClick = { showDeleteDialog = true },
+                    modifier = Modifier.align(Alignment.End)
+                ) {
+                    Text(
+                        stringResource(R.string.deletar_serie),
+                        color = MaterialTheme.colorScheme.error,
+                        fontSize = 12.sp
+                    )
                 }
             }
-
-        }
+        } // closes outer Column
+        } // closes ExerciseType.CARDIO block
         ExerciseType.STRETCHING -> {
 
         }
@@ -1049,11 +1221,7 @@ fun FinishWorkoutButton(
         derivedStateOf {
             val exercises = currentWorkout?.exercises ?: emptyList()
             val hasMinimumExercises = exercises.count { it.isCompleted } >= 1
-            val allSetsFilled = exercises.all { ex ->
-                ex.exerciseSets.all { set ->
-                    set.weight.isNotBlank() && set.reps.isNotBlank() && set.reps != "0"
-                }
-            }
+            val allSetsFilled = exercises.all { ex -> ex.isValidToComplete() }
             hasMinimumExercises && allSetsFilled
         }
     }

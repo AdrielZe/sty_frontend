@@ -442,4 +442,8 @@
     <string name="nenhuma_atividade_registrada">No activities registered</string>
     <string name="complete_treinos_para_ver_o_seu_hist_rico">Complete workouts to view your history</string>
     <string name="iniciar_treino">START WORKOUT</string>
+    <string name="cardio_intervalado">Intervals</string>
+    <string name="cardio_fartlek">Fartlek</string>
+    <string name="cardio_tempo">Tempo Run</string>
+    <string name="cardio_ritmo_constante">Steady State</string>
 </resources>

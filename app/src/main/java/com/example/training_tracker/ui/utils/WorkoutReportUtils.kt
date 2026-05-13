@@ -3,6 +3,7 @@ package com.example.training_tracker.ui.utils
 import android.content.Context
 import com.example.training_tracker.R
 import com.example.training_tracker.data.models.Exercise
+import com.example.training_tracker.data.models.ExerciseType
 import com.example.training_tracker.ui.screens.workout_report.TotalWeightLiftedInfo
 import com.example.training_tracker.ui.screens.workout_report.WorkoutDifficulty
 
@@ -24,7 +25,7 @@ fun WorkoutDifficulty?.generateHeroTitle(context: Context): String {
 }
 
 fun generateTotalWeightedInfo(context: Context, exercises: List<Exercise>): TotalWeightLiftedInfo {
-    val totalWeight = exercises.sumOf { exercise ->
+    val totalWeight = exercises.filter { it.type != ExerciseType.CARDIO }.sumOf { exercise ->
         exercise.exerciseSets.sumOf { set ->
             val reps = set.reps.toDoubleOrNull() ?: 0.0
             val weight = set.weight.parseToDouble()
@@ -101,7 +102,9 @@ fun countTotalSets(exercises: List<Exercise>): Int {
 }
 
 fun countTotalReps(exercises: List<Exercise>): Int {
-    val totalReps = exercises.sumOf { exercise -> exercise.exerciseSets.sumOf { it.reps.toIntOrNull() ?: 0 } }
+    val totalReps = exercises
+        .filter { it.type != ExerciseType.CARDIO }
+        .sumOf { exercise -> exercise.exerciseSets.sumOf { it.reps.toIntOrNull() ?: 0 } }
 
     return totalReps
 }

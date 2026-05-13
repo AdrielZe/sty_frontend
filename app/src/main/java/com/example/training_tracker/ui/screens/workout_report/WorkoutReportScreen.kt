@@ -86,6 +86,7 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.training_tracker.R
 import com.example.training_tracker.data.models.Exercise
+import com.example.training_tracker.data.models.ExerciseType
 import com.example.training_tracker.data.models.Technique
 import com.example.training_tracker.ui.screens.home.MomentumCard
 import com.example.training_tracker.ui.theme.CyanAccent
@@ -1003,6 +1004,25 @@ fun ExerciseSummaryCard(exercise: Exercise) {
                                 .padding(start = 8.dp)
                                 .fillMaxWidth()
                         ) {
+                            if (exercise.type == ExerciseType.CARDIO) {
+                                Text(
+                                    text = "${set.distance ?: set.weight} km",
+                                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.ExtraBold),
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    maxLines = 1
+                                )
+                                Text(
+                                    text = stringResource(R.string.em),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Text(
+                                    text = set.time ?: set.reps,
+                                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.ExtraBold),
+                                    color = CyanAccent,
+                                    maxLines = 1
+                                )
+                            } else {
                             Text(
                                 text = "${set.weight} kg",
                                 style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.ExtraBold),
@@ -1020,6 +1040,7 @@ fun ExerciseSummaryCard(exercise: Exercise) {
                                 color = CyanAccent,
                                 maxLines = 1
                             )
+                            }
 
                             if (set.technique != Technique.NORMAL) {
                                 Text(

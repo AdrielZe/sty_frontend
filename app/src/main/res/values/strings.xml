@@ -506,6 +506,10 @@
     <string name="repeticoes_parciais">Repetições Parciais</string>
     <string name="cluster_set">Cluster Set</string>
     <string name="myo_reps">Myo-Reps</string>
+    <string name="cardio_intervalado">Intervalado</string>
+    <string name="cardio_fartlek">Fartlek</string>
+    <string name="cardio_tempo">Tempo</string>
+    <string name="cardio_ritmo_constante">Ritmo Constante</string>
     <string name="adicionar_cardio">Adicionar Cardio</string>
     <string name="clique_aqui_para_selecionar_o_cardio">Clique aqui para selecionar o cardio</string>
     <string name="cardio">CARDIO</string>
@@ -513,5 +517,6 @@
     <string name="buscar_cardio">Buscar Cardio...</string>
     <string name="distancia_km">DISTÂNCIA (KM)</string>
     <string name="tempo_min">TEMPO (MIN)</string>
+    <string name="em">"  em  "</string>
 
 </resources>

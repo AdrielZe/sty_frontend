@@ -2,6 +2,7 @@ package com.example.training_tracker.ui.screens.workout_screen
 
 import com.example.training_tracker.data.models.Exercise
 import com.example.training_tracker.data.models.ExerciseSet
+import com.example.training_tracker.data.models.ExerciseType
 import com.example.training_tracker.data.models.Records
 import com.example.training_tracker.data.models.Technique
 import com.example.training_tracker.data.models.Workout
@@ -167,7 +168,11 @@ class WorkoutDelegateImpl(
             if (exercise.id == exerciseId) {
                 val updatedSets = exercise.exerciseSets.map { set ->
                     if (set.set == setNumber) {
-                        set.copy(reps = newReps ?: set.reps, weight = newWeight ?: set.weight)
+                        if (exercise.type == ExerciseType.CARDIO) {
+                            set.copy(distance = newWeight ?: set.distance, time = newReps ?: set.time)
+                        } else {
+                            set.copy(reps = newReps ?: set.reps, weight = newWeight ?: set.weight)
+                        }
                     } else set
                 }
                 exercise.copy(exerciseSets = updatedSets)
@@ -229,7 +234,7 @@ class WorkoutDelegateImpl(
 
             var recordsUpdated = false
 
-            workout.exercises.forEach { exercise ->
+            workout.exercises.filter { it.type != ExerciseType.CARDIO }.forEach { exercise ->
                 val maxWeightThisWorkout = exercise.exerciseSets.maxOfOrNull {
                     it.weight.parseToDouble()
                 }
@@ -270,13 +275,15 @@ class WorkoutDelegateImpl(
                 isFirstTime = true
             }
 
-            val totalVolumeWorkout = workout.exercises.sumOf { exercise ->
-                exercise.exerciseSets.sumOf { set ->
-                    val weight = set.weight.parseToDouble()
-                    val reps = set.reps.toIntOrNull() ?: 0
-                    weight * reps
+            val totalVolumeWorkout = workout.exercises
+                .filter { it.type != ExerciseType.CARDIO }
+                .sumOf { exercise ->
+                    exercise.exerciseSets.sumOf { set ->
+                        val weight = set.weight.parseToDouble()
+                        val reps = set.reps.toIntOrNull() ?: 0
+                        weight * reps
+                    }
                 }
-            }
 
             val bestVolume = records.volumeRecords?.firstOrNull() ?: 0.0
 
@@ -317,11 +324,19 @@ class WorkoutDelegateImpl(
 
             val updatedSets = exercise.exerciseSets.map { set ->
                 val lastSet = lastPerformance?.exerciseSets?.find { it.set == set.set }
-                set.copy(
-                    previousWeight = lastSet?.weight ?: "",
-                    previousReps = lastSet?.reps ?: "",
-                    technique = set.technique ?: Technique.NORMAL,
-                )
+                if (exercise.type == ExerciseType.CARDIO) {
+                    set.copy(
+                        previousDistance = lastSet?.distance ?: "",
+                        previousTime = lastSet?.time ?: "",
+                        technique = set.technique ?: Technique.NORMAL,
+                    )
+                } else {
+                    set.copy(
+                        previousWeight = lastSet?.weight ?: "",
+                        previousReps = lastSet?.reps ?: "",
+                        technique = set.technique ?: Technique.NORMAL,
+                    )
+                }
             }
             exercise.copy(exerciseSets = updatedSets)
         }
