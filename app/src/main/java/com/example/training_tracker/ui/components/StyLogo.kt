@@ -38,7 +38,7 @@ fun StyLogo(
     when (layout) {
         StyLogoLayout.VERTICAL -> {
             Column(
-                horizontalAlignment = Alignment.Start,
+                horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = modifier
             ) {
                 Text(
@@ -53,7 +53,8 @@ fun StyLogo(
                     fontSize = taglineSize,
                     fontWeight = FontWeight.Medium,
                     letterSpacing = taglineLetterSpacing,
-                    color = CyanAccent.copy(alpha = 0.65f)
+                    color = CyanAccent.copy(alpha = 0.65f),
+                    textAlign = TextAlign.Center
                 )
             }
         }

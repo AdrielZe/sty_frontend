@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(./gradlew :app:compileDebugKotlin)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\adrie\\\\AndroidStudioProjects\\\\training_tracker\\\\app\\\\src\\\\main\\\\java\\\\com\\\\example\\\\training_tracker\" -Recurse -Filter \"*.kt\")",
+      "Bash(Select-Object -ExpandProperty FullName)"
+    ]
+  }
+}
