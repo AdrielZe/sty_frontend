@@ -11,7 +11,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -23,6 +22,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -31,14 +31,17 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import coil.size.Size
 import com.example.training_tracker.data.models.User
 import com.example.training_tracker.ui.theme.CyanAccent
+import com.example.training_tracker.ui.theme.CyanDark
 import com.example.training_tracker.R
 import java.io.File
 import java.io.FileOutputStream
@@ -62,31 +65,20 @@ fun UserProfileScreen(
             uri?.let {
                 try {
                     val inputStream = context.contentResolver.openInputStream(it)
-                    
                     context.filesDir.listFiles()?.forEach { file ->
-                        if (file.name.startsWith("profile_pic")) {
-                            file.delete()
-                        }
+                        if (file.name.startsWith("profile_pic")) file.delete()
                     }
-                    
-                    // Gerar um nome unico com timestamp para forcar a recomposicao da imagem no Coil
                     val timestamp = System.currentTimeMillis()
                     val profilePicFile = File(context.filesDir, "profile_pic_$timestamp.jpg")
                     val outputStream = FileOutputStream(profilePicFile)
-
-                    inputStream?.use { input ->
-                        outputStream.use { output ->
-                            input.copyTo(output)
-                        }
-                    }
+                    inputStream?.use { input -> outputStream.use { output -> input.copyTo(output) } }
                     viewModel.updateProfilePicture(Uri.fromFile(profilePicFile).toString())
                 } catch (e: Exception) {
                     Log.e("UserProfileScreen", "Erro ao salvar imagem cortada", e)
                 }
             }
         } else {
-            val error = result.error
-            error?.printStackTrace()
+            result.error?.printStackTrace()
         }
     }
 
@@ -98,9 +90,8 @@ fun UserProfileScreen(
                 val contentResolver = context.contentResolver
                 val takeFlags: Int = Intent.FLAG_GRANT_READ_URI_PERMISSION
                 contentResolver.takePersistableUriPermission(it, takeFlags)
-                
                 val cropOptions = com.canhub.cropper.CropImageContractOptions(
-                    it, 
+                    it,
                     com.canhub.cropper.CropImageOptions(
                         aspectRatioX = 1,
                         aspectRatioY = 1,
@@ -128,9 +119,7 @@ fun UserProfileScreen(
         )
     }
 
-    Scaffold(
-        containerColor = MaterialTheme.colorScheme.background
-    ) { padding ->
+    Scaffold(containerColor = MaterialTheme.colorScheme.background) { padding ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -138,9 +127,11 @@ fun UserProfileScreen(
         ) {
             when (val state = uiState) {
                 is UserProfileUiState.Loading -> {
-                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                    CircularProgressIndicator(
+                        modifier = Modifier.align(Alignment.Center),
+                        color = CyanAccent
+                    )
                 }
-
                 is UserProfileUiState.Error -> {
                     Text(
                         text = state.message,
@@ -148,7 +139,6 @@ fun UserProfileScreen(
                         modifier = Modifier.align(Alignment.Center)
                     )
                 }
-
                 is UserProfileUiState.Success -> {
                     ProfileContent(
                         user = state.user,
@@ -173,91 +163,61 @@ fun ProfileContent(
     onEditPhotoClick: () -> Unit,
     onEditNameClick: () -> Unit
 ) {
+    val headerGradient = Brush.verticalGradient(
+        colors = listOf(CyanDark.copy(alpha = 0.85f), CyanAccent.copy(alpha = 0.4f), Color.Transparent)
+    )
+
     LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 24.dp),
+        modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         item {
-            Spacer(modifier = Modifier.height(32.dp))
-
-            // Foto de Perfil
+            // Hero header with gradient + avatar
             Box(
-                modifier = Modifier.size(140.dp),
-                contentAlignment = Alignment.BottomEnd
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(220.dp)
             ) {
                 Box(
                     modifier = Modifier
-                        .size(120.dp)
-                        .align(Alignment.Center)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.surfaceVariant)
-                        .border(
-                            2.dp,
-                            Brush.linearGradient(listOf(CyanAccent, Color.Transparent)),
-                            CircleShape
-                        )
-                        .clickable { onEditPhotoClick() },
-                    contentAlignment = Alignment.Center
-                ) {
-                    if (!user.profilePicture.isNullOrEmpty()) {
-                        AsyncImage(
-                            model = ImageRequest.Builder(LocalContext.current)
-                                .data(user.profilePicture)
-                                .size(Size.ORIGINAL) // Força o Coil a não pré-escalar baseado num bounding box temporário
-                                .build(),
-                            contentDescription = stringResource(R.string.foto_de_perfil),
-                            modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.Crop,
-                            error = painterResource(id = R.drawable.gym)
-                            // Removemos o placeholder para evitar que ele interfira no cálculo de proporção enquanto a imagem real carrega
-                        )
-                    } else {
-                        Image(
-                            painter = painterResource(id = R.drawable.gym),
-                            contentDescription = stringResource(R.string.foto_de_perfil_padr_o),
-                            modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.Crop
-                        )
-                    }
-                }
+                        .fillMaxWidth()
+                        .height(160.dp)
+                        .background(headerGradient)
+                )
 
-                SmallFloatingActionButton(
-                    onClick = onEditPhotoClick,
-                    containerColor = CyanAccent,
-                    contentColor = Color.Black,
-                    shape = CircleShape,
+                Column(
                     modifier = Modifier
-                        .size(36.dp)
-                        .offset(x = (-8).dp, y = (-8).dp)
+                        .fillMaxWidth()
+                        .align(Alignment.BottomCenter),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Edit,
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp)
-                    )
+                    AvatarWithEdit(user = user, onEditPhotoClick = onEditPhotoClick)
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
+            // Name row
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
+                horizontalArrangement = Arrangement.Center,
+                modifier = Modifier.fillMaxWidth()
             ) {
-                Spacer(modifier = Modifier.size(48.dp))
                 Text(
                     text = user.name,
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Bold
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center
                 )
-                IconButton(onClick = onEditNameClick) {
+                IconButton(
+                    onClick = onEditNameClick,
+                    modifier = Modifier.size(36.dp)
+                ) {
                     Icon(
                         imageVector = Icons.Default.Edit,
-                        contentDescription = "Editar nome",
+                        contentDescription = stringResource(R.string.editar_nome),
                         tint = CyanAccent,
-                        modifier = Modifier.size(20.dp)
+                        modifier = Modifier.size(18.dp)
                     )
                 }
             }
@@ -268,14 +228,25 @@ fun ProfileContent(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(28.dp))
+
+            // Section label
+            SectionLabel(
+                text = stringResource(R.string.estat_sticas),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp)
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
         }
 
         item {
-            // Stats Grid
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 StatCard(
                     modifier = Modifier.weight(1f),
@@ -290,14 +261,15 @@ fun ProfileContent(
                     icon = Icons.Default.Reorder
                 )
             }
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(12.dp))
         }
 
         item {
-            // Volume e Músculo
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 StatCard(
                     modifier = Modifier.weight(1f),
@@ -308,59 +280,207 @@ fun ProfileContent(
                 StatCard(
                     modifier = Modifier.weight(1f),
                     title = stringResource(R.string.foco),
-                    value = stringResource(
-                        stats.mostTrainedMuscleGroup?.resId ?: R.string.nenhum_registro
-                    ),
+                    value = stringResource(stats.mostTrainedMuscleGroup?.resId ?: R.string.nenhum_registro),
                     icon = Icons.Default.MyLocation
                 )
             }
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(24.dp))
         }
 
         item {
-            // Maior Peso
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(
-                        alpha = 0.5f
-                    )
-                )
-            ) {
-                Row(
-                    modifier = Modifier.padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(48.dp)
-                            .background(CyanAccent.copy(alpha = 0.1f), CircleShape),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(Icons.Default.Star, contentDescription = null, tint = CyanAccent)
-                    }
-                    Spacer(modifier = Modifier.width(16.dp))
-                    Column {
-                        Text(
-                            text = stringResource(R.string.maior_carga),
-                            style = MaterialTheme.typography.labelMedium,
-                            color = CyanAccent
-                        )
-                        Text(
-                            text = stats.heaviestExerciseName
-                                ?: stringResource(R.string.nenhum_registro),
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Text(
-                            text = "${String.format(Locale.US, "%.1f", stats.heaviestWeight)} kg",
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                    }
-                }
-            }
+            SectionLabel(
+                text = stringResource(R.string.maior_carga),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp)
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            HeaviestLiftCard(
+                stats = stats,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp)
+            )
             Spacer(modifier = Modifier.height(32.dp))
+        }
+    }
+}
+
+@Composable
+private fun AvatarWithEdit(user: User, onEditPhotoClick: () -> Unit) {
+    val avatarSize = 112.dp
+    val badgeSize = 32.dp
+
+    Box(
+        modifier = Modifier.size(avatarSize + badgeSize / 2),
+        contentAlignment = Alignment.BottomEnd
+    ) {
+        Box(
+            modifier = Modifier
+                .size(avatarSize)
+                .align(Alignment.TopStart)
+                .shadow(8.dp, CircleShape)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.surfaceVariant)
+                .border(
+                    width = 3.dp,
+                    brush = Brush.linearGradient(listOf(CyanAccent, CyanDark)),
+                    shape = CircleShape
+                )
+                .clickable { onEditPhotoClick() },
+            contentAlignment = Alignment.Center
+        ) {
+            if (!user.profilePicture.isNullOrEmpty()) {
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(user.profilePicture)
+                        .size(Size.ORIGINAL)
+                        .build(),
+                    contentDescription = stringResource(R.string.foto_de_perfil),
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop,
+                    error = painterResource(id = R.drawable.gym)
+                )
+            } else {
+                Image(
+                    painter = painterResource(id = R.drawable.gym),
+                    contentDescription = stringResource(R.string.foto_de_perfil_padr_o),
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
+            }
+        }
+
+        Box(
+            modifier = Modifier
+                .size(badgeSize)
+                .shadow(4.dp, CircleShape)
+                .background(CyanAccent, CircleShape)
+                .clickable { onEditPhotoClick() },
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.Default.CameraAlt,
+                contentDescription = null,
+                tint = Color.White,
+                modifier = Modifier.size(16.dp)
+            )
+        }
+    }
+}
+
+@Composable
+private fun SectionLabel(text: String, modifier: Modifier = Modifier) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.labelLarge,
+        fontWeight = FontWeight.SemiBold,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        letterSpacing = 0.8.sp,
+        modifier = modifier
+    )
+}
+
+@Composable
+fun StatCard(
+    title: String,
+    value: String,
+    icon: ImageVector,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier,
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(36.dp)
+                    .background(CyanAccent.copy(alpha = 0.15f), RoundedCornerShape(10.dp)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = CyanAccent,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+            Text(
+                text = value,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(
+                text = title,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+    }
+}
+
+@Composable
+private fun HeaviestLiftCard(stats: UserStats, modifier: Modifier = Modifier) {
+    Card(
+        modifier = modifier,
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(52.dp)
+                    .background(
+                        Brush.linearGradient(listOf(CyanAccent.copy(alpha = 0.3f), CyanDark.copy(alpha = 0.15f))),
+                        RoundedCornerShape(14.dp)
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.EmojiEvents,
+                    contentDescription = null,
+                    tint = CyanAccent,
+                    modifier = Modifier.size(28.dp)
+                )
+            }
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(
+                    text = stats.heaviestExerciseName ?: stringResource(R.string.nenhum_registro),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    text = "${String.format(Locale.US, "%.1f", stats.heaviestWeight)} kg",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = CyanAccent,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
         }
     }
 }
@@ -375,25 +495,16 @@ fun EditNameDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Editar Nome") },
+        title = { Text(stringResource(R.string.editar_nome)) },
         text = {
             TextField(
                 value = name,
-                onValueChange =  { newValue ->
-                    // 1. Validação de limite de 20 caracteres
+                onValueChange = { newValue ->
                     if (newValue.length <= 20) {
-
-                        // 2. Permite apenas letras e espaços
                         if (newValue.all { it.isLetter() || it.isWhitespace() }) {
-
-                            // 3. Evita começar com espaço ou ter espaços duplos
                             if (newValue.startsWith(" ") || newValue.contains("  ")) return@TextField
-
-                            // 4. Validação de máximo de 2 espaços
                             val spaceCount = newValue.count { it == ' ' }
-
                             if (spaceCount <= 2) {
-                                // 5. Formatação: Primeira letra de cada palavra em Maiúscula
                                 val formattedName = newValue.split(" ").joinToString(" ") { word ->
                                     word.replaceFirstChar {
                                         if (it.isLowerCase()) it.titlecase(java.util.Locale.getDefault())
@@ -405,7 +516,7 @@ fun EditNameDialog(
                         }
                     }
                 },
-                label = { Text("Nome de usuário") },
+                label = { Text(stringResource(R.string.nome_de_usu_rio)) },
                 singleLine = true,
                 colors = TextFieldDefaults.colors(
                     focusedIndicatorColor = CyanAccent,
@@ -416,59 +527,13 @@ fun EditNameDialog(
         },
         confirmButton = {
             TextButton(onClick = { onConfirm(name) }) {
-                Text("Salvar", color = CyanAccent)
+                Text(stringResource(R.string.salvar), color = CyanAccent)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancelar")
+                Text(stringResource(R.string.cancelar))
             }
         }
     )
-}
-
-@Composable
-fun StatCard(
-    title: String,
-    value: String,
-    icon: ImageVector,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        modifier = modifier.defaultMinSize(minHeight = 110.dp),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(
-                alpha = 0.5f
-            )
-        )
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-        ) {
-            Icon(
-                icon,
-                contentDescription = null,
-                tint = CyanAccent,
-                modifier = Modifier.size(24.dp)
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-            Text(
-                text = title,
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-            Text(
-                text = value,
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-        }
-    }
 }
