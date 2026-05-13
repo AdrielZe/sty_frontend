@@ -16,8 +16,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.training_tracker.R
+import com.example.training_tracker.ui.components.StyLogo
+import com.example.training_tracker.ui.components.StyLogoLayout
 import com.example.training_tracker.ui.theme.CyanAccent
-import com.example.training_tracker.ui.theme.CyanGradient
 
 @Composable
 fun WelcomeScreen(
@@ -44,13 +45,9 @@ fun WelcomeScreen(
                 color = CyanAccent,
                 letterSpacing = 2.sp
             )
-            Text(
-                text = stringResource(R.string.sty),
-                style = TextStyle(
-                    brush = CyanGradient,
-                    fontSize = 48.sp,
-                    fontWeight = FontWeight.Black
-                )
+            StyLogo(
+                titleSize = 48.sp,
+                layout = StyLogoLayout.VERTICAL
             )
 
             Spacer(modifier = Modifier.height(48.dp))

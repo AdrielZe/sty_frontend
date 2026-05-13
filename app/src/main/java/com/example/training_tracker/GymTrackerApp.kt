@@ -24,8 +24,9 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.training_tracker.ui.screens.home.HomeUiState
 import com.example.training_tracker.ui.screens.home.HomeViewModel
 import com.example.training_tracker.ui.screens.welcome.WelcomeScreen
+import com.example.training_tracker.ui.components.StyLogo
+import com.example.training_tracker.ui.components.StyLogoLayout
 import com.example.training_tracker.ui.theme.CyanAccent
-import com.example.training_tracker.ui.theme.CyanGradient
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
@@ -71,14 +72,9 @@ fun AppLoadingScreen() {
         contentAlignment = Alignment.Center
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(
-                text = stringResource(R.string.sty),
-                style = TextStyle(
-                    brush = CyanGradient,
-                    fontSize = 48.sp,
-                    fontWeight = FontWeight.Black,
-                    letterSpacing = 4.sp
-                )
+            StyLogo(
+                titleSize = 48.sp,
+                layout = StyLogoLayout.VERTICAL
             )
             Spacer(modifier = Modifier.height(32.dp))
             CircularProgressIndicator(
