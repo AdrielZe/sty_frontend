@@ -68,7 +68,11 @@ abstract class AppDatabase : RoomDatabase() {
 
         private val MIGRATION_36_37 = object : Migration(36, 37) {
             override fun migrate(database: SupportSQLiteDatabase) {
+                // Corrige a tabela de exercícios (coluna direta)
                 database.execSQL("UPDATE exercises SET muscleGroup = 'QUADRICEPS' WHERE muscleGroup = 'LEGS'")
+                // Corrige exercícios embutidos como JSON nas demais tabelas
+                database.execSQL("UPDATE workouts SET exercises = REPLACE(exercises, '\"muscleGroup\":\"LEGS\"', '\"muscleGroup\":\"QUADRICEPS\"') WHERE exercises LIKE '%\"muscleGroup\":\"LEGS\"%'")
+                database.execSQL("UPDATE workoutHistories SET exercises = REPLACE(exercises, '\"muscleGroup\":\"LEGS\"', '\"muscleGroup\":\"QUADRICEPS\"') WHERE exercises LIKE '%\"muscleGroup\":\"LEGS\"%'")
             }
         }
 

@@ -65,7 +65,8 @@ class Converters {
     @TypeConverter
     fun toExerciseList(value: String): List<Exercise> {
         val listType = object : com.google.gson.reflect.TypeToken<List<Exercise>>() {}.type
-        return gson.fromJson(value, listType)
+        val exercises: List<Exercise> = gson.fromJson(value, listType)
+        return exercises.map { it.copy(type = it.type ?: ExerciseType.STRENGTH) }
     }
 
     @TypeConverter
