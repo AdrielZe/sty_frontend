@@ -10,4 +10,5 @@ data class RecordsUiState(
     val selectedExerciseHistory: Pair<String, List<Double>>? = null,
     val selectedExerciseIsCardio: Boolean = false,
     val cardioRecords: Map<String, List<Double>> = emptyMap(),
+    val searchQuery: String = "",
 )

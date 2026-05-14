@@ -1,5 +1,8 @@
 package com.example.training_tracker.ui.screens.records
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -10,23 +13,28 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ShowChart
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.EmojiEvents
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -39,6 +47,7 @@ import com.example.training_tracker.data.models.MuscleGroups
 import com.example.training_tracker.ui.theme.CyanAccent
 import com.example.training_tracker.ui.theme.CyanGradient
 import java.util.Locale
+import kotlin.math.abs
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -48,6 +57,7 @@ fun RecordsScreen(
     onMuscleGroupSelected: (MuscleGroups?) -> Unit,
     onExerciseClick: (String, List<Double>) -> Unit,
     onDismissHistory: () -> Unit,
+    onSearchQueryChanged: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Scaffold(
@@ -101,7 +111,7 @@ fun RecordsScreen(
                 item {
                     Column(
                         modifier = Modifier.padding(horizontal = 24.dp),
-                        verticalArrangement = Arrangement.spacedBy(20.dp)
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
                         RecordsPodium(
                             modifier = Modifier
@@ -110,13 +120,20 @@ fun RecordsScreen(
                             topExercises = sortedStrengthRecords.take(3)
                         )
 
-                        RecordOverviewCard(
+                        StatsRow(
                             modifier = Modifier.fillMaxWidth(),
-                            title = stringResource(R.string.melhor_volume),
-                            value = "${uiState.records?.volumeRecords?.maxOrNull() ?: 0.0} kg",
-                            icon = Icons.AutoMirrored.Filled.ShowChart
+                            records = uiState.records,
+                            allHistories = (exerciseRecordsMap.values + uiState.cardioRecords.values).toList()
                         )
                     }
+                }
+
+                item {
+                    RecordsSearchBar(
+                        query = uiState.searchQuery,
+                        onQueryChanged = onSearchQueryChanged,
+                        modifier = Modifier.padding(horizontal = 24.dp)
+                    )
                 }
 
                 item {
@@ -200,7 +217,6 @@ fun RecordsScreen(
             }
         }
 
-        // Modal de Histórico e Gráfico
         if (uiState.selectedExerciseHistory != null) {
             val (name, history) = uiState.selectedExerciseHistory
             ModalBottomSheet(
@@ -228,11 +244,188 @@ private fun Double.toTimeString(): String {
 }
 
 @Composable
+fun RecordsSearchBar(
+    query: String,
+    onQueryChanged: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    BasicTextField(
+        value = query,
+        onValueChange = onQueryChanged,
+        singleLine = true,
+        textStyle = MaterialTheme.typography.bodyMedium.copy(
+            color = MaterialTheme.colorScheme.onSurface
+        ),
+        cursorBrush = SolidColor(CyanAccent),
+        decorationBox = { innerTextField ->
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(
+                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                        RoundedCornerShape(16.dp)
+                    )
+                    .border(1.dp, CyanAccent.copy(alpha = 0.2f), RoundedCornerShape(16.dp))
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Icon(
+                    Icons.Default.Search,
+                    contentDescription = null,
+                    tint = CyanAccent.copy(alpha = 0.7f),
+                    modifier = Modifier.size(18.dp)
+                )
+                Box(modifier = Modifier.weight(1f)) {
+                    if (query.isEmpty()) {
+                        Text(
+                            stringResource(R.string.buscar_exercicio_records),
+                            style = MaterialTheme.typography.bodyMedium.copy(
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+                            )
+                        )
+                    }
+                    innerTextField()
+                }
+                if (query.isNotEmpty()) {
+                    Icon(
+                        Icons.Default.Close,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                        modifier = Modifier
+                            .size(18.dp)
+                            .clickable { onQueryChanged("") }
+                    )
+                }
+            }
+        },
+        modifier = modifier.fillMaxWidth()
+    )
+}
+
+@Composable
+fun StatsRow(
+    modifier: Modifier = Modifier,
+    records: com.example.training_tracker.data.models.Records?,
+    allHistories: List<List<Double>>
+) {
+    val bestVolume = records?.volumeRecords?.maxOrNull() ?: 0.0
+    val totalExercises = (records?.exercisesRecordMap?.size ?: 0) + (records?.cardioRecordsMap?.size ?: 0)
+    val bestImprovement = remember(allHistories) {
+        allHistories
+            .filter { it.size >= 2 }
+            .mapNotNull { history ->
+                val oldest = history.last()
+                if (oldest > 0) ((history.first() - oldest) / oldest * 100).toInt() else null
+            }
+            .maxOrNull()
+    }
+
+    val volumeFormatted = remember(bestVolume) {
+        java.text.NumberFormat.getInstance(Locale.getDefault()).apply {
+            maximumFractionDigits = 1
+            minimumFractionDigits = 0
+        }.format(bestVolume) + " kg"
+    }
+
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        CompactStatCard(
+            modifier = Modifier.weight(1f),
+            label = stringResource(R.string.melhor_volume),
+            value = volumeFormatted,
+            icon = Icons.AutoMirrored.Filled.ShowChart
+        )
+        CompactStatCard(
+            modifier = Modifier.weight(1f),
+            label = stringResource(R.string.exercicios_registrados),
+            value = "$totalExercises",
+            icon = Icons.Default.EmojiEvents
+        )
+        if (bestImprovement != null) {
+            CompactStatCard(
+                modifier = Modifier.weight(1f),
+                label = stringResource(R.string.melhor_melhora),
+                value = "+$bestImprovement%",
+                icon = Icons.AutoMirrored.Filled.ShowChart,
+                valueColor = Color(0xFF4CAF50)
+            )
+        }
+    }
+}
+
+@Composable
+fun CompactStatCard(
+    modifier: Modifier = Modifier,
+    label: String,
+    value: String,
+    icon: ImageVector,
+    valueColor: Color = MaterialTheme.colorScheme.onSurface
+) {
+    Card(
+        modifier = modifier.border(0.5.dp, CyanAccent.copy(alpha = 0.3f), RoundedCornerShape(16.dp)),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+        ),
+        shape = RoundedCornerShape(16.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(12.dp),
+            horizontalAlignment = Alignment.Start
+        ) {
+            Icon(
+                icon,
+                contentDescription = null,
+                tint = CyanAccent,
+                modifier = Modifier.size(18.dp)
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                value,
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontWeight = FontWeight.Black,
+                    color = valueColor,
+                    fontSize = 16.sp
+                ),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(
+                label,
+                style = MaterialTheme.typography.labelSmall.copy(
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 0.5.sp,
+                    fontSize = 9.sp
+                ),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+    }
+}
+
+@Composable
 fun ExerciseHistoryContent(
     exerciseName: String,
     history: List<Double>,
     isCardio: Boolean = false,
 ) {
+    val chronologicalHistory = remember(history) { history.reversed() }
+    val maxVal = chronologicalHistory.maxOrNull() ?: 1.0
+    val minVal = chronologicalHistory.minOrNull() ?: 0.0
+    val midVal = (maxVal + minVal) / 2.0
+
+    val formatLabel: (Double) -> String = { v ->
+        if (isCardio) v.toTimeString()
+        else java.text.NumberFormat.getInstance(Locale.getDefault()).apply {
+            maximumFractionDigits = 1
+            minimumFractionDigits = 0
+        }.format(v) + " kg"
+    }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -258,7 +451,6 @@ fun ExerciseHistoryContent(
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        // Gráfico Simples
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -267,10 +459,49 @@ fun ExerciseHistoryContent(
                     MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f),
                     RoundedCornerShape(16.dp)
                 )
-                .padding(16.dp)
+                .padding(start = 8.dp, end = 16.dp, top = 16.dp, bottom = 16.dp)
         ) {
             if (history.size > 1) {
-                EvolutionChart(history = history)
+                Row(modifier = Modifier.fillMaxSize()) {
+                    // Y-axis labels
+                    Column(
+                        modifier = Modifier
+                            .fillMaxHeight()
+                            .width(52.dp),
+                        verticalArrangement = Arrangement.SpaceBetween,
+                        horizontalAlignment = Alignment.End
+                    ) {
+                        Text(
+                            formatLabel(maxVal),
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                fontSize = 9.sp,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                            ),
+                            maxLines = 1
+                        )
+                        Text(
+                            formatLabel(midVal),
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                fontSize = 9.sp,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                            ),
+                            maxLines = 1
+                        )
+                        Text(
+                            formatLabel(minVal),
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                fontSize = 9.sp,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                            ),
+                            maxLines = 1
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    EvolutionChart(
+                        history = history,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
             } else {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text(
@@ -295,7 +526,6 @@ fun ExerciseHistoryContent(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Lista de Histórico
         Column(
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -313,9 +543,7 @@ fun ExerciseHistoryContent(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = if (index == 0) stringResource(R.string.recorde_atual) else stringResource(
-                            R.string.recorde_anterior
-                        ),
+                        text = if (index == 0) stringResource(R.string.recorde_atual) else stringResource(R.string.recorde_anterior),
                         style = MaterialTheme.typography.bodyMedium.copy(
                             fontWeight = if (index == 0) FontWeight.Bold else FontWeight.Normal,
                             color = if (index == 0) CyanAccent else MaterialTheme.colorScheme.onSurface
@@ -335,52 +563,126 @@ fun ExerciseHistoryContent(
 }
 
 @Composable
-fun EvolutionChart(history: List<Double>) {
-    // Invertemos a lista para que o registro mais antigo fique na esquerda
+fun EvolutionChart(
+    history: List<Double>,
+    modifier: Modifier = Modifier
+) {
     val chronologicalHistory = remember(history) { history.reversed() }
-
     val maxWeight = chronologicalHistory.maxOrNull()?.toFloat() ?: 1f
     val minWeight = chronologicalHistory.minOrNull()?.toFloat() ?: 0f
     val range = if (maxWeight == minWeight) 1f else maxWeight - minWeight
 
-    Canvas(modifier = Modifier.fillMaxSize()) {
+    val progress = remember { Animatable(0f) }
+    LaunchedEffect(history) {
+        progress.snapTo(0f)
+        progress.animateTo(
+            targetValue = 1f,
+            animationSpec = tween(durationMillis = 900, easing = FastOutSlowInEasing)
+        )
+    }
+
+    Canvas(modifier = modifier) {
+        val animProgress = progress.value
         val width = size.width
         val height = size.height
-        val spacing = width / (chronologicalHistory.size - 1)
+        val spacing = if (chronologicalHistory.size > 1) width / (chronologicalHistory.size - 1) else width
 
         val points = chronologicalHistory.mapIndexed { index, weight ->
             val x = index * spacing
-            // O cálculo de Y permanece igual
             val y = height - ((weight.toFloat() - minWeight) / range) * height * 0.8f - (height * 0.1f)
             Offset(x, y)
         }
 
-        val path = Path().apply {
-            moveTo(points.first().x, points.first().y)
-            for (i in 1 until points.size) {
-                lineTo(points[i].x, points[i].y)
+        clipRect(right = width * animProgress) {
+            // Gradient fill path
+            val fillPath = Path().apply {
+                moveTo(points.first().x, height)
+                lineTo(points.first().x, points.first().y)
+                for (i in 1 until points.size) {
+                    lineTo(points[i].x, points[i].y)
+                }
+                lineTo(points.last().x, height)
+                close()
+            }
+            drawPath(
+                path = fillPath,
+                brush = Brush.verticalGradient(
+                    colors = listOf(
+                        CyanAccent.copy(alpha = 0.35f),
+                        Color.Transparent
+                    ),
+                    startY = 0f,
+                    endY = height
+                )
+            )
+
+            // Line path
+            val linePath = Path().apply {
+                moveTo(points.first().x, points.first().y)
+                for (i in 1 until points.size) {
+                    lineTo(points[i].x, points[i].y)
+                }
+            }
+            drawPath(
+                path = linePath,
+                color = CyanAccent,
+                style = Stroke(width = 3.dp.toPx(), cap = StrokeCap.Round)
+            )
+
+            // Points
+            points.forEach { point ->
+                drawCircle(color = Color.White, radius = 4.dp.toPx(), center = point)
+                drawCircle(
+                    color = CyanAccent, radius = 4.dp.toPx(), center = point,
+                    style = Stroke(width = 2.dp.toPx())
+                )
             }
         }
+    }
+}
 
-        drawPath(
-            path = path,
-            color = CyanAccent,
-            style = Stroke(width = 3.dp.toPx(), cap = StrokeCap.Round)
-        )
+@Composable
+fun MiniSparkline(
+    history: List<Double>,
+    modifier: Modifier = Modifier
+) {
+    val chronologicalHistory = remember(history) { history.reversed() }
+    val maxVal = chronologicalHistory.maxOrNull()?.toFloat() ?: 1f
+    val minVal = chronologicalHistory.minOrNull()?.toFloat() ?: 0f
+    val range = if (maxVal == minVal) 1f else maxVal - minVal
 
-        points.forEach { point ->
-            drawCircle(
-                color = Color.White,
-                radius = 4.dp.toPx(),
-                center = point
-            )
-            drawCircle(
-                color = CyanAccent,
-                radius = 4.dp.toPx(),
-                center = point,
-                style = Stroke(width = 2.dp.toPx())
+    Canvas(modifier = modifier) {
+        val width = size.width
+        val height = size.height
+        val spacing = if (chronologicalHistory.size > 1) width / (chronologicalHistory.size - 1) else width
+
+        val points = chronologicalHistory.mapIndexed { index, v ->
+            Offset(
+                x = index * spacing,
+                y = height - ((v.toFloat() - minVal) / range) * height * 0.8f - height * 0.1f
             )
         }
+
+        val fillPath = Path().apply {
+            moveTo(points.first().x, height)
+            lineTo(points.first().x, points.first().y)
+            for (i in 1 until points.size) lineTo(points[i].x, points[i].y)
+            lineTo(points.last().x, height)
+            close()
+        }
+        drawPath(
+            fillPath,
+            brush = Brush.verticalGradient(
+                colors = listOf(CyanAccent.copy(alpha = 0.4f), Color.Transparent),
+                startY = 0f, endY = height
+            )
+        )
+
+        val linePath = Path().apply {
+            moveTo(points.first().x, points.first().y)
+            for (i in 1 until points.size) lineTo(points[i].x, points[i].y)
+        }
+        drawPath(linePath, color = CyanAccent, style = Stroke(width = 1.5.dp.toPx(), cap = StrokeCap.Round))
     }
 }
 
@@ -427,9 +729,7 @@ fun RecordsPodium(
                 shape = RoundedCornerShape(24.dp)
             ),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(
-                alpha = 0.3f
-            )
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
         ),
         shape = RoundedCornerShape(24.dp)
     ) {
@@ -451,7 +751,6 @@ fun RecordsPodium(
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.Bottom
             ) {
-                // 2nd Place
                 PodiumPillar(
                     weight = topExercises.getOrNull(1)?.second?.maxOrNull() ?: 0.0,
                     label = "2nd",
@@ -459,7 +758,6 @@ fun RecordsPodium(
                     exerciseName = topExercises.getOrNull(1)?.first ?: "-",
                     pillarWidth = 48.dp
                 )
-                // 1st Place
                 PodiumPillar(
                     weight = topExercises.getOrNull(0)?.second?.maxOrNull() ?: 0.0,
                     label = "1st",
@@ -468,7 +766,6 @@ fun RecordsPodium(
                     isGold = true,
                     pillarWidth = 56.dp
                 )
-                // 3rd Place
                 PodiumPillar(
                     weight = topExercises.getOrNull(2)?.second?.maxOrNull() ?: 0.0,
                     label = "3rd",
@@ -540,62 +837,6 @@ fun PodiumPillar(
 }
 
 @Composable
-fun RecordOverviewCard(
-    modifier: Modifier = Modifier,
-    title: String,
-    value: String,
-    icon: ImageVector
-) {
-    Card(
-        modifier = modifier
-            .border(
-                width = 0.5.dp,
-                color = CyanAccent.copy(alpha = 0.3f),
-                shape = RoundedCornerShape(20.dp)
-            ),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(
-                alpha = 0.3f
-            )
-        ),
-        shape = RoundedCornerShape(20.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .padding(20.dp)
-                .fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Column {
-                Text(
-                    title,
-                    style = MaterialTheme.typography.labelSmall.copy(
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = 1.sp
-                    )
-                )
-                Text(
-                    value,
-                    style = MaterialTheme.typography.headlineSmall.copy(
-                        fontWeight = FontWeight.Black,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        fontSize = 24.sp
-                    )
-                )
-            }
-            Icon(
-                icon,
-                contentDescription = null,
-                tint = CyanAccent,
-                modifier = Modifier.size(32.dp)
-            )
-        }
-    }
-}
-
-@Composable
 fun ExerciseRecordCard(
     exerciseName: String,
     bestValue: Double,
@@ -603,70 +844,66 @@ fun ExerciseRecordCard(
     isCardio: Boolean = false,
     onClick: () -> Unit
 ) {
+    val displayValue = remember(bestValue, isCardio) {
+        if (isCardio) {
+            bestValue.toTimeString()
+        } else {
+            java.text.NumberFormat.getInstance(Locale.getDefault()).apply {
+                maximumFractionDigits = 1
+                minimumFractionDigits = 0
+            }.format(bestValue) + " kg"
+        }
+    }
+
+    val improvementPct = remember(history) {
+        if (history.size >= 2) {
+            val oldest = history.last()
+            if (oldest > 0) ((history.first() - oldest) / oldest * 100).toInt() else null
+        } else null
+    }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(24.dp))
             .clickable { onClick() }
-            .border(
-                width = 0.1.dp,
-                color = CyanAccent.copy(alpha = 0.2f),
-                shape = RoundedCornerShape(24.dp)
-            ),
+            .border(0.1.dp, CyanAccent.copy(alpha = 0.2f), RoundedCornerShape(24.dp)),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(
-                alpha = 0.2f
-            )
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f)
         ),
         shape = RoundedCornerShape(24.dp)
     ) {
-        Row(
-            modifier = Modifier
-                .padding(20.dp)
-                .fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-
-            // --- TEXTOS DA ESQUERDA ---
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = exerciseName.uppercase(),
-                    style = MaterialTheme.typography.titleSmall.copy(
-                        fontWeight = FontWeight.ExtraBold,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        letterSpacing = 0.5.sp
-                    ),
-                    // 👇 1. Proteção de texto: Limita a 2 linhas com "..." no final
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = if (isCardio) stringResource(R.string.maior_tempo_registrado)
-                           else stringResource(R.string.maior_recorde_pessoal),
-                    style = MaterialTheme.typography.labelSmall.copy(
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
-                    ),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-
-            Spacer(modifier = Modifier.width(16.dp))
-
-            val displayValue = remember(bestValue, isCardio) {
-                if (isCardio) {
-                    bestValue.toTimeString()
-                } else {
-                    java.text.NumberFormat.getInstance(Locale.getDefault()).apply {
-                        maximumFractionDigits = 1
-                        minimumFractionDigits = 0
-                    }.format(bestValue) + " kg"
+        Column(modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.Top,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = exerciseName.uppercase(),
+                        style = MaterialTheme.typography.titleSmall.copy(
+                            fontWeight = FontWeight.ExtraBold,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            letterSpacing = 0.5.sp
+                        ),
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = if (isCardio) stringResource(R.string.maior_tempo_registrado)
+                               else stringResource(R.string.maior_recorde_pessoal),
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                        ),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
                 }
-            }
 
-            Column(horizontalAlignment = Alignment.End) {
+                Spacer(modifier = Modifier.width(12.dp))
+
                 Box(
                     modifier = Modifier
                         .background(CyanGradient, RoundedCornerShape(12.dp))
@@ -679,6 +916,73 @@ fun ExerciseRecordCard(
                             color = Color.Black
                         ),
                         maxLines = 1
+                    )
+                }
+            }
+
+            if (history.size >= 2) {
+                Spacer(modifier = Modifier.height(12.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // PR count chip
+                        Box(
+                            modifier = Modifier
+                                .background(
+                                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                                    RoundedCornerShape(8.dp)
+                                )
+                                .padding(horizontal = 8.dp, vertical = 4.dp)
+                        ) {
+                            Text(
+                                text = stringResource(R.string.prs_count, history.size),
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                                    fontSize = 10.sp
+                                )
+                            )
+                        }
+
+                        // Improvement badge
+                        if (improvementPct != null) {
+                            val badgeColor = when {
+                                improvementPct > 0 -> Color(0xFF4CAF50)
+                                improvementPct < 0 -> Color(0xFFE53935)
+                                else -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+                            }
+                            Box(
+                                modifier = Modifier
+                                    .background(
+                                        badgeColor.copy(alpha = 0.15f),
+                                        RoundedCornerShape(8.dp)
+                                    )
+                                    .padding(horizontal = 8.dp, vertical = 4.dp)
+                            ) {
+                                Text(
+                                    text = "${if (improvementPct >= 0) "+" else ""}$improvementPct%",
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = badgeColor,
+                                        fontSize = 10.sp
+                                    )
+                                )
+                            }
+                        }
+                    }
+
+                    // Mini sparkline
+                    MiniSparkline(
+                        history = history,
+                        modifier = Modifier
+                            .width(64.dp)
+                            .height(28.dp)
                     )
                 }
             }

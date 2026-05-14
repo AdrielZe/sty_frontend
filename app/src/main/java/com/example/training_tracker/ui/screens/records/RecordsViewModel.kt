@@ -23,14 +23,13 @@ class RecordsViewModel(
 
     private val _selectedMuscleGroup = MutableStateFlow<MuscleGroups?>(null)
     private val _selectedExerciseHistory = MutableStateFlow<Pair<String, List<Double>>?>(null)
+    private val _searchQuery = MutableStateFlow("")
     private val _exercises = exerciseRepository.exercises
 
     val uiState: StateFlow<RecordsUiState> = combine(
-        recordsRepository.records,
-        _selectedMuscleGroup,
-        _exercises,
-        _selectedExerciseHistory
-    ) { records, selectedGroup, allExercises, selectedHistory ->
+        combine(recordsRepository.records, _selectedMuscleGroup, _exercises) { r, g, e -> Triple(r, g, e) },
+        combine(_selectedExerciseHistory, _searchQuery) { h, q -> h to q }
+    ) { (records, selectedGroup, allExercises), (selectedHistory, searchQuery) ->
 
         val cardioExerciseNames = allExercises
             .filter { it.type == ExerciseType.CARDIO }
@@ -62,13 +61,24 @@ class RecordsViewModel(
         val selectedIsCardio = selectedHistory != null &&
             cardioExerciseNames.contains(selectedHistory.first.uppercase())
 
+        val query = searchQuery.trim()
+        val searchedStrengthRecords = if (query.isEmpty()) filteredStrengthRecords
+        else filteredStrengthRecords?.copy(
+            exercisesRecordMap = filteredStrengthRecords.exercisesRecordMap
+                .filterKeys { it.contains(query, ignoreCase = true) }
+                .toMutableMap()
+        )
+        val searchedCardioRecords = if (query.isEmpty()) filteredCardioRecords
+        else filteredCardioRecords.filterKeys { it.contains(query, ignoreCase = true) }
+
         RecordsUiState(
-            records = filteredStrengthRecords,
+            records = searchedStrengthRecords,
             isLoading = false,
             selectedMuscleGroup = selectedGroup,
             selectedExerciseHistory = selectedHistory,
             selectedExerciseIsCardio = selectedIsCardio,
-            cardioRecords = filteredCardioRecords,
+            cardioRecords = searchedCardioRecords,
+            searchQuery = searchQuery,
         )
     }.stateIn(
         scope = viewModelScope,
@@ -86,6 +96,10 @@ class RecordsViewModel(
 
     fun onDismissHistory() {
         _selectedExerciseHistory.value = null
+    }
+
+    fun onSearchQueryChanged(query: String) {
+        _searchQuery.value = query
     }
 
     companion object {
