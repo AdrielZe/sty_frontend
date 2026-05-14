@@ -533,7 +533,7 @@ fun ExerciseCardUtils(
                         val isCardio = exercise.type == ExerciseType.CARDIO
                         val isStretching = exercise.type == ExerciseType.STRETCHING
                         val isWeightError = showErrors && if (isCardio) (set.distance ?: "").replace(',', '.').toDoubleOrNull() == null else if (isStretching) false else set.weight.isBlank()
-                        val isRepsError = showErrors && if (isCardio || isStretching) !(set.time ?: "").contains(":") else (set.reps.toIntOrNull() ?: 0) <= 0
+                        val isRepsError = showErrors && if (isCardio) !(set.time ?: "").contains(":") else if (isStretching) (set.time ?: "").toIntOrNull() == null else (set.reps.toIntOrNull() ?: 0) <= 0
 
                         SetLine(
                             modifier = Modifier.fillMaxWidth(),
@@ -687,10 +687,12 @@ fun TimeScrollPicker(
 fun CardioTimePickerDialog(
     initialTime: String,
     onDismiss: () -> Unit,
-    onConfirm: (String) -> Unit
+    onConfirm: (String) -> Unit,
+    showHours: Boolean = true
 ) {
-    val initialHours = initialTime.substringBefore(":", "0").toIntOrNull() ?: 0
-    val initialMinutes = initialTime.substringAfter(":", "0").toIntOrNull() ?: 0
+    val initialHours = if (showHours) initialTime.substringBefore(":", "0").toIntOrNull() ?: 0 else 0
+    val initialMinutes = if (showHours) initialTime.substringAfter(":", "0").toIntOrNull() ?: 0
+                         else initialTime.substringBefore(":", initialTime).toIntOrNull() ?: 0
     var selectedHours by remember { mutableStateOf(initialHours) }
     var selectedMinutes by remember { mutableStateOf(initialMinutes) }
 
@@ -706,13 +708,15 @@ fun CardioTimePickerDialog(
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    TimeScrollPicker(range = 0..23, selected = selectedHours, onSelect = { selectedHours = it }, label = "HRS")
-                    Text(
-                        ":",
-                        style = MaterialTheme.typography.headlineLarge,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 24.dp)
-                    )
+                    if (showHours) {
+                        TimeScrollPicker(range = 0..23, selected = selectedHours, onSelect = { selectedHours = it }, label = "HRS")
+                        Text(
+                            ":",
+                            style = MaterialTheme.typography.headlineLarge,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 24.dp)
+                        )
+                    }
                     TimeScrollPicker(range = 0..59, selected = selectedMinutes, onSelect = { selectedMinutes = it }, label = "MIN")
                 }
                 Spacer(Modifier.height(20.dp))
@@ -721,7 +725,11 @@ fun CardioTimePickerDialog(
                         Text("Cancelar", color = MaterialTheme.colorScheme.secondary)
                     }
                     TextButton(onClick = {
-                        onConfirm("${selectedHours.toString().padStart(2, '0')}:${selectedMinutes.toString().padStart(2, '0')}")
+                        if (showHours) {
+                            onConfirm("${selectedHours.toString().padStart(2, '0')}:${selectedMinutes.toString().padStart(2, '0')}")
+                        } else {
+                            onConfirm(selectedMinutes.toString().padStart(2, '0'))
+                        }
                     }) {
                         Text("OK", color = CyanAccent, fontWeight = FontWeight.Bold)
                     }
@@ -1223,7 +1231,8 @@ fun SetLine(
                     onConfirm = { time ->
                         onRepsChange(setNumber, time)
                         showTimePicker = false
-                    }
+                    },
+                    showHours = false
                 )
             }
 
@@ -1275,7 +1284,7 @@ fun SetLine(
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = inputValueReps.ifEmpty { previousReps.ifEmpty { "--:--" } },
+                                text = inputValueReps.ifEmpty { previousReps.ifEmpty { "--" } },
                                 style = MaterialTheme.typography.titleLarge.copy(
                                     color = if (inputValueReps.isEmpty())
                                         MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)

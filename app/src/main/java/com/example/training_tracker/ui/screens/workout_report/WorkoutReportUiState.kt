@@ -3,6 +3,7 @@ package com.example.training_tracker.ui.screens.workout_report
 import com.example.training_tracker.data.models.Exercise
 import com.example.training_tracker.data.models.Records
 import java.time.LocalDate
+import java.time.LocalTime
 
 data class TotalWeightLiftedInfo(
     val title: String,
@@ -33,10 +34,12 @@ data class WorkoutReportUiState(
     val workoutDifficulty: WorkoutDifficulty? = null,
     val heroSectionTitle: String? = "",
     val completionDate: LocalDate? = LocalDate.now(),
+    val completionTime: LocalTime? = null,
     val totalWeightLiftedInfo: TotalWeightLiftedInfo? = null,
     val totalSets: Int = 0,
     val totalReps: Int = 0,
     val totalMinutes: Int = 0,
     val records: Records ?= null,
-    val exercises: List<Exercise> = emptyList()
+    val exercises: List<Exercise> = emptyList(),
+    val caloriesBurned: Int? = null,
 )

@@ -83,7 +83,7 @@ fun GymTrackerNavHost() {
             FreestyleWorkoutScreen(
                 onBackClick = { navController.popBackStack() },
                 onNavigateToReport = { historyId ->
-                    navController.navigate("${Routes.WorkoutReport.name}/$historyId") {
+                    navController.navigate("${Routes.WorkoutReport.name}/$historyId?fromWorkout=true") {
                         popUpTo("MAIN_TABS") { inclusive = false }
                     }
                 },
@@ -146,7 +146,7 @@ fun GymTrackerNavHost() {
 
             LaunchedEffect(navigateToId) {
                 navigateToId?.let { historyId ->
-                    navController.navigate("${Routes.WorkoutReport.name}/$historyId") {
+                    navController.navigate("${Routes.WorkoutReport.name}/$historyId?fromWorkout=true") {
                         popUpTo("MAIN_TABS") { inclusive = false }
                     }
                     workoutViewModel.onNavigatedToReport()
@@ -177,17 +177,20 @@ fun GymTrackerNavHost() {
 
         // Full Screen: Workout Report
         composable(
-            route = "${Routes.WorkoutReport.name}/{workoutId}",
+            route = "${Routes.WorkoutReport.name}/{workoutId}?fromWorkout={fromWorkout}",
             arguments = listOf(
-                navArgument("workoutId") { type = NavType.StringType }
+                navArgument("workoutId") { type = NavType.StringType },
+                navArgument("fromWorkout") { type = NavType.BoolType; defaultValue = false }
             )
-        ) {
-            val workoutReportViewModel: WorkoutReportViewModel = 
+        ) { backStackEntry ->
+            val fromWorkout = backStackEntry.arguments?.getBoolean("fromWorkout") ?: false
+            val workoutReportViewModel: WorkoutReportViewModel =
                 viewModel(factory = WorkoutReportViewModel.Factory)
 
             WorkoutReportScreen(
                 workoutReportScreenViewModel = workoutReportViewModel,
                 onNavigateBack = { navController.popBackStack() },
+                fromWorkout = fromWorkout,
             )
         }
     }

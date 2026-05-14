@@ -50,11 +50,20 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.slideInHorizontally
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import kotlinx.coroutines.delay
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -104,11 +113,33 @@ import java.util.Locale
 fun WorkoutReportScreen(
     workoutReportScreenViewModel: WorkoutReportViewModel,
     onNavigateBack: () -> Unit,
+    fromWorkout: Boolean = false,
 ) {
     val uiState by workoutReportScreenViewModel.uiState.collectAsState()
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     val graphicsLayer = rememberGraphicsLayer()
+
+    var gamificationVisible by remember { mutableStateOf(!fromWorkout) }
+    var metricsVisible by remember { mutableStateOf(!fromWorkout) }
+    var caloriesVisible by remember { mutableStateOf(!fromWorkout) }
+    var recordsVisible by remember { mutableStateOf(!fromWorkout) }
+
+    LaunchedEffect(fromWorkout) {
+        if (fromWorkout) {
+            gamificationVisible = true
+            delay(500)
+            metricsVisible = true
+            delay(350)
+            caloriesVisible = true
+            delay(350)
+            recordsVisible = true
+        }
+    }
+
+    val sectionEnter = slideInHorizontally(
+        animationSpec = tween(650, easing = FastOutSlowInEasing)
+    ) { it } + fadeIn(animationSpec = tween(650))
 
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
@@ -216,14 +247,26 @@ fun WorkoutReportScreen(
                     )
 
                     // 1. Gamification Card
-                    GamificationCard(uiState = uiState)
+                    AnimatedVisibility(visible = gamificationVisible, enter = sectionEnter) {
+                        GamificationCard(uiState = uiState)
+                    }
 
-                    // 2. Métricas Gerais
-                    MetricsGrid(uiState = uiState)
+                    // 2. Sets / Reps / Mins
+                    AnimatedVisibility(visible = metricsVisible, enter = sectionEnter) {
+                        MetricsGrid(uiState = uiState)
+                    }
 
-                    // 3. Novos Recordes
-                    if (uiState.records?.exercisesRecordMap?.isNotEmpty() == true ||
-                        uiState.records?.volumeRecords?.isNotEmpty() == true
+                    // 3. Calorias
+                    AnimatedVisibility(visible = caloriesVisible, enter = sectionEnter) {
+                        CaloriesCard(caloriesBurned = uiState.caloriesBurned)
+                    }
+
+                    // 4. Novos Recordes
+                    AnimatedVisibility(
+                        visible = recordsVisible &&
+                            (uiState.records?.exercisesRecordMap?.isNotEmpty() == true ||
+                                uiState.records?.volumeRecords?.isNotEmpty() == true),
+                        enter = sectionEnter
                     ) {
                         RecordsSection(uiState.records)
                     }
@@ -470,35 +513,31 @@ fun GamificationCard(uiState: WorkoutReportUiState) {
 
 @Composable
 fun MetricsGrid(uiState: WorkoutReportUiState) {
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            MetricCard(
-                Modifier.weight(1f),
-                uiState.totalSets.toString(),
-                stringResource(R.string.serie_upper),
-                Icons.Default.FitnessCenter,
-                CyanAccent
-            )
-            MetricCard(
-                Modifier.weight(1f),
-                uiState.totalReps.toString(),
-                stringResource(R.string.reps),
-                Icons.Default.Repeat,
-                Color(0xFF4CAF50)
-            )
-            MetricCard(
-                Modifier.weight(1f),
-                uiState.totalMinutes.toString(),
-                stringResource(R.string.mins),
-                Icons.Default.Timer,
-                Color(0xFFFF9800)
-            )
-        }
-
-        CaloriesCard(caloriesBurned = uiState.caloriesBurned)
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        MetricCard(
+            Modifier.weight(1f),
+            uiState.totalSets.toString(),
+            stringResource(R.string.serie_upper),
+            Icons.Default.FitnessCenter,
+            CyanAccent
+        )
+        MetricCard(
+            Modifier.weight(1f),
+            uiState.totalReps.toString(),
+            stringResource(R.string.reps),
+            Icons.Default.Repeat,
+            Color(0xFF4CAF50)
+        )
+        MetricCard(
+            Modifier.weight(1f),
+            uiState.totalMinutes.toString(),
+            stringResource(R.string.mins),
+            Icons.Default.Timer,
+            Color(0xFFFF9800)
+        )
     }
 }
 
