@@ -1,9 +1,12 @@
 package com.example.training_tracker.ui.screens.freestyle_workout
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -11,11 +14,14 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -34,6 +40,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.training_tracker.R
 import com.example.training_tracker.data.models.Technique
 import com.example.training_tracker.ui.components.MuscleGroupPickerDialog
+import com.example.training_tracker.ui.screens.create_workout.DaySelector
 import com.example.training_tracker.ui.screens.workout_details.AddExerciseSelectionDialog
 import com.example.training_tracker.ui.theme.CyanAccent
 import com.example.training_tracker.ui.utils.ExerciseCardUtils
@@ -44,6 +51,7 @@ import nl.dionsegijn.konfetti.compose.KonfettiView
 import nl.dionsegijn.konfetti.core.Party
 import nl.dionsegijn.konfetti.core.Position
 import nl.dionsegijn.konfetti.core.emitter.Emitter
+import java.time.DayOfWeek
 import java.util.concurrent.TimeUnit
 
 @Composable
@@ -205,6 +213,13 @@ fun FreestyleWorkoutScreen(
                 )
             }
 
+            if (uiState.showSaveRoutineDialog) {
+                SaveRoutineDialog(
+                    onConfirm = { name, day -> viewModel.saveAsRoutine(name, day) },
+                    onDismiss = { viewModel.dismissSaveRoutineDialog() }
+                )
+            }
+
             if (showConfetti) {
                 KonfettiView(
                     modifier = Modifier.fillMaxSize(),
@@ -227,3 +242,46 @@ fun FreestyleWorkoutScreen(
     }
 }
 
+@Composable
+private fun SaveRoutineDialog(
+    onConfirm: (name: String, day: DayOfWeek) -> Unit,
+    onDismiss: () -> Unit
+) {
+    var name by remember { mutableStateOf("") }
+    var selectedDay by remember { mutableStateOf<DayOfWeek?>(null) }
+    val isValid = name.isNotBlank() && selectedDay != null
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.save_routine_dialog_title), style = MaterialTheme.typography.titleMedium) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(stringResource(R.string.save_routine_dialog_message), style = MaterialTheme.typography.bodyMedium)
+                Text(stringResource(R.string.save_routine_dialog_name_label), style = MaterialTheme.typography.labelMedium)
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    placeholder = { Text(stringResource(R.string.save_routine_dialog_name_placeholder)) },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(stringResource(R.string.save_routine_dialog_day_label), style = MaterialTheme.typography.labelMedium)
+                DaySelector(selectedDay = selectedDay, onDaySelected = { selectedDay = it })
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = { onConfirm(name.trim(), selectedDay!!) },
+                enabled = isValid
+            ) {
+                Text(stringResource(R.string.save_routine_dialog_confirm), color = if (isValid) CyanAccent else Color.Gray)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.save_routine_dialog_skip))
+            }
+        }
+    )
+}

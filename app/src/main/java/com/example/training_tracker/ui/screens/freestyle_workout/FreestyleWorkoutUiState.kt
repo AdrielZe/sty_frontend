@@ -10,5 +10,6 @@ data class FreestyleWorkoutUiState(
     val showExercisePicker: Boolean = false,
     val navigateToReportId: String? = null,
     val pendingExerciseName: String? = null,
-    val showMuscleGroupPicker: Boolean = false
+    val showMuscleGroupPicker: Boolean = false,
+    val showSaveRoutineDialog: Boolean = false
 )

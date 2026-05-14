@@ -11,6 +11,7 @@ import com.example.training_tracker.data.models.ExerciseSet
 import com.example.training_tracker.data.models.MuscleGroups
 import com.example.training_tracker.data.models.Technique
 import com.example.training_tracker.data.models.Workout
+import java.time.DayOfWeek
 import com.example.training_tracker.domain.repository.ExerciseRepository
 import com.example.training_tracker.domain.repository.WorkoutHistoryRepository
 import com.example.training_tracker.domain.repository.WorkoutRepository
@@ -44,6 +45,8 @@ class FreestyleWorkoutViewModel(
 
     private val _pendingExerciseName = MutableStateFlow<String?>(null)
     private val _showMuscleGroupPicker = MutableStateFlow(false)
+    private val _showSaveRoutineDialog = MutableStateFlow(false)
+    private val _pendingReportId = MutableStateFlow<String?>(null)
 
     private val _finishedWorkoutSession = MutableStateFlow<Workout?>(null)
 
@@ -55,13 +58,16 @@ class FreestyleWorkoutViewModel(
             _showExercisePicker,
             _finishedWorkoutSession,
             _pendingExerciseName,
-            _showMuscleGroupPicker
-        ) { showPicker, finishedWorkout, pendingName, showMusclePicker ->
-            InternalState(showPicker, finishedWorkout, pendingName, showMusclePicker)
+            combine(_showMuscleGroupPicker, _showSaveRoutineDialog) { a, b -> a to b }
+        ) { showPicker, finishedWorkout, pendingName, (showMusclePicker, showSaveRoutine) ->
+            InternalState(showPicker, finishedWorkout, pendingName, showMusclePicker, showSaveRoutine)
         }
     ) { workout, availableExercises, histories, internalState ->
         if (internalState.finishedWorkoutSession != null) {
-            FreestyleWorkoutUiState(workout = internalState.finishedWorkoutSession)
+            FreestyleWorkoutUiState(
+                workout = internalState.finishedWorkoutSession,
+                showSaveRoutineDialog = internalState.showSaveRoutineDialog
+            )
         } else if (workout != null) {
             val enrichedWorkout = enrichWorkoutWithHistory(workout, histories)
             FreestyleWorkoutUiState(
@@ -94,7 +100,8 @@ class FreestyleWorkoutViewModel(
         val showExercisePicker: Boolean,
         val finishedWorkoutSession: Workout?,
         val pendingExerciseName: String?,
-        val showMuscleGroupPicker: Boolean
+        val showMuscleGroupPicker: Boolean,
+        val showSaveRoutineDialog: Boolean = false
     )
 
     init {
@@ -297,7 +304,8 @@ class FreestyleWorkoutViewModel(
                     _finishedWorkoutSession.value = completedWorkout
                 },
                 onNavigateToReport = { historyId ->
-                    _navigateToReport.value = historyId
+                    _pendingReportId.value = historyId
+                    _showSaveRoutineDialog.value = true
                 },
                 resetWorkout = {
                     workoutRepository.updateWorkout(
@@ -317,6 +325,34 @@ class FreestyleWorkoutViewModel(
                 }
             )
         }
+    }
+
+    fun saveAsRoutine(name: String, dayOfWeek: DayOfWeek) {
+        val exercises = _finishedWorkoutSession.value?.exercises ?: return
+        val cleanExercises = exercises.map { exercise ->
+            exercise.copy(
+                id = java.util.UUID.randomUUID().toString(),
+                isCompleted = false,
+                exerciseSets = exercise.exerciseSets.map { it.copy(isCompleted = false) }
+            )
+        }
+        viewModelScope.launch {
+            workoutRepository.addWorkout(
+                Workout(
+                    name = name,
+                    exercises = cleanExercises,
+                    dayOfWeek = dayOfWeek,
+                    isOnGoing = false
+                )
+            )
+            dismissSaveRoutineDialog()
+        }
+    }
+
+    fun dismissSaveRoutineDialog() {
+        _showSaveRoutineDialog.value = false
+        _navigateToReport.value = _pendingReportId.value
+        _pendingReportId.value = null
     }
 
     companion object {
