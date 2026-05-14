@@ -11,4 +11,5 @@ interface UserRepository {
     suspend fun updateWeeklyGoal(goal: Int)
     suspend fun updateProfilePicture(uri: String)
     suspend fun updateUserName(newName: String)
+    suspend fun updateBodyData(weightKg: Float?, ageYears: Int?, gender: String?)
 }

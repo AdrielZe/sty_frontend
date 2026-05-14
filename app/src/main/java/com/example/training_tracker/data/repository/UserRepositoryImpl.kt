@@ -38,4 +38,11 @@ class UserRepositoryImpl(
             userDao.upsertUser(currentUser.copy(name = newName))
         }
     }
+
+    override suspend fun updateBodyData(weightKg: Float?, ageYears: Int?, gender: String?) {
+        val currentUser = userDao.getUser().first()
+        if (currentUser != null) {
+            userDao.upsertUser(currentUser.copy(weightKg = weightKg, ageYears = ageYears, gender = gender))
+        }
+    }
 }

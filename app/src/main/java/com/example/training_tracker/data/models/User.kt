@@ -10,5 +10,8 @@ data class User(
     val name: String,
     val profilePicture: String? = null,
     val nameDisplay: String? = null,
-    val weeklyGoal: Int? = null
+    val weeklyGoal: Int? = null,
+    @androidx.room.ColumnInfo("weightKg") val weightKg: Float? = null,
+    @androidx.room.ColumnInfo("ageYears") val ageYears: Int? = null,
+    @androidx.room.ColumnInfo("gender") val gender: String? = null, // "MALE" | "FEMALE" | "OTHER"
 )
