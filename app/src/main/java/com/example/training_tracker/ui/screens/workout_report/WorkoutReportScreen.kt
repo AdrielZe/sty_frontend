@@ -32,6 +32,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.FitnessCenter
+import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.Repeat
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Timer
@@ -182,8 +183,21 @@ fun WorkoutReportScreen(
                             layout = StyLogoLayout.VERTICAL
                         )
                         uiState.completionDate?.let { date ->
+                            val completionTime = uiState.completionTime
+                            val dateText = remember(date, completionTime) {
+                                val month = date.month.getDisplayName(
+                                    java.time.format.TextStyle.FULL,
+                                    java.util.Locale.getDefault()
+                                ).replaceFirstChar { it.uppercase() }
+                                val base = "$month ${date.dayOfMonth}, ${date.year}"
+                                if (completionTime != null) {
+                                    val hour = completionTime.hour.toString().padStart(2, '0')
+                                    val minute = completionTime.minute.toString().padStart(2, '0')
+                                    "$base · $hour:$minute"
+                                } else base
+                            }
                             Text(
-                                text = date.toString(),
+                                text = dateText,
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -456,31 +470,101 @@ fun GamificationCard(uiState: WorkoutReportUiState) {
 
 @Composable
 fun MetricsGrid(uiState: WorkoutReportUiState) {
-    Row(
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            MetricCard(
+                Modifier.weight(1f),
+                uiState.totalSets.toString(),
+                stringResource(R.string.serie_upper),
+                Icons.Default.FitnessCenter,
+                CyanAccent
+            )
+            MetricCard(
+                Modifier.weight(1f),
+                uiState.totalReps.toString(),
+                stringResource(R.string.reps),
+                Icons.Default.Repeat,
+                Color(0xFF4CAF50)
+            )
+            MetricCard(
+                Modifier.weight(1f),
+                uiState.totalMinutes.toString(),
+                stringResource(R.string.mins),
+                Icons.Default.Timer,
+                Color(0xFFFF9800)
+            )
+        }
+
+        CaloriesCard(caloriesBurned = uiState.caloriesBurned)
+    }
+}
+
+@Composable
+fun CaloriesCard(caloriesBurned: Int?) {
+    val fireColor = Color(0xFFFF5722)
+    Card(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+        ),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f))
     ) {
-        MetricCard(
-            Modifier.weight(1f),
-            uiState.totalSets.toString(),
-            stringResource(R.string.serie_upper),
-            Icons.Default.FitnessCenter,
-            CyanAccent
-        )
-        MetricCard(
-            Modifier.weight(1f),
-            uiState.totalReps.toString(),
-            stringResource(R.string.reps),
-            Icons.Default.Repeat,
-            Color(0xFF4CAF50)
-        )
-        MetricCard(
-            Modifier.weight(1f),
-            uiState.totalMinutes.toString(),
-            stringResource(R.string.mins),
-            Icons.Default.Timer,
-            Color(0xFFFF9800)
-        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(44.dp)
+                        .clip(CircleShape)
+                        .background(fireColor.copy(alpha = 0.15f))
+                        .border(BorderStroke(1.dp, fireColor.copy(alpha = 0.4f)), CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        Icons.Default.LocalFireDepartment,
+                        contentDescription = null,
+                        tint = fireColor,
+                        modifier = Modifier.size(22.dp)
+                    )
+                }
+                Column {
+                    Text(
+                        text = stringResource(R.string.calorias_queimadas_label),
+                        fontSize = 10.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontWeight = FontWeight.ExtraBold,
+                        letterSpacing = 1.sp
+                    )
+                    if (caloriesBurned != null) {
+                        Text(
+                            text = stringResource(R.string.calorias_queimadas, caloriesBurned),
+                            fontSize = 22.sp,
+                            fontWeight = FontWeight.Black,
+                            color = fireColor
+                        )
+                    } else {
+                        Text(
+                            text = stringResource(R.string.configure_peso_perfil),
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -1024,7 +1108,7 @@ fun ExerciseSummaryCard(exercise: Exercise) {
                                 )
                             } else if (exercise.type == ExerciseType.STRETCHING) {
                                 Text(
-                                    text = set.time ?: "--:--",
+                                    text = "${set.time ?: "--"} ${stringResource(R.string.minutos_label)}",
                                     style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
                                     color = CyanAccent,
                                     maxLines = 1
