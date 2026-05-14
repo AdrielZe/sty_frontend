@@ -39,6 +39,7 @@ class WorkoutHistoryViewModel(
     private val _selectedDate = MutableStateFlow<LocalDate?>(null)
     private val _selectedMuscleGroup = MutableStateFlow<MuscleGroups?>(null)
     private val _currentCalendarMonth = MutableStateFlow<LocalDate>(LocalDate.now().withDayOfMonth(1))
+    private val _currentPage = MutableStateFlow(0)
 
     val uiState: StateFlow<WorkoutHistoryUiState> = combine(
         workoutHistoryRepository.workoutHistories,
@@ -46,7 +47,8 @@ class WorkoutHistoryViewModel(
         _sortOrder,
         _selectedDate,
         _selectedMuscleGroup,
-        _currentCalendarMonth
+        _currentCalendarMonth,
+        _currentPage
     ) { args: Array<Any?> ->
         val history = args[0] as List<WorkoutHistory>
         val query = args[1] as String
@@ -54,12 +56,12 @@ class WorkoutHistoryViewModel(
         val selectedDate = args[3] as LocalDate?
         val selectedMuscle = args[4] as MuscleGroups?
         val currentMonth = args[5] as LocalDate
+        val page = args[6] as Int
 
         val filteredList = history.filter { workout ->
             val matchesQuery = workout.name.contains(query, ignoreCase = true)
             val matchesDate = selectedDate == null || workout.completionDate == selectedDate
             val matchesMuscle = selectedMuscle == null || workout.exercises.any { it.muscleGroup == selectedMuscle }
-            
             matchesQuery && matchesDate && matchesMuscle
         }
 
@@ -74,13 +76,19 @@ class WorkoutHistoryViewModel(
             SortOrder.NAME_DESC -> filteredList.sortedByDescending { it.name.lowercase() }
         }
 
+        val totalPages = maxOf(1, (sortedList.size + PAGE_SIZE - 1) / PAGE_SIZE)
+        val safePage = page.coerceIn(0, totalPages - 1)
+        val pagedList = sortedList.drop(safePage * PAGE_SIZE).take(PAGE_SIZE)
+
         WorkoutHistoryUiState(
-            savedWorkouts = sortedList,
+            savedWorkouts = pagedList,
             searchQuery = query,
             sortOrder = sort,
             selectedDate = selectedDate,
             selectedMuscleGroup = selectedMuscle,
-            currentCalendarMonth = currentMonth
+            currentCalendarMonth = currentMonth,
+            currentPage = safePage,
+            totalPages = totalPages
         )
     }.stateIn(
         scope = viewModelScope,
@@ -90,22 +98,30 @@ class WorkoutHistoryViewModel(
 
     fun onSearchQueryChange(newQuery: String) {
         _searchQuery.value = newQuery
+        _currentPage.value = 0
     }
 
     fun onSortOrderChange(newSortOrder: SortOrder) {
         _sortOrder.value = newSortOrder
+        _currentPage.value = 0
     }
 
     fun onDateSelected(date: LocalDate?) {
         _selectedDate.value = if (_selectedDate.value == date) null else date
+        _currentPage.value = 0
     }
 
     fun onMuscleGroupSelected(muscleGroup: MuscleGroups?) {
         _selectedMuscleGroup.value = if (_selectedMuscleGroup.value == muscleGroup) null else muscleGroup
+        _currentPage.value = 0
     }
 
     fun onMoveMonth(delta: Long) {
         _currentCalendarMonth.update { it.plusMonths(delta) }
+    }
+
+    fun onPageChange(page: Int) {
+        _currentPage.value = page
     }
 
     fun duplicateFromHistory(history: WorkoutHistory, targetDay: DayOfWeek) {
@@ -125,6 +141,8 @@ class WorkoutHistoryViewModel(
     }
 
     companion object {
+        const val PAGE_SIZE = 10
+
         val Factory = viewModelFactory {
             initializer {
                 val application = (this[APPLICATION_KEY] as GymTrackerApplication)

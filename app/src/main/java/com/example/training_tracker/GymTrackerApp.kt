@@ -26,7 +26,10 @@ import com.example.training_tracker.ui.screens.home.HomeViewModel
 import com.example.training_tracker.ui.screens.welcome.WelcomeScreen
 import com.example.training_tracker.ui.components.StyLogo
 import com.example.training_tracker.ui.components.StyLogoLayout
-import com.example.training_tracker.ui.theme.CyanAccent
+import androidx.compose.runtime.CompositionLocalProvider
+import com.example.training_tracker.ui.theme.AccentThemes
+import com.example.training_tracker.ui.theme.AppTheme
+import com.example.training_tracker.ui.theme.LocalAccentTheme
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
@@ -35,6 +38,12 @@ fun GymTrackerApp(
 ) {
     val uiState by homeViewModel.uiState.collectAsState()
 
+    val accentTheme = when (val s = uiState) {
+        is HomeUiState.Success -> AccentThemes.fromName(s.user?.accentThemeName)
+        else -> AccentThemes.Cyan
+    }
+
+    CompositionLocalProvider(LocalAccentTheme provides accentTheme) {
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
@@ -61,6 +70,7 @@ fun GymTrackerApp(
             }
         }
     }
+    } // CompositionLocalProvider
 }
 
 @Composable
@@ -78,7 +88,7 @@ fun AppLoadingScreen() {
             )
             Spacer(modifier = Modifier.height(32.dp))
             CircularProgressIndicator(
-                color = CyanAccent,
+                color = AppTheme.accent.light,
                 strokeWidth = 4.dp,
                 modifier = Modifier.size(48.dp)
             )
@@ -121,7 +131,7 @@ fun AppErrorScreen(message: String, onRetry: () -> Unit) {
             Spacer(modifier = Modifier.height(32.dp))
             Button(
                 onClick = onRetry,
-                colors = ButtonDefaults.buttonColors(containerColor = CyanAccent),
+                colors = ButtonDefaults.buttonColors(containerColor = AppTheme.accent.light),
                 shape = RoundedCornerShape(16.dp)
             ) {
                 Text(text = stringResource(R.string.tentar_novamente), color = Color.Black, fontWeight = FontWeight.Bold)

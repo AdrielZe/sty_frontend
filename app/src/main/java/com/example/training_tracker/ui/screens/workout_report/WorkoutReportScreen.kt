@@ -100,8 +100,7 @@ import com.example.training_tracker.ui.components.StyLogoLayout
 import com.example.training_tracker.data.models.Exercise
 import com.example.training_tracker.data.models.ExerciseType
 import com.example.training_tracker.data.models.Technique
-import com.example.training_tracker.ui.theme.CyanAccent
-import com.example.training_tracker.ui.theme.CyanGradient
+import com.example.training_tracker.ui.theme.AppTheme
 import kotlinx.coroutines.launch
 import java.io.File
 import java.io.FileOutputStream
@@ -154,7 +153,7 @@ fun WorkoutReportScreen(
                         stringResource(R.string.relatorio_do_treino),
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.ExtraBold,
-                            color = CyanAccent,
+                            color = AppTheme.accent.light,
                             letterSpacing = 2.sp
                         )
                     )
@@ -164,7 +163,7 @@ fun WorkoutReportScreen(
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(R.string.voltar),
-                            tint = CyanAccent
+                            tint = AppTheme.accent.light
                         )
                     }
                 },
@@ -298,7 +297,7 @@ fun WorkoutReportScreen(
                         .fillMaxWidth()
                         // 👇 1. Troca do height para defaultMinSize no Button
                         .defaultMinSize(minHeight = 64.dp)
-                        .shadow(16.dp, RoundedCornerShape(32.dp), spotColor = CyanAccent),
+                        .shadow(16.dp, RoundedCornerShape(32.dp), spotColor = AppTheme.accent.light),
                     shape = RoundedCornerShape(32.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
                     contentPadding = PaddingValues() // Zera o padding padrão, o Box assume o controle
@@ -309,7 +308,7 @@ fun WorkoutReportScreen(
                             // Isso garante que o fundo com gradiente estique para baixo junto com o botão
                             .fillMaxWidth()
                             .defaultMinSize(minHeight = 64.dp)
-                            .background(CyanGradient),
+                            .background(AppTheme.accent.gradient),
                         contentAlignment = Alignment.Center
                     ) {
                         Row(
@@ -446,7 +445,7 @@ fun GamificationCard(uiState: WorkoutReportUiState) {
                     Icon(
                         Icons.AutoMirrored.Filled.TrendingUp,
                         contentDescription = null,
-                        tint = CyanAccent,
+                        tint = AppTheme.accent.light,
                         modifier = Modifier.size(20.dp)
                     )
                     Spacer(Modifier.width(8.dp))
@@ -454,7 +453,7 @@ fun GamificationCard(uiState: WorkoutReportUiState) {
                         stringResource(R.string.total_de_peso_levantado),
                         style = MaterialTheme.typography.labelMedium.copy(
                             fontWeight = FontWeight.ExtraBold,
-                            color = CyanAccent,
+                            color = AppTheme.accent.light,
                             letterSpacing = 1.5.sp
                         ),
                         // Proteção contra traduções longas / telas finas
@@ -522,7 +521,7 @@ fun MetricsGrid(uiState: WorkoutReportUiState) {
             uiState.totalSets.toString(),
             stringResource(R.string.serie_upper),
             Icons.Default.FitnessCenter,
-            CyanAccent
+            AppTheme.accent.light
         )
         MetricCard(
             Modifier.weight(1f),
@@ -721,7 +720,7 @@ fun MuscleIntensitySection(exercises: List<Exercise>) {
                             Surface(
                                 modifier = Modifier.size(8.dp),
                                 shape = CircleShape,
-                                color = CyanAccent.copy(
+                                color = AppTheme.accent.light.copy(
                                     alpha = (1f - (index * 0.15f)).coerceIn(
                                         0.4f,
                                         1f
@@ -744,7 +743,7 @@ fun MuscleIntensitySection(exercises: List<Exercise>) {
                             }",
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.ExtraBold,
-                            color = CyanAccent
+                            color = AppTheme.accent.light
                         )
                     }
                     if (index < muscleGroupsData.size - 1) {
@@ -766,7 +765,7 @@ fun MuscleLineChart(
     modifier: Modifier = Modifier
 ) {
     val maxSets = remember(data) { data.maxOf { it.second }.toFloat().coerceAtLeast(1f) }
-    val accentColor = CyanAccent
+    val accentColor = AppTheme.accent.light
     val textMeasurer = rememberTextMeasurer()
     val onSurface = MaterialTheme.colorScheme.onSurface
 
@@ -883,14 +882,14 @@ fun RecordsSection(records: com.example.training_tracker.data.models.Records?) {
         ) {
             ReportSectionLabel(stringResource(R.string.new_achievements))
             Surface(
-                color = CyanAccent.copy(alpha = 0.15f),
+                color = AppTheme.accent.light.copy(alpha = 0.15f),
                 shape = RoundedCornerShape(20.dp)
             ) {
                 Text(
                     text = sortedRecords.size.toString(),
                     modifier = Modifier.padding(horizontal = 10.dp, vertical = 3.dp),
                     style = MaterialTheme.typography.labelSmall.copy(
-                        color = CyanAccent,
+                        color = AppTheme.accent.light,
                         fontWeight = FontWeight.Bold
                     )
                 )
@@ -912,7 +911,7 @@ fun RecordsSection(records: com.example.training_tracker.data.models.Records?) {
                 value = "${numberFormat.format(maxWeight)}kg",
                 subValue = exerciseName,
                 icon = Icons.Default.EmojiEvents,
-                color = CyanAccent
+                color = AppTheme.accent.light
             )
         }
     }
@@ -1023,7 +1022,7 @@ private fun ReportSectionLabel(text: String, modifier: Modifier = Modifier) {
     Text(
         text = text,
         style = MaterialTheme.typography.titleSmall.copy(
-            brush = CyanGradient,
+            brush = AppTheme.accent.gradient,
             fontWeight = FontWeight.Bold
         ),
         modifier = modifier
@@ -1071,7 +1070,7 @@ fun ExerciseSummaryCard(exercise: Exercise) {
                     text = exercise.name,
                     style = MaterialTheme.typography.titleSmall.copy(
                         fontWeight = FontWeight.Bold,
-                        brush = CyanGradient
+                        brush = AppTheme.accent.gradient
                     ),
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
@@ -1142,14 +1141,14 @@ fun ExerciseSummaryCard(exercise: Exercise) {
                                 Text(
                                     text = set.time ?: set.reps,
                                     style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
-                                    color = CyanAccent,
+                                    color = AppTheme.accent.light,
                                     maxLines = 1
                                 )
                             } else if (exercise.type == ExerciseType.STRETCHING) {
                                 Text(
                                     text = "${set.time ?: "--"} ${stringResource(R.string.minutos_label)}",
                                     style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
-                                    color = CyanAccent,
+                                    color = AppTheme.accent.light,
                                     maxLines = 1
                                 )
                             } else {
@@ -1163,7 +1162,7 @@ fun ExerciseSummaryCard(exercise: Exercise) {
                                 Text(
                                     text = "${set.reps} reps",
                                     style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
-                                    color = CyanAccent,
+                                    color = AppTheme.accent.light,
                                     maxLines = 1
                                 )
                             }

@@ -27,6 +27,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.HistoryToggleOff
 import androidx.compose.material.icons.filled.MoreVert
@@ -72,7 +74,7 @@ import com.example.training_tracker.data.models.WorkoutHistory
 import com.example.training_tracker.ui.screens.home.MuscleBadge
 import com.example.training_tracker.ui.screens.registered_workouts.DuplicateWorkoutDialog
 import com.example.training_tracker.ui.screens.registered_workouts.TextGray
-import com.example.training_tracker.ui.theme.CyanAccent
+import com.example.training_tracker.ui.theme.AppTheme
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -90,6 +92,7 @@ fun WorkoutHistoryScreen(
     onNavigateBack: () -> Unit,
     onClickHistory: (String) -> Unit,
     onDuplicateFromHistory: (WorkoutHistory, DayOfWeek) -> Unit = { _, _ -> },
+    onPageChange: (Int) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Scaffold(
@@ -102,7 +105,7 @@ fun WorkoutHistoryScreen(
                         stringResource(R.string.historico),
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.Bold,
-                            color = CyanAccent,
+                            color = AppTheme.accent.light,
                             letterSpacing = 1.sp
                         )
                     )
@@ -112,7 +115,7 @@ fun WorkoutHistoryScreen(
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = null,
-                            tint = CyanAccent
+                            tint = AppTheme.accent.light
                         )
                     }
                 },
@@ -209,6 +212,16 @@ fun WorkoutHistoryScreen(
                         onClick = { onClickHistory(workout.id) },
                         onDuplicateToDay = { day -> onDuplicateFromHistory(workout, day) }
                     )
+                }
+
+                if (uiState.totalPages > 1) {
+                    item {
+                        PaginationControls(
+                            currentPage = uiState.currentPage,
+                            totalPages = uiState.totalPages,
+                            onPageChange = onPageChange
+                        )
+                    }
                 }
             }
         }
@@ -320,9 +333,9 @@ fun HistoryCalendarCard(
                                     .size(32.dp)
                                     .clip(CircleShape)
                                     .background(
-                                        if (isSelected) CyanAccent
-                                        else if (isWorkoutDay) CyanAccent.copy(alpha = 0.3f)
-                                        else if (isToday) CyanAccent.copy(alpha = 0.1f)
+                                        if (isSelected) AppTheme.accent.light
+                                        else if (isWorkoutDay) AppTheme.accent.light.copy(alpha = 0.3f)
+                                        else if (isToday) AppTheme.accent.light.copy(alpha = 0.1f)
                                         else Color.Transparent
                                     )
                                     .clickable { onDateSelected(date) },
@@ -415,7 +428,7 @@ fun HistoryFilterRow(currentSort: SortOrder, onSortChange: (SortOrder) -> Unit) 
 @Composable
 fun FilterChip(selected: Boolean, label: String, onClick: () -> Unit) {
     Surface(
-        color = if (selected) CyanAccent else MaterialTheme.colorScheme.surface,
+        color = if (selected) AppTheme.accent.light else MaterialTheme.colorScheme.surface,
         shape = RoundedCornerShape(12.dp),
         modifier = Modifier
             .height(36.dp)
@@ -580,14 +593,14 @@ fun HistoryWorkoutCard(
 
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Surface(
-                            color = CyanAccent.copy(alpha = 0.2f),
+                            color = AppTheme.accent.light.copy(alpha = 0.2f),
                             shape = CircleShape,
-                            border = BorderStroke(1.dp, CyanAccent.copy(alpha = 0.5f))
+                            border = BorderStroke(1.dp, AppTheme.accent.light.copy(alpha = 0.5f))
                         ) {
                             Text(
                                 text = volume,
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-                                color = CyanAccent,
+                                color = AppTheme.accent.light,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 12.sp
                             )
@@ -711,6 +724,59 @@ private fun getHistoryWorkoutImage(workout: WorkoutHistory): Int {
         MuscleGroups.CARDIO -> R.drawable.cardio_workout
         MuscleGroups.STRETCHING -> R.drawable.stretching_workout
         else -> R.drawable.biceps_workout
+    }
+}
+
+@Composable
+fun PaginationControls(
+    currentPage: Int,
+    totalPages: Int,
+    onPageChange: (Int) -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        FilledIconButton(
+            onClick = { onPageChange(currentPage - 1) },
+            enabled = currentPage > 0,
+            colors = IconButtonDefaults.filledIconButtonColors(
+                containerColor = MaterialTheme.colorScheme.surface,
+                contentColor = AppTheme.accent.light,
+                disabledContainerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.4f),
+                disabledContentColor = TextGray.copy(alpha = 0.4f)
+            )
+        ) {
+            Icon(Icons.Default.ChevronLeft, contentDescription = null)
+        }
+
+        Spacer(Modifier.width(12.dp))
+
+        Text(
+            text = "${currentPage + 1} / $totalPages",
+            style = MaterialTheme.typography.labelMedium.copy(
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+        )
+
+        Spacer(Modifier.width(12.dp))
+
+        FilledIconButton(
+            onClick = { onPageChange(currentPage + 1) },
+            enabled = currentPage < totalPages - 1,
+            colors = IconButtonDefaults.filledIconButtonColors(
+                containerColor = MaterialTheme.colorScheme.surface,
+                contentColor = AppTheme.accent.light,
+                disabledContainerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.4f),
+                disabledContentColor = TextGray.copy(alpha = 0.4f)
+            )
+        ) {
+            Icon(Icons.Default.ChevronRight, contentDescription = null)
+        }
     }
 }
 

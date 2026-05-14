@@ -13,7 +13,6 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import com.example.training_tracker.ui.theme.AppTheme.brushes
 
 private val LightColorScheme = lightColorScheme(
     primary = CyanDark,
@@ -43,10 +42,10 @@ private val DarkColorScheme = darkColorScheme(
     tertiary = GrayWhiteText,
     outline = LightOutlineText
 )
+
 @Composable
 fun Training_trackerTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
     dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
@@ -61,7 +60,10 @@ fun Training_trackerTheme(
 
     val brushes = if (darkTheme) DarkBrushes else LightBrushes
 
-    CompositionLocalProvider(LocalCustomBrushes provides brushes) {
+    CompositionLocalProvider(
+        LocalCustomBrushes provides brushes,
+        LocalAccentTheme provides AccentThemes.Cyan
+    ) {
         MaterialTheme(
             colorScheme = colorScheme,
             typography = Typography,
@@ -70,7 +72,6 @@ fun Training_trackerTheme(
     }
 }
 
-// No seu arquivo Theme.kt ou um novo arquivo CustomTheme.kt
 data class CustomBrushes(
     val primaryGradient: Brush,
     val backgroundGradient: Brush
@@ -80,9 +81,16 @@ val LocalCustomBrushes = staticCompositionLocalOf<CustomBrushes> {
     error("No CustomBrushes provided")
 }
 
-// Objeto utilitário para facilitar o acesso
+val LocalAccentTheme = staticCompositionLocalOf<AccentTheme> {
+    AccentThemes.Cyan
+}
+
 object AppTheme {
     val brushes: CustomBrushes
         @Composable
         get() = LocalCustomBrushes.current
+
+    val accent: AccentTheme
+        @Composable
+        get() = LocalAccentTheme.current
 }

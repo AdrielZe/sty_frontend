@@ -456,6 +456,7 @@
     <string name="dados_corporais">BODY DATA</string>
     <string name="configure_peso_perfil">Set your weight in profile to see calories</string>
     <string name="dados_corporais_info">This information is used to calculate the calories burned in your workouts. The more accurate it is, the more precise your results will be!</string>
+    <string name="cor_do_tema">THEME COLOR</string>
     <string name="anos_label">yrs</string>
     <string name="tem_certeza_que_deseja_remover_o_treino">Are you sure you wish to remove the workout %1$s?</string>
     <string name="criar">Create</string>

@@ -14,4 +14,5 @@ data class User(
     @androidx.room.ColumnInfo("weightKg") val weightKg: Float? = null,
     @androidx.room.ColumnInfo("ageYears") val ageYears: Int? = null,
     @androidx.room.ColumnInfo("gender") val gender: String? = null, // "MALE" | "FEMALE" | "OTHER"
+    @androidx.room.ColumnInfo("accentThemeName") val accentThemeName: String? = null,
 )

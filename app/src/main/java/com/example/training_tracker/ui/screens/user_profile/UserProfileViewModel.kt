@@ -103,6 +103,12 @@ class UserProfileViewModel(
         }
     }
 
+    fun updateAccentTheme(themeName: String) {
+        viewModelScope.launch {
+            userRepository.updateAccentTheme(themeName)
+        }
+    }
+
     companion object {
         val Factory = viewModelFactory {
             initializer {

@@ -51,8 +51,8 @@ import com.example.training_tracker.data.models.MuscleGroups
 import com.example.training_tracker.data.models.Workout
 import com.example.training_tracker.ui.screens.home.MuscleBadge
 import com.example.training_tracker.ui.screens.home.getWorkoutImageRes
-import com.example.training_tracker.ui.theme.CyanAccent
-import com.example.training_tracker.ui.theme.CyanGradient
+import com.example.training_tracker.ui.theme.AppTheme
+
 import kotlinx.coroutines.delay
 import java.time.DayOfWeek
 
@@ -182,14 +182,14 @@ fun RegisteredWorkoutsScreen(
                             stringResource(R.string.agenda_de_treinos),
                             style = MaterialTheme.typography.titleMedium.copy(
                                 fontWeight = FontWeight.Bold,
-                                color = CyanAccent,
+                                color = AppTheme.accent.light,
                                 letterSpacing = 1.sp
                             )
                         )
                     },
                     navigationIcon = {
                         IconButton(onClick = onNavigateBack) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.content_description_back), tint = CyanAccent)
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.content_description_back), tint = AppTheme.accent.light)
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
@@ -305,7 +305,7 @@ fun ActiveWorkoutCard(
             .border(
                 width = 1.dp,
                 brush = Brush.linearGradient(
-                    listOf(CyanAccent.copy(alpha = 0.25f), Color.Transparent)
+                    listOf(AppTheme.accent.light.copy(alpha = 0.25f), Color.Transparent)
                 ),
                 shape = RoundedCornerShape(20.dp)
             ),
@@ -408,7 +408,7 @@ fun ActiveWorkoutCard(
                             showMenu = false
                         },
                         leadingIcon = {
-                            Icon(Icons.Default.ContentCopy, contentDescription = null, tint = CyanAccent)
+                            Icon(Icons.Default.ContentCopy, contentDescription = null, tint = AppTheme.accent.light)
                         }
                     )
                     DropdownMenuItem(
@@ -430,14 +430,14 @@ fun ActiveWorkoutCard(
 @Composable
 fun MuscleBadgeRegistered(muscle: MuscleGroups) {
     Surface(
-        color = CyanAccent.copy(alpha = 0.08f),
+        color = AppTheme.accent.light.copy(alpha = 0.08f),
         shape = RoundedCornerShape(4.dp),
-        border = BorderStroke(0.5.dp, CyanAccent.copy(alpha = 0.25f))
+        border = BorderStroke(0.5.dp, AppTheme.accent.light.copy(alpha = 0.25f))
     ) {
         Text(
             text = stringResource(muscle.resId),
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
-            color = CyanAccent,
+            color = AppTheme.accent.light,
             fontSize = 10.sp,
             fontWeight = FontWeight.Bold,
             letterSpacing = 0.5.sp
@@ -486,7 +486,7 @@ fun DuplicateWorkoutDialog(
                 Text(
                     text = workoutName,
                     style = MaterialTheme.typography.bodySmall,
-                    color = CyanAccent,
+                    color = AppTheme.accent.light,
                     fontWeight = FontWeight.Medium
                 )
             }
@@ -520,12 +520,12 @@ fun DuplicateWorkoutDialog(
                                         .clickable { selectedDay = day },
                                     shape = RoundedCornerShape(10.dp),
                                     color = when {
-                                        isSelected -> CyanAccent
-                                        isCurrent -> CyanAccent.copy(alpha = 0.12f)
+                                        isSelected -> AppTheme.accent.light
+                                        isCurrent -> AppTheme.accent.light.copy(alpha = 0.12f)
                                         else -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
                                     },
                                     border = if (isCurrent && !isSelected)
-                                        BorderStroke(1.dp, CyanAccent.copy(alpha = 0.4f))
+                                        BorderStroke(1.dp, AppTheme.accent.light.copy(alpha = 0.4f))
                                     else null
                                 ) {
                                     Column(
@@ -538,7 +538,7 @@ fun DuplicateWorkoutDialog(
                                             fontWeight = FontWeight.Bold,
                                             color = when {
                                                 isSelected -> Color.White
-                                                isCurrent -> CyanAccent
+                                                isCurrent -> AppTheme.accent.light
                                                 else -> MaterialTheme.colorScheme.onSurfaceVariant
                                             }
                                         )
@@ -548,7 +548,7 @@ fun DuplicateWorkoutDialog(
                                                 modifier = Modifier
                                                     .size(4.dp)
                                                     .clip(CircleShape)
-                                                    .background(if (isSelected) Color.White else CyanAccent)
+                                                    .background(if (isSelected) Color.White else AppTheme.accent.light)
                                             )
                                         }
                                     }
@@ -573,7 +573,7 @@ fun DuplicateWorkoutDialog(
             ) {
                 Text(
                     text = stringResource(R.string.duplicar),
-                    color = if (selectedDay != null) CyanAccent
+                    color = if (selectedDay != null) AppTheme.accent.light
                             else MaterialTheme.colorScheme.onSurfaceVariant,
                     fontWeight = FontWeight.Bold
                 )
@@ -601,7 +601,7 @@ fun DaySection(
         modifier = Modifier
             .fillMaxWidth()
             .background(
-                color = CyanAccent.copy(alpha = highlightAlpha),
+                color = AppTheme.accent.light.copy(alpha = highlightAlpha),
                 shape = RoundedCornerShape(16.dp)
             )
             .padding(if (isHighlighted) 8.dp else 0.dp)
@@ -618,7 +618,7 @@ fun DaySection(
                             .width(3.dp)
                             .height(16.dp)
                             .clip(RoundedCornerShape(2.dp))
-                            .background(CyanAccent)
+                            .background(AppTheme.accent.light)
                     )
                     Spacer(Modifier.width(8.dp))
                 }
@@ -626,14 +626,14 @@ fun DaySection(
                     day,
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.Bold,
-                        color = if (isHighlighted || hasWorkouts) CyanAccent
+                        color = if (isHighlighted || hasWorkouts) AppTheme.accent.light
                                 else MaterialTheme.colorScheme.onSurfaceVariant,
                         letterSpacing = 0.5.sp
                     )
                 )
             }
             Surface(
-                color = if (hasWorkouts) CyanAccent.copy(alpha = 0.15f)
+                color = if (hasWorkouts) AppTheme.accent.light.copy(alpha = 0.15f)
                         else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f),
                 shape = CircleShape
             ) {
@@ -641,7 +641,7 @@ fun DaySection(
                     count.toString(),
                     modifier = Modifier.padding(horizontal = 10.dp, vertical = 3.dp),
                     fontSize = 12.sp,
-                    color = if (hasWorkouts) CyanAccent else TextGray,
+                    color = if (hasWorkouts) AppTheme.accent.light else TextGray,
                     fontWeight = FontWeight.Bold
                 )
             }
@@ -671,7 +671,7 @@ fun WeeklyPlanHeader() {
             Text(
                 stringResource(R.string.consistencia_e_a_chave),
                 style = MaterialTheme.typography.labelSmall.copy(
-                    color = CyanAccent,
+                    color = AppTheme.accent.light,
                     letterSpacing = 2.sp,
                     fontWeight = FontWeight.Bold
                 )
@@ -689,11 +689,11 @@ fun NoActivityCard(onCreateWorkoutClick: () -> Unit) {
             .border(
                 width = 1.dp,
                 brush = Brush.linearGradient(
-                    listOf(CyanAccent.copy(alpha = 0.2f), CyanAccent.copy(alpha = 0.05f))
+                    listOf(AppTheme.accent.light.copy(alpha = 0.2f), AppTheme.accent.light.copy(alpha = 0.05f))
                 ),
                 shape = RoundedCornerShape(16.dp)
             )
-            .background(CyanAccent.copy(alpha = 0.03f))
+            .background(AppTheme.accent.light.copy(alpha = 0.03f))
             .clickable { onCreateWorkoutClick() }
             .padding(horizontal = 16.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -703,13 +703,13 @@ fun NoActivityCard(onCreateWorkoutClick: () -> Unit) {
             modifier = Modifier
                 .size(36.dp)
                 .clip(RoundedCornerShape(10.dp))
-                .background(CyanAccent.copy(alpha = 0.1f)),
+                .background(AppTheme.accent.light.copy(alpha = 0.1f)),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 Icons.Default.Add,
                 contentDescription = null,
-                tint = CyanAccent,
+                tint = AppTheme.accent.light,
                 modifier = Modifier.size(20.dp)
             )
         }
@@ -723,7 +723,7 @@ fun NoActivityCard(onCreateWorkoutClick: () -> Unit) {
             Text(
                 text = stringResource(R.string.toque_para_adicionar_treino),
                 style = MaterialTheme.typography.labelMedium,
-                color = CyanAccent.copy(alpha = 0.7f)
+                color = AppTheme.accent.light.copy(alpha = 0.7f)
             )
         }
     }

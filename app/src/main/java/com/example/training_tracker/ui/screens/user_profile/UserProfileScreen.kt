@@ -17,6 +17,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -34,15 +35,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.ui.unit.dp
+import com.example.training_tracker.ui.theme.AccentThemes
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import coil.size.Size
 import com.example.training_tracker.data.models.User
-import com.example.training_tracker.ui.theme.CyanAccent
-import com.example.training_tracker.ui.theme.CyanDark
+import com.example.training_tracker.ui.theme.AppTheme
 import com.example.training_tracker.R
 import java.io.File
 import java.io.FileOutputStream
@@ -131,7 +134,7 @@ fun UserProfileScreen(
                 is UserProfileUiState.Loading -> {
                     CircularProgressIndicator(
                         modifier = Modifier.align(Alignment.Center),
-                        color = CyanAccent
+                        color = AppTheme.accent.light
                     )
                 }
                 is UserProfileUiState.Error -> {
@@ -151,7 +154,8 @@ fun UserProfileScreen(
                             )
                         },
                         onEditNameClick = { showEditNameDialog = true },
-                        onEditBodyDataClick = { showBodyDataDialog = true }
+                        onEditBodyDataClick = { showBodyDataDialog = true },
+                        onAccentThemeChange = { viewModel.updateAccentTheme(it) }
                     )
                     if (showBodyDataDialog) {
                         BodyDataDialog(
@@ -177,10 +181,11 @@ fun ProfileContent(
     stats: UserStats,
     onEditPhotoClick: () -> Unit,
     onEditNameClick: () -> Unit,
-    onEditBodyDataClick: () -> Unit = {}
+    onEditBodyDataClick: () -> Unit = {},
+    onAccentThemeChange: (String) -> Unit = {}
 ) {
     val headerGradient = Brush.verticalGradient(
-        colors = listOf(CyanDark.copy(alpha = 0.85f), CyanAccent.copy(alpha = 0.4f), Color.Transparent)
+        colors = listOf(AppTheme.accent.dark.copy(alpha = 0.85f), AppTheme.accent.light.copy(alpha = 0.4f), Color.Transparent)
     )
 
     LazyColumn(
@@ -232,7 +237,7 @@ fun ProfileContent(
                     Icon(
                         imageVector = Icons.Default.Edit,
                         contentDescription = stringResource(R.string.editar_nome),
-                        tint = CyanAccent,
+                        tint = AppTheme.accent.light,
                         modifier = Modifier.size(18.dp)
                     )
                 }
@@ -337,6 +342,62 @@ fun ProfileContent(
             )
             Spacer(modifier = Modifier.height(32.dp))
         }
+
+        item {
+            SectionLabel(
+                text = stringResource(R.string.cor_do_tema),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp)
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            AccentThemePicker(
+                currentThemeName = user.accentThemeName,
+                onThemeSelected = onAccentThemeChange,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp)
+            )
+            Spacer(modifier = Modifier.height(32.dp))
+        }
+    }
+}
+
+@Composable
+private fun AccentThemePicker(
+    currentThemeName: String?,
+    onThemeSelected: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    LazyRow(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        items(AccentThemes.all) { theme ->
+            val isSelected = theme.name == (currentThemeName ?: AccentThemes.Cyan.name)
+            Box(
+                modifier = Modifier
+                    .size(44.dp)
+                    .clip(CircleShape)
+                    .background(theme.gradient)
+                    .border(
+                        width = if (isSelected) 3.dp else 0.dp,
+                        color = if (isSelected) AppTheme.accent.light else Color.Transparent,
+                        shape = CircleShape
+                    )
+                    .clickable { onThemeSelected(theme.name) },
+                contentAlignment = Alignment.Center
+            ) {
+                if (isSelected) {
+                    Icon(
+                        imageVector = Icons.Default.Check,
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
+        }
     }
 }
 
@@ -358,7 +419,7 @@ private fun AvatarWithEdit(user: User, onEditPhotoClick: () -> Unit) {
                 .background(MaterialTheme.colorScheme.surfaceVariant)
                 .border(
                     width = 3.dp,
-                    brush = Brush.linearGradient(listOf(CyanAccent, CyanDark)),
+                    brush = Brush.linearGradient(listOf(AppTheme.accent.light, AppTheme.accent.dark)),
                     shape = CircleShape
                 )
                 .clickable { onEditPhotoClick() },
@@ -389,7 +450,7 @@ private fun AvatarWithEdit(user: User, onEditPhotoClick: () -> Unit) {
             modifier = Modifier
                 .size(badgeSize)
                 .shadow(4.dp, CircleShape)
-                .background(CyanAccent, CircleShape)
+                .background(AppTheme.accent.light, CircleShape)
                 .clickable { onEditPhotoClick() },
             contentAlignment = Alignment.Center
         ) {
@@ -439,13 +500,13 @@ fun StatCard(
             Box(
                 modifier = Modifier
                     .size(36.dp)
-                    .background(CyanAccent.copy(alpha = 0.15f), RoundedCornerShape(10.dp)),
+                    .background(AppTheme.accent.light.copy(alpha = 0.15f), RoundedCornerShape(10.dp)),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
-                    tint = CyanAccent,
+                    tint = AppTheme.accent.light,
                     modifier = Modifier.size(20.dp)
                 )
             }
@@ -488,7 +549,7 @@ private fun HeaviestLiftCard(stats: UserStats, modifier: Modifier = Modifier) {
                 modifier = Modifier
                     .size(52.dp)
                     .background(
-                        Brush.linearGradient(listOf(CyanAccent.copy(alpha = 0.3f), CyanDark.copy(alpha = 0.15f))),
+                        Brush.linearGradient(listOf(AppTheme.accent.light.copy(alpha = 0.3f), AppTheme.accent.dark.copy(alpha = 0.15f))),
                         RoundedCornerShape(14.dp)
                     ),
                 contentAlignment = Alignment.Center
@@ -496,7 +557,7 @@ private fun HeaviestLiftCard(stats: UserStats, modifier: Modifier = Modifier) {
                 Icon(
                     imageVector = Icons.Default.EmojiEvents,
                     contentDescription = null,
-                    tint = CyanAccent,
+                    tint = AppTheme.accent.light,
                     modifier = Modifier.size(28.dp)
                 )
             }
@@ -511,7 +572,7 @@ private fun HeaviestLiftCard(stats: UserStats, modifier: Modifier = Modifier) {
                 Text(
                     text = "${String.format(Locale.US, "%.1f", stats.heaviestWeight)} kg",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = CyanAccent,
+                    color = AppTheme.accent.light,
                     fontWeight = FontWeight.SemiBold
                 )
             }
@@ -626,7 +687,7 @@ fun BodyDataCard(
                 Icon(
                     imageVector = Icons.Default.Edit,
                     contentDescription = stringResource(R.string.editar_perfil),
-                    tint = CyanAccent,
+                    tint = AppTheme.accent.light,
                     modifier = Modifier.size(20.dp)
                 )
             }
@@ -669,13 +730,13 @@ fun BodyDataDialog(
                         modifier = Modifier
                             .size(40.dp)
                             .clip(RoundedCornerShape(12.dp))
-                            .background(CyanAccent.copy(alpha = 0.15f)),
+                            .background(AppTheme.accent.light.copy(alpha = 0.15f)),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Default.Person,
                             contentDescription = null,
-                            tint = CyanAccent,
+                            tint = AppTheme.accent.light,
                             modifier = Modifier.size(22.dp)
                         )
                     }
@@ -700,7 +761,7 @@ fun BodyDataDialog(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(12.dp))
-                        .background(CyanAccent.copy(alpha = 0.08f))
+                        .background(AppTheme.accent.light.copy(alpha = 0.08f))
                         .padding(12.dp),
                     horizontalArrangement = Arrangement.spacedBy(10.dp),
                     verticalAlignment = Alignment.Top
@@ -708,7 +769,7 @@ fun BodyDataDialog(
                     Icon(
                         imageVector = Icons.Default.LocalFireDepartment,
                         contentDescription = null,
-                        tint = CyanAccent,
+                        tint = AppTheme.accent.light,
                         modifier = Modifier.size(18.dp)
                     )
                     Text(
@@ -777,12 +838,12 @@ fun BodyDataDialog(
                                 .weight(1f)
                                 .clip(RoundedCornerShape(12.dp))
                                 .background(
-                                    if (selected) CyanAccent
+                                    if (selected) AppTheme.accent.light
                                     else MaterialTheme.colorScheme.surfaceVariant
                                 )
                                 .border(
                                     width = 1.dp,
-                                    color = if (selected) CyanAccent else MaterialTheme.colorScheme.outlineVariant,
+                                    color = if (selected) AppTheme.accent.light else MaterialTheme.colorScheme.outlineVariant,
                                     shape = RoundedCornerShape(12.dp)
                                 )
                                 .clickable { gender = value }
@@ -825,7 +886,7 @@ fun BodyDataDialog(
                         },
                         modifier = Modifier.weight(1f),
                         shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = CyanAccent)
+                        colors = ButtonDefaults.buttonColors(containerColor = AppTheme.accent.light)
                     ) {
                         Text(stringResource(R.string.salvar), color = Color.Black, fontWeight = FontWeight.Bold)
                     }
@@ -861,9 +922,9 @@ private fun BodyDataField(
             keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = keyboardType),
             shape = RoundedCornerShape(12.dp),
             colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = CyanAccent,
+                focusedBorderColor = AppTheme.accent.light,
                 unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
-                cursorColor = CyanAccent
+                cursorColor = AppTheme.accent.light
             ),
             modifier = Modifier.fillMaxWidth()
         )
@@ -904,15 +965,15 @@ fun EditNameDialog(
                 label = { Text(stringResource(R.string.nome_de_usu_rio)) },
                 singleLine = true,
                 colors = TextFieldDefaults.colors(
-                    focusedIndicatorColor = CyanAccent,
+                    focusedIndicatorColor = AppTheme.accent.light,
                     unfocusedIndicatorColor = Color.Gray,
-                    cursorColor = CyanAccent
+                    cursorColor = AppTheme.accent.light
                 )
             )
         },
         confirmButton = {
             TextButton(onClick = { onConfirm(name) }) {
-                Text(stringResource(R.string.salvar), color = CyanAccent)
+                Text(stringResource(R.string.salvar), color = AppTheme.accent.light)
             }
         },
         dismissButton = {

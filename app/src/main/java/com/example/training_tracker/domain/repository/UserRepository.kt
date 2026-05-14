@@ -12,4 +12,5 @@ interface UserRepository {
     suspend fun updateProfilePicture(uri: String)
     suspend fun updateUserName(newName: String)
     suspend fun updateBodyData(weightKg: Float?, ageYears: Int?, gender: String?)
+    suspend fun updateAccentTheme(themeName: String)
 }

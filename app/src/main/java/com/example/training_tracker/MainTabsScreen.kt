@@ -137,7 +137,8 @@ fun MainTabsScreen(
                     onClickHistory = { id ->
                         rootNavController.navigate("${Routes.WorkoutReport.name}/$id")
                     },
-                    onDuplicateFromHistory = viewModel::duplicateFromHistory
+                    onDuplicateFromHistory = viewModel::duplicateFromHistory,
+                    onPageChange = viewModel::onPageChange
                 )
             }
 

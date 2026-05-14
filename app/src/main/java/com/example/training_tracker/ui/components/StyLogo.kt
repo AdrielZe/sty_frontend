@@ -17,8 +17,8 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.training_tracker.R
-import com.example.training_tracker.ui.theme.CyanAccent
-import com.example.training_tracker.ui.theme.CyanGradient
+import com.example.training_tracker.ui.theme.AppTheme
+
 
 enum class StyLogoLayout { HORIZONTAL, VERTICAL }
 
@@ -44,7 +44,7 @@ fun StyLogo(
             ) {
                 Text(
                     text = stringResource(R.string.home_app_title),
-                    style = TextStyle(brush = CyanGradient),
+                    style = TextStyle(brush = AppTheme.accent.gradient),
                     fontSize = titleSize,
                     fontWeight = FontWeight.ExtraBold,
                     letterSpacing = (titleSize.value * 0.13f).sp
@@ -54,7 +54,7 @@ fun StyLogo(
                     fontSize = taglineSize,
                     fontWeight = FontWeight.Medium,
                     letterSpacing = taglineLetterSpacing,
-                    color = CyanAccent.copy(alpha = 0.65f),
+                    color = AppTheme.accent.light.copy(alpha = 0.65f),
                     textAlign = TextAlign.Center
                 )
             }
@@ -67,7 +67,7 @@ fun StyLogo(
             ) {
                 Text(
                     text = stringResource(R.string.home_app_title),
-                    style = TextStyle(brush = CyanGradient),
+                    style = TextStyle(brush = AppTheme.accent.gradient),
                     fontSize = titleSize,
                     fontWeight = FontWeight.ExtraBold,
                     letterSpacing = (titleSize.value * 0.13f).sp
@@ -78,7 +78,7 @@ fun StyLogo(
                     fontSize = taglineSize,
                     fontWeight = FontWeight.Medium,
                     letterSpacing = taglineLetterSpacing,
-                    color = CyanAccent.copy(alpha = 0.65f)
+                    color = AppTheme.accent.light.copy(alpha = 0.65f)
                 )
             }
         }

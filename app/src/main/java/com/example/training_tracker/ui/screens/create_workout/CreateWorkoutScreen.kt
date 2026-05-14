@@ -75,7 +75,7 @@ import com.example.training_tracker.ui.screens.workout_details.AddCardioSelectio
 import com.example.training_tracker.ui.screens.workout_details.AddExerciseSelectionDialog
 import com.example.training_tracker.ui.screens.workout_details.AddStretchingSelectionDialog
 import com.example.training_tracker.ui.theme.AppTheme
-import com.example.training_tracker.ui.theme.CyanAccent
+
 import com.example.training_tracker.ui.theme.Dimens
 import com.example.training_tracker.ui.utils.ErrorDialog
 import java.time.DayOfWeek
@@ -146,7 +146,7 @@ fun CreateWorkoutScreen(
                         fontSize = 18.sp,
                         fontWeight = FontWeight.ExtraBold,
                         letterSpacing = 1.sp,
-                        color = CyanAccent
+                        color = AppTheme.accent.light
                     )
                 },
                 navigationIcon = {
@@ -193,7 +193,7 @@ fun CreateWorkoutScreen(
                 shape = RoundedCornerShape(Dimens.cornerRadius),
                 isError = uiState.showErrors && !uiState.isNameValid,
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = CyanAccent,
+                    focusedBorderColor = AppTheme.accent.light,
                     unfocusedBorderColor = MaterialTheme.colorScheme.outline,
                     errorBorderColor = MaterialTheme.colorScheme.error
                 )
@@ -253,7 +253,7 @@ fun CreateWorkoutScreen(
                     Icon(
                         imageVector = Icons.Default.Add,
                         contentDescription = null,
-                        tint = CyanAccent,
+                        tint = AppTheme.accent.light,
                         modifier = Modifier.size(24.dp)
                     )
                     Spacer(modifier = Modifier.width(12.dp))
@@ -306,7 +306,7 @@ fun CreateWorkoutScreen(
                     Icon(
                         imageVector = Icons.Default.Add,
                         contentDescription = null,
-                        tint = CyanAccent,
+                        tint = AppTheme.accent.light,
                         modifier = Modifier.size(24.dp)
                     )
 
@@ -360,7 +360,7 @@ fun CreateWorkoutScreen(
                     Icon(
                         imageVector = Icons.Default.Add,
                         contentDescription = null,
-                        tint = CyanAccent,
+                        tint = AppTheme.accent.light,
                         modifier = Modifier.size(24.dp)
                     )
 
@@ -383,7 +383,7 @@ fun CreateWorkoutScreen(
                 text = stringResource(id = R.string.create_workout_added_exercises_title),
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.Bold,
-                color = CyanAccent,
+                color = AppTheme.accent.light,
                 letterSpacing = 1.sp
             )
             Spacer(modifier = Modifier.height(Dimens.paddingSmall))
@@ -468,10 +468,10 @@ fun DaySelector(
     ) {
         items(days) { day ->
             val isSelected = day == selectedDay
-            val backgroundColor = if (isSelected) CyanAccent else Color.Transparent
+            val backgroundColor = if (isSelected) AppTheme.accent.light else Color.Transparent
             val contentColor = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurface
             val borderColor = when {
-                isSelected -> CyanAccent
+                isSelected -> AppTheme.accent.light
                 isError -> MaterialTheme.colorScheme.error
                 else -> MaterialTheme.colorScheme.outline
             }
@@ -537,7 +537,7 @@ fun ExerciseItem(exercise: Exercise, onDelete: () -> Unit) {
                             exercise.muscleGroup?.let { muscle ->
                                 ExerciseBadge(
                                     text = stringResource(muscle.resId).uppercase(),
-                                    backgroundColor = CyanAccent
+                                    backgroundColor = AppTheme.accent.light
                                 )
                             }
                         }
@@ -617,7 +617,7 @@ fun SaveWorkoutButton(
             .shadow(
                 elevation = if (isEnabled) 16.dp else 0.dp,
                 shape = RoundedCornerShape(32.dp),
-                spotColor = CyanAccent.copy(alpha = 0.5f)
+                spotColor = AppTheme.accent.light.copy(alpha = 0.5f)
             )
             .clip(RoundedCornerShape(32.dp))
             .background(

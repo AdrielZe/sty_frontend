@@ -18,7 +18,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.training_tracker.R
 import com.example.training_tracker.ui.components.StyLogo
 import com.example.training_tracker.ui.components.StyLogoLayout
-import com.example.training_tracker.ui.theme.CyanAccent
+import com.example.training_tracker.ui.theme.AppTheme
+
 
 @Composable
 fun WelcomeScreen(
@@ -42,7 +43,7 @@ fun WelcomeScreen(
             Text(
                 text = stringResource(R.string.bem_vindo_ao),
                 style = MaterialTheme.typography.labelLarge,
-                color = CyanAccent,
+                color = AppTheme.accent.light,
                 letterSpacing = 2.sp
             )
             StyLogo(
@@ -96,9 +97,9 @@ fun WelcomeScreen(
                 singleLine = true,
                 shape = RoundedCornerShape(16.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = CyanAccent,
-                    focusedLabelColor = CyanAccent,
-                    cursorColor = CyanAccent
+                    focusedBorderColor = AppTheme.accent.light,
+                    focusedLabelColor = AppTheme.accent.light,
+                    cursorColor = AppTheme.accent.light
                 )
             )
 
@@ -116,8 +117,8 @@ fun WelcomeScreen(
                     .height(56.dp),
                 shape = RoundedCornerShape(16.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = CyanAccent,
-                    disabledContainerColor = CyanAccent.copy(alpha = 0.5f)
+                    containerColor = AppTheme.accent.light,
+                    disabledContainerColor = AppTheme.accent.light.copy(alpha = 0.5f)
                 )
             ) {
                 Text(

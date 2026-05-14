@@ -40,7 +40,7 @@ import com.example.training_tracker.ui.screens.workout_report.WorkoutReportViewM
 import com.example.training_tracker.ui.screens.workout_screen.WorkoutScreen
 import com.example.training_tracker.ui.screens.workout_screen.WorkoutViewModel
 import com.example.training_tracker.ui.screens.freestyle_workout.FreestyleWorkoutScreen
-import com.example.training_tracker.ui.theme.CyanAccent
+import com.example.training_tracker.ui.theme.AppTheme
 import java.time.DayOfWeek
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -238,8 +238,8 @@ fun StyBottomNavBar(
                 },
                 alwaysShowLabel = true,
                 colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = CyanAccent,
-                    selectedTextColor = CyanAccent,
+                    selectedIconColor = AppTheme.accent.light,
+                    selectedTextColor = AppTheme.accent.light,
                     unselectedIconColor = TextGray,
                     unselectedTextColor = TextGray,
                     indicatorColor = Color.Transparent

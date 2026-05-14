@@ -100,8 +100,8 @@ import com.example.training_tracker.data.models.MuscleGroups
 import com.example.training_tracker.data.models.User
 import com.example.training_tracker.data.models.Workout
 import com.example.training_tracker.data.models.extensions.isValidToComplete
-import com.example.training_tracker.ui.theme.CyanAccent
-import com.example.training_tracker.ui.theme.CyanGradient
+import com.example.training_tracker.ui.theme.AppTheme
+
 import com.example.training_tracker.ui.theme.GreenGradient
 import com.example.training_tracker.ui.theme.Typography
 import kotlin.math.abs
@@ -150,7 +150,7 @@ fun HomeLoadingScreen() {
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
-        CircularProgressIndicator(color = CyanAccent)
+        CircularProgressIndicator(color = AppTheme.accent.light)
     }
 }
 
@@ -199,7 +199,7 @@ fun HomeContent(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = onNavigateToCreateWorkout,
-                containerColor = CyanAccent,
+                containerColor = AppTheme.accent.light,
                 contentColor = Color.Black,
                 shape = CircleShape,
                 modifier = Modifier
@@ -326,7 +326,7 @@ fun HomeContent(
                     .size(300.dp) // Tamanho da imagem expandida
                     .clip(CircleShape)
                     .background(MaterialTheme.colorScheme.surfaceVariant)
-                    .border(BorderStroke(4.dp, CyanGradient), CircleShape)
+                    .border(BorderStroke(4.dp, AppTheme.accent.gradient), CircleShape)
                     .clickable { isProfileExpanded = false },
                 contentAlignment = Alignment.Center
             ) {
@@ -392,7 +392,7 @@ fun FreestyleWorkoutNameDialog(
                 .fillMaxWidth()
                 .padding(16.dp)
                 // Adicionando uma borda sutil em degradê ou cor de destaque
-                .border(1.dp, CyanAccent.copy(alpha = 0.2f), RoundedCornerShape(28.dp)),
+                .border(1.dp, AppTheme.accent.light.copy(alpha = 0.2f), RoundedCornerShape(28.dp)),
             shape = RoundedCornerShape(28.dp),
             colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f)
@@ -407,13 +407,13 @@ fun FreestyleWorkoutNameDialog(
                 Box(
                     modifier = Modifier
                         .size(56.dp)
-                        .background(CyanAccent.copy(alpha = 0.1f), CircleShape),
+                        .background(AppTheme.accent.light.copy(alpha = 0.1f), CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Default.Edit, // Certifique-se de importar Icons.Default.Edit
                         contentDescription = null,
-                        tint = CyanAccent,
+                        tint = AppTheme.accent.light,
                         modifier = Modifier.size(28.dp)
                     )
                 }
@@ -450,10 +450,10 @@ fun FreestyleWorkoutNameDialog(
                     singleLine = true,
                     textStyle = TextStyle(fontWeight = FontWeight.Medium, fontSize = 16.sp),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = CyanAccent,
+                        focusedBorderColor = AppTheme.accent.light,
                         unfocusedBorderColor = Color.Gray.copy(alpha = 0.3f),
-                        cursorColor = CyanAccent,
-                        focusedContainerColor = CyanAccent.copy(alpha = 0.02f)
+                        cursorColor = AppTheme.accent.light,
+                        focusedContainerColor = AppTheme.accent.light.copy(alpha = 0.02f)
                     )
                 )
 
@@ -482,9 +482,9 @@ fun FreestyleWorkoutNameDialog(
                             .weight(1f)
                             .height(48.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = CyanAccent,
+                            containerColor = AppTheme.accent.light,
                             contentColor = Color.Black,
-                            disabledContainerColor = CyanAccent.copy(alpha = 0.3f)
+                            disabledContainerColor = AppTheme.accent.light.copy(alpha = 0.3f)
                         ),
                         shape = RoundedCornerShape(14.dp),
                         elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
@@ -569,7 +569,7 @@ fun FreestyleWorkoutCard(
         ),
         border = BorderStroke(
             1.dp,
-            if (isLocked) Color.Gray.copy(alpha = 0.3f) else CyanAccent.copy(alpha = 0.3f)
+            if (isLocked) Color.Gray.copy(alpha = 0.3f) else AppTheme.accent.light.copy(alpha = 0.3f)
         )
     ) {
         Row(
@@ -582,7 +582,7 @@ fun FreestyleWorkoutCard(
                 modifier = Modifier
                     .size(48.dp)
                     .background(
-                        if (isLocked) Color.Gray.copy(alpha = 0.1f) else CyanAccent.copy(
+                        if (isLocked) Color.Gray.copy(alpha = 0.1f) else AppTheme.accent.light.copy(
                             alpha = 0.1f
                         ), CircleShape
                     ),
@@ -591,7 +591,7 @@ fun FreestyleWorkoutCard(
                 Icon(
                     imageVector = if (isLocked) Icons.Default.Lock else Icons.Default.Bolt,
                     contentDescription = null,
-                    tint = if (isLocked) Color.Gray else CyanAccent,
+                    tint = if (isLocked) Color.Gray else AppTheme.accent.light,
                     modifier = Modifier.size(28.dp)
                 )
             }
@@ -601,7 +601,7 @@ fun FreestyleWorkoutCard(
                     text = stringResource(R.string.treino_livre),
                     style = Typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = if (isLocked) Color.Gray else CyanAccent
+                    color = if (isLocked) Color.Gray else AppTheme.accent.light
                 )
                 Text(
                     text = if (isLocked)
@@ -632,7 +632,7 @@ fun FreestyleWorkoutCard(
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                     contentDescription = null,
-                    tint = CyanAccent,
+                    tint = AppTheme.accent.light,
                 )
             }
         }
@@ -712,13 +712,13 @@ fun SetWeeklyGoalCard(onClick: () -> Unit) {
                 Surface(
                     modifier = Modifier.size(48.dp),
                     shape = CircleShape,
-                    color = CyanAccent.copy(alpha = 0.2f),
-                    border = BorderStroke(1.dp, CyanAccent.copy(alpha = 0.5f))
+                    color = AppTheme.accent.light.copy(alpha = 0.2f),
+                    border = BorderStroke(1.dp, AppTheme.accent.light.copy(alpha = 0.5f))
                 ) {
                     Icon(
                         imageVector = Icons.Default.Add,
                         contentDescription = null,
-                        tint = CyanAccent,
+                        tint = AppTheme.accent.light,
                         modifier = Modifier.padding(12.dp)
                     )
                 }
@@ -786,7 +786,7 @@ fun WeeklyGoalPickerDialog(
                     text = stringResource(R.string.meta_semanal),
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
-                    color = CyanAccent
+                    color = AppTheme.accent.light
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
@@ -808,7 +808,7 @@ fun WeeklyGoalPickerDialog(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(50.dp),
-                        color = CyanAccent.copy(alpha = 0.1f),
+                        color = AppTheme.accent.light.copy(alpha = 0.1f),
                         shape = RoundedCornerShape(12.dp)
                     ) {}
 
@@ -835,7 +835,7 @@ fun WeeklyGoalPickerDialog(
                                     style = if (isSelected) {
                                         MaterialTheme.typography.headlineMedium.copy(
                                             fontWeight = FontWeight.Bold,
-                                            color = CyanAccent
+                                            color = AppTheme.accent.light
                                         )
                                     } else {
                                         MaterialTheme.typography.bodyLarge.copy(
@@ -865,7 +865,7 @@ fun WeeklyGoalPickerDialog(
                     Spacer(modifier = Modifier.width(8.dp))
                     Button(
                         onClick = { onConfirm(selectedGoal) },
-                        colors = ButtonDefaults.buttonColors(containerColor = CyanAccent),
+                        colors = ButtonDefaults.buttonColors(containerColor = AppTheme.accent.light),
                         shape = RoundedCornerShape(12.dp)
                     ) {
                         Text("CONFIRMAR", color = Color.Black, fontWeight = FontWeight.Bold)
@@ -960,7 +960,7 @@ fun WeeklyProgressCard(
                                 modifier = Modifier
                                     .size(16.dp) // Aumentei um tiquinho (14.dp é bem ruim de clicar)
                                     .clickable { onEditGoal() },
-                                tint = CyanAccent
+                                tint = AppTheme.accent.light
                             )
                         }
 
@@ -978,14 +978,14 @@ fun WeeklyProgressCard(
 
                     // LADO DIREITO (Contador X / Y)
                     Surface(
-                        color = CyanAccent.copy(alpha = 0.1f),
+                        color = AppTheme.accent.light.copy(alpha = 0.1f),
                         shape = CircleShape,
-                        border = BorderStroke(1.dp, CyanAccent.copy(alpha = 0.3f))
+                        border = BorderStroke(1.dp, AppTheme.accent.light.copy(alpha = 0.3f))
                     ) {
                         Text(
                             text = "$currentWorkouts / $goalWorkouts",
                             modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                            color = CyanAccent,
+                            color = AppTheme.accent.light,
                             style = Typography.labelMedium,
                             fontWeight = FontWeight.ExtraBold
                         )
@@ -1007,7 +1007,7 @@ fun WeeklyProgressCard(
                             modifier = Modifier
                                 .fillMaxWidth(fraction = progress)
                                 .fillMaxHeight() // fillMaxHeight aqui está seguro, pois o pai tem altura fixa de 8.dp
-                                .background(CyanGradient)
+                                .background(AppTheme.accent.gradient)
                         )
                     }
                     Spacer(modifier = Modifier.height(8.dp))
@@ -1051,8 +1051,8 @@ fun CustomTopBar(
                 .background(
                     Brush.linearGradient(
                         listOf(
-                            com.example.training_tracker.ui.theme.CyanDark.copy(alpha = 0.6f),
-                            com.example.training_tracker.ui.theme.CyanAccent.copy(alpha = 0.3f)
+                            AppTheme.accent.dark.copy(alpha = 0.6f),
+                            com.example.training_tracker.ui.theme.AppTheme.accent.light.copy(alpha = 0.3f)
                         )
                     )
                 )
@@ -1099,13 +1099,13 @@ fun HomeSectionHeader(
     ) {
         Text(
             text = title,
-            style = Typography.titleMedium.copy(brush = CyanGradient),
+            style = Typography.titleMedium.copy(brush = AppTheme.accent.gradient),
             fontWeight = FontWeight.Bold
         )
         if (actionLabel != null && onActionClick != null) {
             Surface(
                 shape = RoundedCornerShape(20.dp),
-                color = CyanAccent.copy(alpha = 0.12f),
+                color = AppTheme.accent.light.copy(alpha = 0.12f),
                 modifier = Modifier.clickable { onActionClick() }
             ) {
                 Row(
@@ -1117,12 +1117,12 @@ fun HomeSectionHeader(
                         text = actionLabel.trim(),
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.SemiBold,
-                        color = CyanAccent
+                        color = AppTheme.accent.light
                     )
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                         contentDescription = null,
-                        tint = CyanAccent,
+                        tint = AppTheme.accent.light,
                         modifier = Modifier.size(14.dp)
                     )
                 }
@@ -1144,11 +1144,11 @@ fun MainGradientButton(
             .shadow(
                 elevation = 16.dp,
                 shape = RoundedCornerShape(32.dp),
-                spotColor = CyanAccent.copy(alpha = 0.5f)
+                spotColor = AppTheme.accent.light.copy(alpha = 0.5f)
             )
             .clip(RoundedCornerShape(32.dp))
             .background(
-                brush = CyanGradient
+                brush = AppTheme.accent.gradient
             )
             .clickable { onClick() },
         contentAlignment = Alignment.Center
@@ -1243,7 +1243,7 @@ fun WorkoutCard(modifier: Modifier = Modifier, workout: Workout?, onClick: () ->
                         modifier = Modifier
                             .clip(RoundedCornerShape(8.dp))
                             .background(
-                                brush = if (isCompleted) GreenGradient else CyanGradient,
+                                brush = if (isCompleted) GreenGradient else AppTheme.accent.gradient,
                                 alpha = 0.9f
                             )
                     ) {
@@ -1263,7 +1263,7 @@ fun WorkoutCard(modifier: Modifier = Modifier, workout: Workout?, onClick: () ->
                             modifier = Modifier
                                 .clip(RoundedCornerShape(8.dp))
                                 .background(
-                                    brush = if (isCompleted) GreenGradient else CyanGradient,
+                                    brush = if (isCompleted) GreenGradient else AppTheme.accent.gradient,
                                     alpha = 0.9f
                                 )
                         ) {
@@ -1309,7 +1309,7 @@ fun WorkoutCard(modifier: Modifier = Modifier, workout: Workout?, onClick: () ->
                                     modifier = Modifier
                                         .fillMaxWidth(workout.progress)
                                         .fillMaxHeight()
-                                        .background(CyanGradient)
+                                        .background(AppTheme.accent.gradient)
                                 )
                             }
                             Spacer(modifier = Modifier.height(4.dp))
@@ -1482,7 +1482,7 @@ fun EmptyWorkoutCard(modifier: Modifier = Modifier) {
                     Icon(
                         imageVector = Icons.Default.AccessibilityNew,
                         contentDescription = null,
-                        tint = CyanAccent,
+                        tint = AppTheme.accent.light,
                         modifier = Modifier.size(28.dp)
                     )
                     Spacer(modifier = Modifier.width(12.dp))
@@ -1533,7 +1533,7 @@ fun MomentumCard(count: Int) {
                 stringResource(R.string.mantenha_o_foco),
                 style = MaterialTheme.typography.headlineSmall.copy(
                     fontWeight = FontWeight.Black,
-                    color = CyanAccent,
+                    color = AppTheme.accent.light,
                     lineHeight = 24.sp
                 )
             )
@@ -1559,7 +1559,7 @@ fun MomentumCard(count: Int) {
                         text = "$count",
                         style = Typography.headlineMedium,
                         fontWeight = FontWeight.ExtraBold,
-                        color = CyanAccent,
+                        color = AppTheme.accent.light,
                     )
                 }
             }
@@ -1595,7 +1595,7 @@ fun EmptyMomentumCard() {
                 stringResource(R.string.comece_hoje),
                 style = MaterialTheme.typography.headlineSmall.copy(
                     fontWeight = FontWeight.Black,
-                    color = CyanAccent,
+                    color = AppTheme.accent.light,
                     lineHeight = 24.sp
                 )
             )

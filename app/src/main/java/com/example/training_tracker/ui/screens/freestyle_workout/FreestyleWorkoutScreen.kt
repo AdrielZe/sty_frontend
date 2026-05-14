@@ -42,7 +42,7 @@ import com.example.training_tracker.data.models.Technique
 import com.example.training_tracker.ui.components.MuscleGroupPickerDialog
 import com.example.training_tracker.ui.screens.create_workout.DaySelector
 import com.example.training_tracker.ui.screens.workout_details.AddExerciseSelectionDialog
-import com.example.training_tracker.ui.theme.CyanAccent
+import com.example.training_tracker.ui.theme.AppTheme
 import com.example.training_tracker.ui.utils.ExerciseCardUtils
 import com.example.training_tracker.ui.utils.FinishWorkoutButton
 import com.example.training_tracker.ui.utils.WorkoutTopBar
@@ -122,7 +122,7 @@ fun FreestyleWorkoutScreen(
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 onClick = { viewModel.showExercisePicker(true) },
-                containerColor = CyanAccent,
+                containerColor = AppTheme.accent.light,
                 contentColor = Color.Black,
                 icon = { Icon(Icons.Default.Add, contentDescription = null) },
                 text = { Text(stringResource(R.string.adicionar_exercicio), fontWeight = FontWeight.Bold) },
@@ -275,7 +275,7 @@ private fun SaveRoutineDialog(
                 onClick = { onConfirm(name.trim(), selectedDay!!) },
                 enabled = isValid
             ) {
-                Text(stringResource(R.string.save_routine_dialog_confirm), color = if (isValid) CyanAccent else Color.Gray)
+                Text(stringResource(R.string.save_routine_dialog_confirm), color = if (isValid) AppTheme.accent.light else Color.Gray)
             }
         },
         dismissButton = {

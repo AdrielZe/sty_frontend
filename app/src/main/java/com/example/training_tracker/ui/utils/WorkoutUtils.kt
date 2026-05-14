@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -107,8 +108,6 @@ import com.example.training_tracker.data.models.Workout
 import com.example.training_tracker.data.models.extensions.isValidToComplete
 import com.example.training_tracker.ui.screens.registered_workouts.TextGray
 import com.example.training_tracker.ui.theme.AppTheme
-import com.example.training_tracker.ui.theme.CyanAccent
-import com.example.training_tracker.ui.theme.CyanGradient
 import com.example.training_tracker.ui.theme.Dimens
 import com.example.training_tracker.ui.theme.Typography
 import kotlin.text.take
@@ -307,11 +306,11 @@ fun ExerciseCardUtils(
                     Column(modifier = Modifier.fillMaxWidth()) {
                         AsyncImage(
                             modifier = Modifier
-                                .size(125.dp) // Reduzi de 150 para 100 para ficar agradável em telas pequenas
+                                .size(125.dp)
                                 .clip(CircleShape)
                                 .align(Alignment.CenterHorizontally)
                                 .background(color = Color.White)
-                                .border(width = 2.dp, color = CyanAccent),
+                                .border(width = 2.dp, color = AppTheme.accent.light),
                             model = ImageRequest.Builder(LocalContext.current)
                                 .data(cardImage)
                                 .crossfade(true)
@@ -361,7 +360,7 @@ fun ExerciseCardUtils(
                     brush = AppTheme.brushes.backgroundGradient,
                     shape = RoundedCornerShape(24.dp)
                 )
-                .border(1.dp, CyanAccent.copy(alpha = 0.3f), RoundedCornerShape(24.dp)),
+                .border(1.dp, AppTheme.accent.light.copy(alpha = 0.3f), RoundedCornerShape(24.dp)),
             colors = CardDefaults.cardColors(Color.Transparent)
         ) {
             Column(modifier = Modifier.padding(24.dp)) {
@@ -372,7 +371,7 @@ fun ExerciseCardUtils(
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
                             "SETS: $totalSets",
-                            color = CyanAccent,
+                            color = AppTheme.accent.light,
                             fontWeight = FontWeight.Bold,
                             fontSize = 10.sp
                         )
@@ -458,7 +457,7 @@ fun ExerciseCardUtils(
                                             Icon(
                                                 Icons.Default.Done,
                                                 null,
-                                                tint = CyanAccent
+                                                tint = AppTheme.accent.light
                                             )
                                         }
                                     )
@@ -469,13 +468,13 @@ fun ExerciseCardUtils(
                         Box(
                             modifier = Modifier
                                 .size(40.dp)
-                                .background(CyanAccent.copy(alpha = 0.1f), CircleShape),
+                                .background(AppTheme.accent.light.copy(alpha = 0.1f), CircleShape),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 Icons.Default.FitnessCenter,
                                 null,
-                                tint = CyanAccent,
+                                tint = AppTheme.accent.light,
                                 modifier = Modifier.size(20.dp)
                             )
                         }
@@ -491,7 +490,7 @@ fun ExerciseCardUtils(
                     ) {
                         Surface(
                             modifier = Modifier.weight(1f), // Protegido pelo weight
-                            color = CyanAccent.copy(alpha = 0.1f),
+                            color = AppTheme.accent.light.copy(alpha = 0.1f),
                             shape = RoundedCornerShape(8.dp),
                         ) {
                             val activeSet =
@@ -500,7 +499,7 @@ fun ExerciseCardUtils(
                             Text(
                                 text = stringResource(R.string.serie_atual, activeSet),
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
-                                color = CyanAccent,
+                                color = AppTheme.accent.light,
                                 fontSize = 11.sp, // Ajuste leve no tamanho
                                 fontWeight = FontWeight.Bold,
                                 maxLines = 1,
@@ -516,7 +515,7 @@ fun ExerciseCardUtils(
                             modifier = Modifier
                                 .size(100.dp) // Define um tamanho seguro, redondo e harmônico
                                 .clip(CircleShape)
-                                .border(width = 1.dp, color = CyanAccent, shape = CircleShape)
+                                .border(width = 1.dp, color = AppTheme.accent.light, shape = CircleShape)
                                 .background(color = Color.White),
                             model = ImageRequest.Builder(LocalContext.current)
                                 .data(cardImage)
@@ -579,7 +578,7 @@ fun ExerciseCardUtils(
                                 .fillMaxWidth()
                                 .height(56.dp),
                             shape = RoundedCornerShape(16.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = CyanAccent)
+                            colors = ButtonDefaults.buttonColors(containerColor = AppTheme.accent.light)
                         ) {
                             Icon(Icons.Default.Add, null, tint = Color.Black)
                             Spacer(Modifier.width(8.dp))
@@ -666,7 +665,7 @@ fun TimeScrollPicker(
                         Text(
                             text = item.toString().padStart(2, '0'),
                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                            color = if (isSelected) CyanAccent else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.35f),
+                            color = if (isSelected) AppTheme.accent.light else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.35f),
                             fontSize = if (isSelected) 24.sp else 18.sp
                         )
                     }
@@ -677,7 +676,7 @@ fun TimeScrollPicker(
                     .align(Alignment.Center)
                     .height(itemHeightDp)
                     .fillMaxWidth()
-                    .border(1.dp, CyanAccent.copy(alpha = 0.35f), RoundedCornerShape(8.dp))
+                    .border(1.dp, AppTheme.accent.light.copy(alpha = 0.35f), RoundedCornerShape(8.dp))
             )
         }
     }
@@ -731,7 +730,7 @@ fun CardioTimePickerDialog(
                             onConfirm(selectedMinutes.toString().padStart(2, '0'))
                         }
                     }) {
-                        Text("OK", color = CyanAccent, fontWeight = FontWeight.Bold)
+                        Text("OK", color = AppTheme.accent.light, fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -783,7 +782,7 @@ fun InputTextBox(
                     color = when {
                         isError -> Color.Red
                         isLocked -> Color.Transparent
-                        else -> CyanAccent.copy(alpha = 0.2f)
+                        else -> AppTheme.accent.light.copy(alpha = 0.2f)
                     },
                     shape = RoundedCornerShape(12.dp)
                 ),
@@ -982,13 +981,13 @@ fun SetLine(
                                     if (selectedTechnique == Technique.NORMAL)
                                         MaterialTheme.colorScheme.surfaceVariant
                                     else
-                                        CyanAccent.copy(alpha = 0.3f)
+                                        AppTheme.accent.light.copy(alpha = 0.3f)
                                 )
                                 .border(
                                     width = 2.dp,
                                     color = if (selectedTechnique == Technique.NORMAL)
                                         Color.Transparent
-                                    else CyanAccent,
+                                    else AppTheme.accent.light,
                                     shape = CircleShape
                                 )
                                 .clickable(enabled = !isCompleted) {
@@ -1016,7 +1015,7 @@ fun SetLine(
                                     text = {
                                         Text(
                                             text = stringResource(technique.label),
-                                            color = if (technique == selectedTechnique) CyanAccent else Color.Unspecified
+                                            color = if (technique == selectedTechnique) AppTheme.accent.light else Color.Unspecified
                                         )
                                     },
                                     onClick = {
@@ -1115,7 +1114,7 @@ fun SetLine(
                             color = when {
                                 isErrorReps -> Color.Red
                                 isCompleted -> Color.Transparent
-                                else -> CyanAccent.copy(alpha = 0.2f)
+                                else -> AppTheme.accent.light.copy(alpha = 0.2f)
                             },
                             shape = RoundedCornerShape(12.dp)
                         )
@@ -1159,13 +1158,13 @@ fun SetLine(
                                 if (selectedTechnique == Technique.NORMAL)
                                     MaterialTheme.colorScheme.surfaceVariant
                                 else
-                                    CyanAccent.copy(alpha = 0.3f)
+                                    AppTheme.accent.light.copy(alpha = 0.3f)
                             )
                             .border(
                                 width = 2.dp,
                                 color = if (selectedTechnique == Technique.NORMAL)
                                     Color.Transparent
-                                else CyanAccent,
+                                else AppTheme.accent.light,
                                 shape = CircleShape
                             )
                             .clickable(enabled = !isCompleted) {
@@ -1193,7 +1192,7 @@ fun SetLine(
                                 text = {
                                     Text(
                                         text = stringResource(technique.label),
-                                        color = if (technique == selectedTechnique) CyanAccent else Color.Unspecified
+                                        color = if (technique == selectedTechnique) AppTheme.accent.light else Color.Unspecified
                                     )
                                 },
                                 onClick = {
@@ -1276,7 +1275,7 @@ fun SetLine(
                                     color = when {
                                         isErrorReps -> Color.Red
                                         isCompleted -> Color.Transparent
-                                        else -> CyanAccent.copy(alpha = 0.2f)
+                                        else -> AppTheme.accent.light.copy(alpha = 0.2f)
                                     },
                                     shape = RoundedCornerShape(12.dp)
                                 )
@@ -1298,60 +1297,6 @@ fun SetLine(
                         }
                     }
 
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Bottom,
-                        modifier = Modifier.padding(bottom = 4.dp)
-                    ) {
-                        Text("TEC", fontSize = 10.sp, color = TextGray, fontWeight = FontWeight.Bold)
-                        Spacer(Modifier.height(8.dp))
-                        Box {
-                            Box(
-                                modifier = Modifier
-                                    .size(48.dp)
-                                    .clip(CircleShape)
-                                    .background(
-                                        if (selectedTechnique == Technique.NORMAL)
-                                            MaterialTheme.colorScheme.surfaceVariant
-                                        else CyanAccent.copy(alpha = 0.3f)
-                                    )
-                                    .border(
-                                        width = 2.dp,
-                                        color = if (selectedTechnique == Technique.NORMAL) Color.Transparent else CyanAccent,
-                                        shape = CircleShape
-                                    )
-                                    .clickable(enabled = !isCompleted) { showTechniqueMenu = true },
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = if (selectedTechnique == Technique.NORMAL) "—"
-                                    else stringResource(selectedTechnique.label).take(2).uppercase(),
-                                    color = if (selectedTechnique == Technique.NORMAL) TextGray else Color.White,
-                                    fontWeight = FontWeight.Black
-                                )
-                            }
-                            DropdownMenu(
-                                expanded = showTechniqueMenu,
-                                onDismissRequest = { showTechniqueMenu = false },
-                                modifier = Modifier.background(MaterialTheme.colorScheme.surface)
-                            ) {
-                                Technique.values().filter { !it.isCardio }.forEach { technique ->
-                                    DropdownMenuItem(
-                                        text = {
-                                            Text(
-                                                text = stringResource(technique.label),
-                                                color = if (technique == selectedTechnique) CyanAccent else Color.Unspecified
-                                            )
-                                        },
-                                        onClick = {
-                                            onTechniqueChange(technique)
-                                            showTechniqueMenu = false
-                                        }
-                                    )
-                                }
-                            }
-                        }
-                    }
                 }
 
                 if (isDeleteMode && !isCompleted) {
@@ -1423,12 +1368,12 @@ fun FinishWorkoutButton(
             .shadow(
                 elevation = if (canCompleteWorkout && workout?.isCompleted == false) 16.dp else 0.dp,
                 shape = RoundedCornerShape(32.dp),
-                spotColor = CyanAccent.copy(alpha = 0.5f)
+                spotColor = AppTheme.accent.light.copy(alpha = 0.5f)
             )
             .clip(RoundedCornerShape(32.dp))
             .background(
                 if (canCompleteWorkout && workout?.isCompleted == false) {
-                    CyanGradient
+                    AppTheme.accent.gradient
                 } else if (workout?.isCompleted == true) {
                     Brush.horizontalGradient(
                         listOf(
@@ -1583,14 +1528,14 @@ fun WorkoutTopBar(
                             Icon(
                                 Icons.Default.Timer,
                                 contentDescription = null,
-                                tint = if (isPaused) Color.Gray else CyanAccent,
+                                tint = if (isPaused) Color.Gray else AppTheme.accent.light,
                                 modifier = Modifier.size(12.dp)
                             )
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(
                                 text = formattedTime,
                                 style = MaterialTheme.typography.labelSmall,
-                                color = if (isPaused) Color.Gray else CyanAccent,
+                                color = if (isPaused) Color.Gray else AppTheme.accent.light,
                                 fontWeight = FontWeight.Bold
                             )
                             Spacer(modifier = Modifier.width(8.dp))
@@ -1603,7 +1548,7 @@ fun WorkoutTopBar(
                                 contentDescription = if (isPaused) stringResource(R.string.resume) else stringResource(
                                     R.string.pause
                                 ),
-                                tint = CyanAccent,
+                                tint = AppTheme.accent.light,
                                 modifier = Modifier
                                     .size(24.dp) // Tamanho agradável para clique
                                     .clip(CircleShape) // Garante que o efeito de toque seja redondo
@@ -1621,7 +1566,7 @@ fun WorkoutTopBar(
                 text = "%.0f%%".format(progressPercentage),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Black,
-                color = CyanAccent
+                color = AppTheme.accent.light
             )
         }
         Box(
@@ -1634,7 +1579,7 @@ fun WorkoutTopBar(
                 modifier = Modifier
                     .fillMaxWidth(animatedProgress)
                     .fillMaxHeight()
-                    .background(CyanGradient)
+                    .background(AppTheme.accent.gradient)
             )
         }
     }

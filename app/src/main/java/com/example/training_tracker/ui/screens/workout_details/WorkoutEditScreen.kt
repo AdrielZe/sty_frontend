@@ -57,7 +57,7 @@ import com.example.training_tracker.data.models.Workout
 import com.example.training_tracker.ui.components.MuscleGroupPickerDialog
 import com.example.training_tracker.ui.screens.create_workout.ExerciseBadge
 import com.example.training_tracker.ui.screens.home.MainGradientButton
-import com.example.training_tracker.ui.theme.CyanAccent
+import com.example.training_tracker.ui.theme.AppTheme
 import com.example.training_tracker.ui.theme.Dimens
 import kotlin.math.roundToInt
 
@@ -103,7 +103,7 @@ fun WorkoutDetailsScreen(
                         fontSize = 18.sp,
                         fontWeight = FontWeight.ExtraBold,
                         letterSpacing = 1.sp,
-                        color = CyanAccent
+                        color = AppTheme.accent.light
                     )
                 },
                 navigationIcon = {
@@ -130,7 +130,7 @@ fun WorkoutDetailsScreen(
         ) {
             if (uiState.isLoading) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(color = CyanAccent)
+                    CircularProgressIndicator(color = AppTheme.accent.light)
                 }
             } else {
                 val workout = uiState.workout
@@ -188,7 +188,7 @@ fun WorkoutDetailsScreen(
                                         Icon(
                                             imageVector = Icons.Default.Timer,
                                             contentDescription = null,
-                                            tint = CyanAccent,
+                                            tint = AppTheme.accent.light,
                                             modifier = Modifier.size(16.dp)
                                         )
                                         Spacer(modifier = Modifier.width(4.dp))
@@ -224,7 +224,7 @@ fun WorkoutDetailsScreen(
                             text = stringResource(id = R.string.workout_details_exercise_list_title),
                             style = MaterialTheme.typography.labelLarge,
                             fontWeight = FontWeight.Bold,
-                            color = CyanAccent,
+                            color = AppTheme.accent.light,
                             letterSpacing = 1.sp
                         )
 
@@ -287,13 +287,13 @@ fun WorkoutDetailsScreen(
                                     )
                                     .alpha(if (isBeingDragged) 0f else 1f)
                                     .background(
-                                        if (isHovered && !isBeingDragged) CyanAccent.copy(alpha = 0.1f) else Color.Transparent,
+                                        if (isHovered && !isBeingDragged) AppTheme.accent.light.copy(alpha = 0.1f) else Color.Transparent,
                                         RoundedCornerShape(Dimens.cornerRadius)
                                     )
                                     .then(
                                         if (isHovered && !isBeingDragged) Modifier.border(
                                             2.dp,
-                                            CyanAccent,
+                                            AppTheme.accent.light,
                                             RoundedCornerShape(Dimens.cornerRadius)
                                         ) else Modifier
                                     )
@@ -420,18 +420,18 @@ fun AddExerciseButton(onClick: () -> Unit) {
             .fillMaxWidth()
             .height(60.dp),
         shape = RoundedCornerShape(16.dp),
-        color = CyanAccent.copy(alpha = 0.05f),
-        border = BorderStroke(2.dp, CyanAccent.copy(alpha = 0.3f))
+        color = AppTheme.accent.light.copy(alpha = 0.05f),
+        border = BorderStroke(2.dp, AppTheme.accent.light.copy(alpha = 0.3f))
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center
         ) {
-            Icon(Icons.Default.Add, contentDescription = null, tint = CyanAccent)
+            Icon(Icons.Default.Add, contentDescription = null, tint = AppTheme.accent.light)
             Spacer(modifier = Modifier.width(8.dp))
             Text(
                 stringResource(id = R.string.workout_details_add_exercise_button),
-                color = CyanAccent,
+                color = AppTheme.accent.light,
                 fontWeight = FontWeight.ExtraBold,
                 style = MaterialTheme.typography.bodyLarge
             )
@@ -464,12 +464,12 @@ fun ExerciseDetailItem(
             Surface(
                 modifier = Modifier.size(36.dp),
                 shape = CircleShape,
-                color = CyanAccent.copy(alpha = 0.15f)
+                color = AppTheme.accent.light.copy(alpha = 0.15f)
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Text(
                         text = number.toString(),
-                        color = CyanAccent,
+                        color = AppTheme.accent.light,
                         fontWeight = FontWeight.ExtraBold,
                         fontSize = 14.sp
                     )
@@ -494,7 +494,7 @@ fun ExerciseDetailItem(
                         exercise.muscleGroup?.let { muscle ->
                             ExerciseBadge(
                                 text = stringResource(muscle.resId).uppercase(),
-                                backgroundColor = CyanAccent
+                                backgroundColor = AppTheme.accent.light
                             )
                         }
                     }
@@ -585,7 +585,7 @@ fun AddExerciseSelectionDialog(
                 .fillMaxWidth()
                 .heightIn(max = 700.dp) // Limita a altura para não sumir com os botões
                 .padding(vertical = 16.dp)
-                .border(1.dp, CyanAccent.copy(alpha = 0.2f), RoundedCornerShape(28.dp)),
+                .border(1.dp, AppTheme.accent.light.copy(alpha = 0.2f), RoundedCornerShape(28.dp)),
             shape = RoundedCornerShape(28.dp),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
             elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
@@ -598,13 +598,13 @@ fun AddExerciseSelectionDialog(
                 Box(
                     modifier = Modifier
                         .size(48.dp)
-                        .background(CyanAccent.copy(alpha = 0.1f), CircleShape),
+                        .background(AppTheme.accent.light.copy(alpha = 0.1f), CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Default.FitnessCenter, // Ícone de exercício
                         contentDescription = null,
-                        tint = CyanAccent,
+                        tint = AppTheme.accent.light,
                         modifier = Modifier.size(24.dp)
                     )
                 }
@@ -633,12 +633,12 @@ fun AddExerciseSelectionDialog(
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     shape = RoundedCornerShape(16.dp),
-                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = CyanAccent) },
+                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = AppTheme.accent.light) },
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = CyanAccent,
+                        focusedBorderColor = AppTheme.accent.light,
                         unfocusedBorderColor = Color.Gray.copy(alpha = 0.3f),
-                        cursorColor = CyanAccent,
-                        focusedContainerColor = CyanAccent.copy(alpha = 0.02f)
+                        cursorColor = AppTheme.accent.light,
+                        focusedContainerColor = AppTheme.accent.light.copy(alpha = 0.02f)
                     )
                 )
 
@@ -658,18 +658,18 @@ fun AddExerciseSelectionDialog(
                                     .fillMaxWidth()
                                     .clickable { onSelect(searchQuery.trim()) },
                                 shape = RoundedCornerShape(12.dp),
-                                color = CyanAccent.copy(alpha = 0.05f)
+                                color = AppTheme.accent.light.copy(alpha = 0.05f)
                             ) {
                                 Row(
                                     modifier = Modifier.padding(16.dp),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Icon(Icons.Default.Add, contentDescription = null, tint = CyanAccent)
+                                    Icon(Icons.Default.Add, contentDescription = null, tint = AppTheme.accent.light)
                                     Spacer(Modifier.width(12.dp))
                                     Text(
                                         text = "${stringResource(R.string.criar)} \"${searchQuery.trim()}\"",
                                         style = MaterialTheme.typography.bodyLarge,
-                                        color = CyanAccent,
+                                        color = AppTheme.accent.light,
                                         fontWeight = FontWeight.Bold
                                     )
                                 }
@@ -699,7 +699,7 @@ fun AddExerciseSelectionDialog(
 
                                 // Tag de Grupo Muscular (Localizada)
                                 Surface(
-                                    color = CyanAccent,
+                                    color = AppTheme.accent.light,
                                     shape = RoundedCornerShape(6.dp)
                                 ) {
                                     Text(
@@ -759,7 +759,7 @@ fun AddCardioSelectionDialog(
                 .fillMaxWidth()
                 .heightIn(max = 700.dp) // Limita a altura para não sumir com os botões
                 .padding(vertical = 16.dp)
-                .border(1.dp, CyanAccent.copy(alpha = 0.2f), RoundedCornerShape(28.dp)),
+                .border(1.dp, AppTheme.accent.light.copy(alpha = 0.2f), RoundedCornerShape(28.dp)),
             shape = RoundedCornerShape(28.dp),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
             elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
@@ -772,13 +772,13 @@ fun AddCardioSelectionDialog(
                 Box(
                     modifier = Modifier
                         .size(48.dp)
-                        .background(CyanAccent.copy(alpha = 0.1f), CircleShape),
+                        .background(AppTheme.accent.light.copy(alpha = 0.1f), CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Default.RunCircle, // Ícone de corrida
                         contentDescription = null,
-                        tint = CyanAccent,
+                        tint = AppTheme.accent.light,
                         modifier = Modifier.size(24.dp)
                     )
                 }
@@ -807,12 +807,12 @@ fun AddCardioSelectionDialog(
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     shape = RoundedCornerShape(16.dp),
-                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = CyanAccent) },
+                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = AppTheme.accent.light) },
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = CyanAccent,
+                        focusedBorderColor = AppTheme.accent.light,
                         unfocusedBorderColor = Color.Gray.copy(alpha = 0.3f),
-                        cursorColor = CyanAccent,
-                        focusedContainerColor = CyanAccent.copy(alpha = 0.02f)
+                        cursorColor = AppTheme.accent.light,
+                        focusedContainerColor = AppTheme.accent.light.copy(alpha = 0.02f)
                     )
                 )
 
@@ -832,18 +832,18 @@ fun AddCardioSelectionDialog(
                                     .fillMaxWidth()
                                     .clickable { onSelect(searchQuery.trim()) },
                                 shape = RoundedCornerShape(12.dp),
-                                color = CyanAccent.copy(alpha = 0.05f)
+                                color = AppTheme.accent.light.copy(alpha = 0.05f)
                             ) {
                                 Row(
                                     modifier = Modifier.padding(16.dp),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Icon(Icons.Default.Add, contentDescription = null, tint = CyanAccent)
+                                    Icon(Icons.Default.Add, contentDescription = null, tint = AppTheme.accent.light)
                                     Spacer(Modifier.width(12.dp))
                                     Text(
                                         text = "${stringResource(R.string.criar)} \"${searchQuery.trim()}\"",
                                         style = MaterialTheme.typography.bodyLarge,
-                                        color = CyanAccent,
+                                        color = AppTheme.accent.light,
                                         fontWeight = FontWeight.Bold
                                     )
                                 }
@@ -873,7 +873,7 @@ fun AddCardioSelectionDialog(
 
                                 // Tag de Grupo Muscular (Localizada)
                                 Surface(
-                                    color = CyanAccent,
+                                    color = AppTheme.accent.light,
                                     shape = RoundedCornerShape(6.dp)
                                 ) {
                                     Text(
@@ -935,7 +935,7 @@ fun AddStretchingSelectionDialog(
                 .fillMaxWidth()
                 .heightIn(max = 700.dp)
                 .padding(vertical = 16.dp)
-                .border(1.dp, CyanAccent.copy(alpha = 0.2f), RoundedCornerShape(28.dp)),
+                .border(1.dp, AppTheme.accent.light.copy(alpha = 0.2f), RoundedCornerShape(28.dp)),
             shape = RoundedCornerShape(28.dp),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
             elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
@@ -947,13 +947,13 @@ fun AddStretchingSelectionDialog(
                 Box(
                     modifier = Modifier
                         .size(48.dp)
-                        .background(CyanAccent.copy(alpha = 0.1f), CircleShape),
+                        .background(AppTheme.accent.light.copy(alpha = 0.1f), CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Default.SelfImprovement,
                         contentDescription = null,
-                        tint = CyanAccent,
+                        tint = AppTheme.accent.light,
                         modifier = Modifier.size(24.dp)
                     )
                 }
@@ -974,12 +974,12 @@ fun AddStretchingSelectionDialog(
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     shape = RoundedCornerShape(16.dp),
-                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = CyanAccent) },
+                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = AppTheme.accent.light) },
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = CyanAccent,
+                        focusedBorderColor = AppTheme.accent.light,
                         unfocusedBorderColor = Color.Gray.copy(alpha = 0.3f),
-                        cursorColor = CyanAccent,
-                        focusedContainerColor = CyanAccent.copy(alpha = 0.02f)
+                        cursorColor = AppTheme.accent.light,
+                        focusedContainerColor = AppTheme.accent.light.copy(alpha = 0.02f)
                     )
                 )
                 Spacer(modifier = Modifier.height(16.dp))
@@ -992,15 +992,15 @@ fun AddStretchingSelectionDialog(
                             Surface(
                                 modifier = Modifier.fillMaxWidth().clickable { onSelect(searchQuery.trim()) },
                                 shape = RoundedCornerShape(12.dp),
-                                color = CyanAccent.copy(alpha = 0.05f)
+                                color = AppTheme.accent.light.copy(alpha = 0.05f)
                             ) {
                                 Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(Icons.Default.Add, contentDescription = null, tint = CyanAccent)
+                                    Icon(Icons.Default.Add, contentDescription = null, tint = AppTheme.accent.light)
                                     Spacer(Modifier.width(12.dp))
                                     Text(
                                         text = "${stringResource(R.string.criar)} \"${searchQuery.trim()}\"",
                                         style = MaterialTheme.typography.bodyLarge,
-                                        color = CyanAccent,
+                                        color = AppTheme.accent.light,
                                         fontWeight = FontWeight.Bold
                                     )
                                 }
@@ -1019,7 +1019,7 @@ fun AddStretchingSelectionDialog(
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
                                 Text(text = exercise.name, modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
-                                Surface(color = CyanAccent, shape = RoundedCornerShape(6.dp)) {
+                                Surface(color = AppTheme.accent.light, shape = RoundedCornerShape(6.dp)) {
                                     Text(
                                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                                         text = stringResource(exercise.muscleGroup?.resId ?: R.string.detalhes_do_treino_desconhecido),
@@ -1066,8 +1066,8 @@ fun EditWorkoutNameDialog(
                 singleLine = true,
                 leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = CyanAccent,
-                    focusedLabelColor = CyanAccent
+                    focusedBorderColor = AppTheme.accent.light,
+                    focusedLabelColor = AppTheme.accent.light
                 )
             )
         },
@@ -1080,7 +1080,7 @@ fun EditWorkoutNameDialog(
                     }
                 }
             ) {
-                Text(stringResource(R.string.confirmar), color = CyanAccent, fontWeight = FontWeight.Bold)
+                Text(stringResource(R.string.confirmar), color = AppTheme.accent.light, fontWeight = FontWeight.Bold)
             }
         },
         dismissButton = {

@@ -1,8 +1,12 @@
 package com.example.training_tracker.ui.screens.records
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -19,14 +23,19 @@ import androidx.compose.material.icons.automirrored.filled.ShowChart
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.EmojiEvents
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -44,6 +53,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.training_tracker.R
 import com.example.training_tracker.data.models.MuscleGroups
+import com.example.training_tracker.ui.theme.AppTheme
 import com.example.training_tracker.ui.theme.CyanAccent
 import com.example.training_tracker.ui.theme.CyanGradient
 import java.util.Locale
@@ -69,7 +79,7 @@ fun RecordsScreen(
                         stringResource(R.string.recordes_pessoais),
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.Bold,
-                            color = CyanAccent,
+                            color = AppTheme.accent.light,
                             letterSpacing = 1.sp
                         )
                     )
@@ -79,7 +89,7 @@ fun RecordsScreen(
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = null,
-                            tint = CyanAccent
+                            tint = AppTheme.accent.light
                         )
                     }
                 },
@@ -89,7 +99,7 @@ fun RecordsScreen(
     ) { paddingValues ->
         if (uiState.isLoading) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(color = CyanAccent)
+                CircularProgressIndicator(color = AppTheme.accent.light)
             }
         } else {
             val exerciseRecordsMap = uiState.records?.exercisesRecordMap ?: emptyMap()
@@ -101,6 +111,12 @@ fun RecordsScreen(
 
             val allEmpty = sortedStrengthRecords.isEmpty() && sortedCardioRecords.isEmpty()
 
+            var podiumExpanded by remember { mutableStateOf(false) }
+            val chevronRotation by animateFloatAsState(
+                targetValue = if (podiumExpanded) 180f else 0f,
+                label = "chevron"
+            )
+
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
@@ -109,23 +125,13 @@ fun RecordsScreen(
                 contentPadding = PaddingValues(top = 16.dp, bottom = 32.dp)
             ) {
                 item {
-                    Column(
-                        modifier = Modifier.padding(horizontal = 24.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        RecordsPodium(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(240.dp),
-                            topExercises = sortedStrengthRecords.take(3)
-                        )
-
-                        StatsRow(
-                            modifier = Modifier.fillMaxWidth(),
-                            records = uiState.records,
-                            allHistories = (exerciseRecordsMap.values + uiState.cardioRecords.values).toList()
-                        )
-                    }
+                    StatsRow(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 24.dp),
+                        records = uiState.records,
+                        allHistories = (exerciseRecordsMap.values + uiState.cardioRecords.values).toList()
+                    )
                 }
 
                 item {
@@ -169,6 +175,46 @@ fun RecordsScreen(
                                     )
                                 }
                             }
+                        }
+                    }
+                }
+
+                item {
+                    Column(modifier = Modifier.padding(horizontal = 24.dp)) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { podiumExpanded = !podiumExpanded }
+                                .padding(vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                stringResource(R.string.top_exercicios),
+                                style = MaterialTheme.typography.labelLarge.copy(
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                                    fontWeight = FontWeight.Bold,
+                                    letterSpacing = 1.sp
+                                )
+                            )
+                            Icon(
+                                imageVector = Icons.Filled.ExpandMore,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                                modifier = Modifier.rotate(chevronRotation)
+                            )
+                        }
+                        AnimatedVisibility(
+                            visible = podiumExpanded,
+                            enter = expandVertically(),
+                            exit = shrinkVertically()
+                        ) {
+                            RecordsPodium(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(240.dp),
+                                topExercises = sortedStrengthRecords.take(3)
+                            )
                         }
                     }
                 }
@@ -222,7 +268,7 @@ fun RecordsScreen(
             ModalBottomSheet(
                 onDismissRequest = onDismissHistory,
                 containerColor = MaterialTheme.colorScheme.surface,
-                dragHandle = { BottomSheetDefaults.DragHandle(color = CyanAccent.copy(alpha = 0.5f)) }
+                dragHandle = { BottomSheetDefaults.DragHandle(color = AppTheme.accent.light.copy(alpha = 0.5f)) }
             ) {
                 ExerciseHistoryContent(
                     exerciseName = name,
@@ -256,7 +302,7 @@ fun RecordsSearchBar(
         textStyle = MaterialTheme.typography.bodyMedium.copy(
             color = MaterialTheme.colorScheme.onSurface
         ),
-        cursorBrush = SolidColor(CyanAccent),
+        cursorBrush = SolidColor(AppTheme.accent.light),
         decorationBox = { innerTextField ->
             Row(
                 modifier = Modifier
@@ -265,7 +311,7 @@ fun RecordsSearchBar(
                         MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
                         RoundedCornerShape(16.dp)
                     )
-                    .border(1.dp, CyanAccent.copy(alpha = 0.2f), RoundedCornerShape(16.dp))
+                    .border(1.dp, AppTheme.accent.light.copy(alpha = 0.2f), RoundedCornerShape(16.dp))
                     .padding(horizontal = 16.dp, vertical = 12.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -273,7 +319,7 @@ fun RecordsSearchBar(
                 Icon(
                     Icons.Default.Search,
                     contentDescription = null,
-                    tint = CyanAccent.copy(alpha = 0.7f),
+                    tint = AppTheme.accent.light.copy(alpha = 0.7f),
                     modifier = Modifier.size(18.dp)
                 )
                 Box(modifier = Modifier.weight(1f)) {
@@ -365,7 +411,7 @@ fun CompactStatCard(
     valueColor: Color = MaterialTheme.colorScheme.onSurface
 ) {
     Card(
-        modifier = modifier.border(0.5.dp, CyanAccent.copy(alpha = 0.3f), RoundedCornerShape(16.dp)),
+        modifier = modifier.border(0.5.dp, AppTheme.accent.light.copy(alpha = 0.3f), RoundedCornerShape(16.dp)),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
         ),
@@ -378,7 +424,7 @@ fun CompactStatCard(
             Icon(
                 icon,
                 contentDescription = null,
-                tint = CyanAccent,
+                tint = AppTheme.accent.light,
                 modifier = Modifier.size(18.dp)
             )
             Spacer(modifier = Modifier.height(8.dp))
@@ -437,7 +483,7 @@ fun ExerciseHistoryContent(
             text = exerciseName.uppercase(),
             style = MaterialTheme.typography.headlineSmall.copy(
                 fontWeight = FontWeight.Black,
-                color = CyanAccent,
+                color = AppTheme.accent.light,
                 letterSpacing = 1.sp
             )
         )
@@ -546,7 +592,7 @@ fun ExerciseHistoryContent(
                         text = if (index == 0) stringResource(R.string.recorde_atual) else stringResource(R.string.recorde_anterior),
                         style = MaterialTheme.typography.bodyMedium.copy(
                             fontWeight = if (index == 0) FontWeight.Bold else FontWeight.Normal,
-                            color = if (index == 0) CyanAccent else MaterialTheme.colorScheme.onSurface
+                            color = if (index == 0) AppTheme.accent.light else MaterialTheme.colorScheme.onSurface
                         )
                     )
                     Text(
@@ -581,6 +627,8 @@ fun EvolutionChart(
         )
     }
 
+    val accentColor = AppTheme.accent.light
+
     Canvas(modifier = modifier) {
         val animProgress = progress.value
         val width = size.width
@@ -608,7 +656,7 @@ fun EvolutionChart(
                 path = fillPath,
                 brush = Brush.verticalGradient(
                     colors = listOf(
-                        CyanAccent.copy(alpha = 0.35f),
+                        accentColor.copy(alpha = 0.35f),
                         Color.Transparent
                     ),
                     startY = 0f,
@@ -625,7 +673,7 @@ fun EvolutionChart(
             }
             drawPath(
                 path = linePath,
-                color = CyanAccent,
+                color = accentColor,
                 style = Stroke(width = 3.dp.toPx(), cap = StrokeCap.Round)
             )
 
@@ -633,7 +681,7 @@ fun EvolutionChart(
             points.forEach { point ->
                 drawCircle(color = Color.White, radius = 4.dp.toPx(), center = point)
                 drawCircle(
-                    color = CyanAccent, radius = 4.dp.toPx(), center = point,
+                    color = accentColor, radius = 4.dp.toPx(), center = point,
                     style = Stroke(width = 2.dp.toPx())
                 )
             }
@@ -650,6 +698,8 @@ fun MiniSparkline(
     val maxVal = chronologicalHistory.maxOrNull()?.toFloat() ?: 1f
     val minVal = chronologicalHistory.minOrNull()?.toFloat() ?: 0f
     val range = if (maxVal == minVal) 1f else maxVal - minVal
+
+    val accentColor = AppTheme.accent.light
 
     Canvas(modifier = modifier) {
         val width = size.width
@@ -673,7 +723,7 @@ fun MiniSparkline(
         drawPath(
             fillPath,
             brush = Brush.verticalGradient(
-                colors = listOf(CyanAccent.copy(alpha = 0.4f), Color.Transparent),
+                colors = listOf(accentColor.copy(alpha = 0.4f), Color.Transparent),
                 startY = 0f, endY = height
             )
         )
@@ -682,7 +732,7 @@ fun MiniSparkline(
             moveTo(points.first().x, points.first().y)
             for (i in 1 until points.size) lineTo(points[i].x, points[i].y)
         }
-        drawPath(linePath, color = CyanAccent, style = Stroke(width = 1.5.dp.toPx(), cap = StrokeCap.Round))
+        drawPath(linePath, color = accentColor, style = Stroke(width = 1.5.dp.toPx(), cap = StrokeCap.Round))
     }
 }
 
@@ -696,11 +746,11 @@ fun MuscleGroupChip(
         modifier = Modifier
             .clip(RoundedCornerShape(12.dp))
             .background(
-                if (isSelected) CyanAccent else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                if (isSelected) AppTheme.accent.light else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
             )
             .border(
                 width = 1.dp,
-                color = if (isSelected) Color.Transparent else CyanAccent.copy(alpha = 0.2f),
+                color = if (isSelected) Color.Transparent else AppTheme.accent.light.copy(alpha = 0.2f),
                 shape = RoundedCornerShape(12.dp)
             )
             .clickable { onClick() }
@@ -725,7 +775,7 @@ fun RecordsPodium(
         modifier = modifier
             .border(
                 width = 0.5.dp,
-                color = CyanAccent.copy(alpha = 0.3f),
+                color = AppTheme.accent.light.copy(alpha = 0.3f),
                 shape = RoundedCornerShape(24.dp)
             ),
         colors = CardDefaults.cardColors(
@@ -740,7 +790,7 @@ fun RecordsPodium(
             Text(
                 stringResource(R.string.top_exercicios),
                 style = MaterialTheme.typography.labelLarge.copy(
-                    color = CyanAccent,
+                    color = AppTheme.accent.light,
                     fontWeight = FontWeight.Black,
                     letterSpacing = 2.sp
                 )
@@ -798,7 +848,7 @@ fun PodiumPillar(
                 fontSize = 9.sp,
                 lineHeight = 11.sp,
                 fontWeight = FontWeight.ExtraBold,
-                color = if (isGold) CyanAccent else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                color = if (isGold) AppTheme.accent.light else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
             ),
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
@@ -818,7 +868,7 @@ fun PodiumPillar(
                 .width(pillarWidth)
                 .fillMaxHeight(heightFraction)
                 .background(
-                    brush = if (isGold) CyanGradient else SolidColor(CyanAccent.copy(alpha = 0.15f)),
+                    brush = if (isGold) AppTheme.accent.gradient else SolidColor(AppTheme.accent.light.copy(alpha = 0.15f)),
                     shape = RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp)
                 ),
             contentAlignment = Alignment.TopCenter
@@ -867,7 +917,7 @@ fun ExerciseRecordCard(
             .fillMaxWidth()
             .clip(RoundedCornerShape(24.dp))
             .clickable { onClick() }
-            .border(0.1.dp, CyanAccent.copy(alpha = 0.2f), RoundedCornerShape(24.dp)),
+            .border(0.1.dp, AppTheme.accent.light.copy(alpha = 0.2f), RoundedCornerShape(24.dp)),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f)
         ),
@@ -906,7 +956,7 @@ fun ExerciseRecordCard(
 
                 Box(
                     modifier = Modifier
-                        .background(CyanGradient, RoundedCornerShape(12.dp))
+                        .background(AppTheme.accent.gradient, RoundedCornerShape(12.dp))
                         .padding(horizontal = 12.dp, vertical = 6.dp)
                 ) {
                     Text(

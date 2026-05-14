@@ -505,6 +505,7 @@
     <string name="dados_corporais">DADOS CORPORAIS</string>
     <string name="configure_peso_perfil">Configure seu peso no perfil para ver as calorias</string>
     <string name="dados_corporais_info">Essas informações são usadas para calcular as calorias queimadas nos seus treinos. Quanto mais precisas, mais exatos serão seus resultados!</string>
+    <string name="cor_do_tema">COR DO TEMA</string>
     <string name="anos_label">anos</string>
     <string name="tem_certeza_que_deseja_remover_o_treino">Tem certeza que deseja remover o treino %1$s?</string>
     <string name="criar">Criar</string>
@@ -534,7 +535,7 @@
     <string name="cardio_fartlek">Fartlek</string>
     <string name="cardio_tempo">Tempo</string>
     <string name="cardio_ritmo_constante">Ritmo Constante</string>
-    <string name="stretching">Alongamento</string>
+    <string name="stretching">ALONGAMENTO</string>
     <string name="adicionar_alongamento">Adicionar Alongamento</string>
     <string name="clique_aqui_para_selecionar_o_alongamento">Clique aqui para selecionar o alongamento</string>
     <string name="selecionar_alongamento">Selecionar Alongamento</string>
@@ -545,7 +546,7 @@
     <string name="selecionar_cardio">Selecionar Cardio</string>
     <string name="buscar_cardio">Buscar Cardio...</string>
     <string name="distancia_km">DISTÂNCIA (KM)</string>
-    <string name="tempo_min">TEMPO (MIN)</string>
+    <string name="tempo_min">TEMPO (HR/MIN)</string>
     <string name="em">"  em  "</string>
     <string name="stronger_than_yesterday">stronger than yesterday</string>
     <string name="progresso">Progresso</string>
