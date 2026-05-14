@@ -106,7 +106,15 @@ class Converters {
     fun toExerciseSet(value: String): List<ExerciseSet> {
         val listType = object: com.google.gson.reflect.TypeToken<List<ExerciseSet>>() {}.type
         val sets: List<ExerciseSet> = gson.fromJson(value, listType)
-        return sets.map { if (it.technique == null) it.copy(technique = Technique.NORMAL) else it }
+        return sets.map {
+            it.copy(
+                reps = it.reps ?: "",
+                weight = it.weight ?: "",
+                previousReps = it.previousReps ?: "",
+                previousWeight = it.previousWeight ?: "",
+                technique = it.technique ?: Technique.NORMAL
+            )
+        }
     }
     @TypeConverter
     fun fromDayOfWeek(value: DayOfWeek?): String? = value?.name
