@@ -9,6 +9,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.training_tracker.GymTrackerApplication
 import com.example.training_tracker.data.models.Workout
 import com.example.training_tracker.domain.repository.UserRepository
+import com.example.training_tracker.ui.utils.CalorieCalculator
 import com.example.training_tracker.domain.repository.WorkoutHistoryRepository
 import com.example.training_tracker.domain.repository.WorkoutRepository
 import kotlinx.coroutines.flow.SharingStarted
@@ -62,19 +63,32 @@ class HomeViewModel(
         val startOfWeek = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
         val endOfWeek = today.with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY))
 
-        val workoutsThisWeek = workoutHistories.count { history ->
+        val thisWeekHistories = workoutHistories.filter { history ->
             val historyDate = history.completionDate
             (historyDate.isEqual(startOfWeek) || historyDate.isAfter(startOfWeek)) &&
             (historyDate.isEqual(endOfWeek) || historyDate.isBefore(endOfWeek))
         }
+
+        val weeklyCalories = if (user?.weightKg != null) {
+            thisWeekHistories.sumOf { history ->
+                CalorieCalculator.calculate(
+                    exercises = history.exercises,
+                    durationMs = history.durationMillis,
+                    weightKg = user.weightKg,
+                    ageYears = user.ageYears,
+                    gender = user.gender
+                )
+            }
+        } else 0
 
         HomeUiState.Success(
             user = user,
             currentDate = getCurrentDate(),
             todayWorkouts = workoutsWithStatus,
             totalWorkoutsCompleted = workoutHistories.size,
-            workoutsCompletedThisWeek = workoutsThisWeek,
-            activeFreestyleWorkout = activeFreestyle
+            workoutsCompletedThisWeek = thisWeekHistories.size,
+            activeFreestyleWorkout = activeFreestyle,
+            weeklyCalories = weeklyCalories,
         ) as HomeUiState
     }
     .catch { e ->

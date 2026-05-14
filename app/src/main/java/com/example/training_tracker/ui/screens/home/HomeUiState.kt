@@ -12,6 +12,7 @@ sealed interface HomeUiState {
         val todayWorkouts: List<Workout> = emptyList(),
         val totalWorkoutsCompleted: Int = 0,
         val workoutsCompletedThisWeek: Int = 0,
-        val activeFreestyleWorkout: Workout? = null
+        val activeFreestyleWorkout: Workout? = null,
+        val weeklyCalories: Int = 0,
     ) : HomeUiState
 }

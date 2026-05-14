@@ -44,6 +44,7 @@ import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.filled.Bolt
+import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.MailOutline
 import androidx.compose.material3.AlertDialog
@@ -289,6 +290,13 @@ fun HomeContent(
 
             HomeSectionHeader(title = stringResource(R.string.progresso))
 
+            Spacer(modifier = Modifier.height(10.dp))
+
+            if (homeUiState.user?.weightKg != null && homeUiState.weeklyCalories > 0) {
+                Spacer(modifier = Modifier.height(12.dp))
+                WeeklyCaloriesCard(calories = homeUiState.weeklyCalories)
+            }
+
             Spacer(modifier = Modifier.height(12.dp))
 
             if (homeUiState.totalWorkoutsCompleted > 0) MomentumCard(count = homeUiState.totalWorkoutsCompleted) else EmptyMomentumCard()
@@ -296,6 +304,7 @@ fun HomeContent(
             Spacer(modifier = Modifier.height(12.dp))
 
             val weeklyGoal = homeUiState.user?.weeklyGoal
+
             if (weeklyGoal != null && weeklyGoal > 0) {
                 WeeklyProgressCard(
                     currentWorkouts = homeUiState.workoutsCompletedThisWeek,
@@ -1601,6 +1610,67 @@ fun EmptyMomentumCard() {
                 fontSize = 14.sp,
                 color = if (isSystemDark) MaterialTheme.colorScheme.onSurface else Color.White
             )
+        }
+    }
+}
+
+@Composable
+fun WeeklyCaloriesCard(calories: Int) {
+    val fireColor = Color(0xFFFF5722)
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+        ),
+        border = androidx.compose.foundation.BorderStroke(
+            1.dp,
+            fireColor.copy(alpha = 0.25f)
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(14.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(44.dp)
+                        .clip(CircleShape)
+                        .background(fireColor.copy(alpha = 0.15f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        Icons.Default.LocalFireDepartment,
+                        contentDescription = null,
+                        tint = fireColor,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+                Column {
+                    Text(
+                        text = stringResource(R.string.calorias_semana),
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontWeight = FontWeight.ExtraBold,
+                            letterSpacing = 1.sp
+                        )
+                    )
+                    Text(
+                        text = stringResource(R.string.calorias_queimadas, calories),
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            fontWeight = FontWeight.Black,
+                            color = fireColor
+                        )
+                    )
+                }
+            }
         }
     }
 }
