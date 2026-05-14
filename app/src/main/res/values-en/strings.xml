@@ -423,6 +423,8 @@
     <string name="nenhuma_atividade">No activities</string>
     <string name="toque_para_adicionar_treino">Tap to add a workout</string>
     <string name="duplicar_treino">Duplicate workout</string>
+    <string name="editar_treino">Edit workout</string>
+    <string name="editar_grupo_muscular">Edit muscle group</string>
     <string name="selecione_o_dia_para_duplicar">Select the day for the copy</string>
     <string name="dia_atual_indicado">● Current workout day</string>
     <string name="duplicar">Duplicate</string>

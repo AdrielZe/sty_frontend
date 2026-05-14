@@ -472,6 +472,8 @@
     <string name="nenhuma_atividade">Nenhuma atividade</string>
     <string name="toque_para_adicionar_treino">Toque para adicionar um treino</string>
     <string name="duplicar_treino">Duplicar treino</string>
+    <string name="editar_treino">Editar treino</string>
+    <string name="editar_grupo_muscular">Editar grupo muscular</string>
     <string name="selecione_o_dia_para_duplicar">Selecione o dia para a cópia</string>
     <string name="dia_atual_indicado">● Dia atual do treino</string>
     <string name="duplicar">Duplicar</string>

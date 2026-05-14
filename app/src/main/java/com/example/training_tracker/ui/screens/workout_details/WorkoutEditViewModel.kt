@@ -9,6 +9,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.training_tracker.GymTrackerApplication
 import com.example.training_tracker.data.models.Exercise
+import com.example.training_tracker.data.models.ExerciseType
 import com.example.training_tracker.data.models.MuscleGroups
 import com.example.training_tracker.domain.repository.ExerciseRepository
 import com.example.training_tracker.domain.repository.WorkoutRepository
@@ -193,6 +194,26 @@ class WorkoutEditViewModel(
             }
         }
     }
+    fun updateExerciseMuscleGroup(exerciseId: String, muscleGroup: MuscleGroups) {
+        val currentWorkout = uiState.value.workout ?: return
+        val derivedType = when (muscleGroup) {
+            MuscleGroups.CARDIO -> ExerciseType.CARDIO
+            MuscleGroups.STRETCHING -> ExerciseType.STRETCHING
+            else -> ExerciseType.STRENGTH
+        }
+        val updatedExercises = currentWorkout.exercises.map { exercise ->
+            if (exercise.id == exerciseId) exercise.copy(muscleGroup = muscleGroup, type = derivedType) else exercise
+        }
+        val updatedWorkout = currentWorkout.copy(exercises = updatedExercises)
+        viewModelScope.launch {
+            try {
+                workoutRepository.updateWorkout(updatedWorkout)
+            } catch (e: Exception) {
+                _uiEvent.send("Erro ao atualizar grupo muscular: ${e.message}")
+            }
+        }
+    }
+
     fun moveExercise(fromIndex: Int, toIndex: Int) {
         val currentWorkout = uiState.value.workout ?: return
         val exercises = currentWorkout.exercises.toMutableList()

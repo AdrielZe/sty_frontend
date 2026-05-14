@@ -118,6 +118,9 @@ fun MainTabsScreen(
                         } else {
                             rootNavController.navigate(Routes.CreateWorkout.name)
                         }
+                    },
+                    onEditWorkout = { workoutId ->
+                        rootNavController.navigate("${Routes.WorkoutDetails.name}/$workoutId/false")
                     }
                 )
             }

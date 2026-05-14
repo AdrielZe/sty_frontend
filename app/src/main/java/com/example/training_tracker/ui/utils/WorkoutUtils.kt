@@ -488,23 +488,48 @@ fun ExerciseCardUtils(
                         modifier = Modifier.fillMaxWidth(), // Garante que ocupa a largura total
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Surface(
-                            modifier = Modifier.weight(1f), // Protegido pelo weight
-                            color = AppTheme.accent.light.copy(alpha = 0.1f),
-                            shape = RoundedCornerShape(8.dp),
+                        Column(
+                            modifier = Modifier.weight(1f),
+                            verticalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
-                            val activeSet =
-                                exercise.exerciseSets.lastOrNull() { !(it.weight.isEmpty() && it.reps.isEmpty()) }?.set
-                                    ?: 1
-                            Text(
-                                text = stringResource(R.string.serie_atual, activeSet),
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
-                                color = AppTheme.accent.light,
-                                fontSize = 11.sp, // Ajuste leve no tamanho
-                                fontWeight = FontWeight.Bold,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
+                            Surface(
+                                color = AppTheme.accent.light.copy(alpha = 0.1f),
+                                shape = RoundedCornerShape(8.dp),
+                            ) {
+                                val activeSet =
+                                    exercise.exerciseSets.lastOrNull() { !(it.weight.isEmpty() && it.reps.isEmpty()) }?.set
+                                        ?: 1
+                                Text(
+                                    text = stringResource(R.string.serie_atual, activeSet),
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
+                                    color = AppTheme.accent.light,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+                            exercise.muscleGroup?.let { muscle ->
+                                val muscleColor = when (muscle) {
+                                    MuscleGroups.CARDIO -> Color(0xFFFF9800)
+                                    MuscleGroups.STRETCHING -> Color(0xFF4CAF50)
+                                    else -> AppTheme.accent.light
+                                }
+                                Surface(
+                                    color = muscleColor.copy(alpha = 0.1f),
+                                    shape = RoundedCornerShape(8.dp),
+                                ) {
+                                    Text(
+                                        text = stringResource(muscle.resId).uppercase(),
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
+                                        color = muscleColor,
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                }
+                            }
                         }
 
                         Spacer(Modifier.width(16.dp))

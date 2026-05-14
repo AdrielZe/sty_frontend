@@ -73,6 +73,7 @@ fun WorkoutDetailsScreen(
     var showAddExerciseDialog by remember { mutableStateOf(false) }
     var showEditWorkoutNameDialog by remember { mutableStateOf(false) }
     var exerciseToDelete by remember { mutableStateOf<Exercise?>(null) }
+    var exerciseToChangeMuscle by remember { mutableStateOf<Exercise?>(null) }
 
     val scrollState = rememberScrollState()
 
@@ -302,7 +303,8 @@ fun WorkoutDetailsScreen(
                                     number = index + 1,
                                     exercise = exercise,
                                     isEditMode = uiState.isEditMode,
-                                    onRemove = { exerciseToDelete = exercise }
+                                    onRemove = { exerciseToDelete = exercise },
+                                    onChangeMuscleGroup = { exerciseToChangeMuscle = exercise }
                                 )
                             }
                             Spacer(modifier = Modifier.height(Dimens.paddingSmall))
@@ -377,6 +379,17 @@ fun WorkoutDetailsScreen(
             }
         }
 
+        exerciseToChangeMuscle?.let { exercise ->
+            MuscleGroupPickerDialog(
+                exerciseName = exercise.name,
+                onDismiss = { exerciseToChangeMuscle = null },
+                onMuscleGroupSelected = { muscleGroup ->
+                    viewModel.updateExerciseMuscleGroup(exercise.id, muscleGroup)
+                    exerciseToChangeMuscle = null
+                }
+            )
+        }
+
         if (showEditWorkoutNameDialog) {
             EditWorkoutNameDialog(
                 onDismiss = { showEditWorkoutNameDialog = false },
@@ -444,7 +457,8 @@ fun ExerciseDetailItem(
     number: Int,
     exercise: Exercise,
     isEditMode: Boolean,
-    onRemove: () -> Unit
+    onRemove: () -> Unit,
+    onChangeMuscleGroup: () -> Unit = {}
 ) {
     Card(
         modifier = Modifier
@@ -491,38 +505,63 @@ fun ExerciseDetailItem(
 
                 when (exerciseType) {
                     ExerciseType.STRENGTH -> {
-                        exercise.muscleGroup?.let { muscle ->
-                            ExerciseBadge(
-                                text = stringResource(muscle.resId).uppercase(),
-                                backgroundColor = AppTheme.accent.light
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            exercise.muscleGroup?.let { muscle ->
+                                ExerciseBadge(
+                                    text = stringResource(muscle.resId).uppercase(),
+                                    backgroundColor = AppTheme.accent.light
+                                )
+                            }
+                            Icon(
+                                imageVector = Icons.Default.Edit,
+                                contentDescription = stringResource(R.string.editar_grupo_muscular),
+                                tint = AppTheme.accent.light.copy(alpha = 0.7f),
+                                modifier = Modifier
+                                    .size(14.dp)
+                                    .clickable { onChangeMuscleGroup() }
                             )
                         }
                     }
                     ExerciseType.CARDIO -> {
-                        ExerciseBadge(
-                            text = "CARDIO",
-                            backgroundColor = Color(0xFFFF9800) // Laranja para cardio
-                        )
-
-//                        val cardioDetails = listOfNotNull(
-//                            exercise.time?.takeIf { it.isNotBlank() }?.let { "$it min" },
-//                            exercise.distance?.takeIf { it.isNotBlank() }?.let { "$it km" }
-//                        ).joinToString(" • ")
-
-//                        if (cardioDetails.isNotEmpty()) {
-//                            Text(
-//                                text = cardioDetails,
-//                                style = MaterialTheme.typography.labelSmall,
-//                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-//                                fontWeight = FontWeight.Bold
-//                            )
-//                        }
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            ExerciseBadge(
+                                text = "CARDIO",
+                                backgroundColor = Color(0xFFFF9800)
+                            )
+                            Icon(
+                                imageVector = Icons.Default.Edit,
+                                contentDescription = stringResource(R.string.editar_grupo_muscular),
+                                tint = Color(0xFFFF9800).copy(alpha = 0.7f),
+                                modifier = Modifier
+                                    .size(14.dp)
+                                    .clickable { onChangeMuscleGroup() }
+                            )
+                        }
                     }
                     ExerciseType.STRETCHING -> {
-                        ExerciseBadge(
-                            text = "ALONGAMENTO",
-                            backgroundColor = Color(0xFF4CAF50)
-                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            ExerciseBadge(
+                                text = "ALONGAMENTO",
+                                backgroundColor = Color(0xFF4CAF50)
+                            )
+                            Icon(
+                                imageVector = Icons.Default.Edit,
+                                contentDescription = stringResource(R.string.editar_grupo_muscular),
+                                tint = Color(0xFF4CAF50).copy(alpha = 0.7f),
+                                modifier = Modifier
+                                    .size(14.dp)
+                                    .clickable { onChangeMuscleGroup() }
+                            )
+                        }
                     }
                 }
             }

@@ -152,6 +152,7 @@ fun RegisteredWorkoutsScreen(
     onNavigateBack: () -> Unit,
     onWorkoutClick: (String) -> Unit,
     onCreateWorkoutClick: (DayOfWeek?) -> Unit,
+    onEditWorkout: (String) -> Unit = {},
     modifier: Modifier = Modifier,
     viewModel: RegisteredWorkoutsViewModel = viewModel(factory = RegisteredWorkoutsViewModel.Factory)
 ) {
@@ -228,6 +229,7 @@ fun RegisteredWorkoutsScreen(
                                                 onWorkoutClick = onWorkoutClick,
                                                 onDeleteClick = { viewModel.deleteWorkout(workout) },
                                                 onDuplicateClick = { targetDay -> viewModel.duplicateWorkout(workout, targetDay) },
+                                                onEditClick = { onEditWorkout(workout.id) },
                                                 workout = workout
                                             )
                                         }
@@ -251,6 +253,7 @@ fun ActiveWorkoutCard(
     onWorkoutClick: (String) -> Unit,
     onDeleteClick: () -> Unit = {},
     onDuplicateClick: (DayOfWeek) -> Unit = {},
+    onEditClick: () -> Unit = {},
     workout: Workout
 ) {
     var showMenu by remember { mutableStateOf(false) }
@@ -401,6 +404,16 @@ fun ActiveWorkoutCard(
                     )
                 }
                 DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.editar_treino)) },
+                        onClick = {
+                            onEditClick()
+                            showMenu = false
+                        },
+                        leadingIcon = {
+                            Icon(Icons.Default.Edit, contentDescription = null, tint = AppTheme.accent.light)
+                        }
+                    )
                     DropdownMenuItem(
                         text = { Text(stringResource(R.string.duplicar_treino)) },
                         onClick = {
