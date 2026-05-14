@@ -30,6 +30,7 @@ enum class StyLogoLayout { HORIZONTAL, VERTICAL }
 fun StyLogo(
     titleSize: TextUnit = 22.sp,
     layout: StyLogoLayout = StyLogoLayout.VERTICAL,
+    centerTitle: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     val taglineSize = (titleSize.value * 0.28f).coerceAtLeast(8f).sp
@@ -38,7 +39,7 @@ fun StyLogo(
     when (layout) {
         StyLogoLayout.VERTICAL -> {
             Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
+                horizontalAlignment = if (centerTitle) Alignment.CenterHorizontally else Alignment.Start,
                 modifier = modifier
             ) {
                 Text(

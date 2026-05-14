@@ -433,6 +433,7 @@
     <string name="serie_upper">SÉRIES</string>
     <string name="reps">REPS</string>
     <string name="mins">MINS</string>
+    <string name="minutos_label">min</string>
     <string name="intensidade_muscular">INTENSIDADE MUSCULAR 📈</string>
     <string name="outro">OUTRO</string>
     <string name="serie">série</string>
@@ -488,6 +489,23 @@
     <string name="historico_de_recordes">HISTÓRICO DE RECORDES</string>
     <string name="recorde_atual">Recorde atual</string>
     <string name="recorde_anterior">Recorde anterior</string>
+    <string name="exercicios_registrados">EXERCÍCIOS</string>
+    <string name="melhor_melhora">MELHORA</string>
+    <string name="prs_count">%d PRs</string>
+    <string name="buscar_exercicio_records">Buscar exercício...</string>
+    <string name="calorias_queimadas">~%d kcal</string>
+    <string name="calorias_queimadas_label">CALORIAS QUEIMADAS</string>
+    <string name="calorias_semana">Calorias esta semana</string>
+    <string name="peso_corporal_label">Peso (kg)</string>
+    <string name="idade_label">Idade</string>
+    <string name="genero_label">Gênero</string>
+    <string name="masculino_label">Masculino</string>
+    <string name="feminino_label">Feminino</string>
+    <string name="outro_label">Outro</string>
+    <string name="dados_corporais">DADOS CORPORAIS</string>
+    <string name="configure_peso_perfil">Configure seu peso no perfil para ver as calorias</string>
+    <string name="dados_corporais_info">Essas informações são usadas para calcular as calorias queimadas nos seus treinos. Quanto mais precisas, mais exatos serão seus resultados!</string>
+    <string name="anos_label">anos</string>
     <string name="tem_certeza_que_deseja_remover_o_treino">Tem certeza que deseja remover o treino %1$s?</string>
     <string name="criar">Criar</string>
     <string name="workout_details_title">DETALHES DO TREINO</string>
@@ -535,5 +553,15 @@
     <string name="nome_de_usu_rio">Nome de usuário</string>
     <string name="estat_sticas">Estatísticas</string>
     <string name="salvar">Salvar</string>
+
+    <!-- SaveRoutineDialog -->
+    <string name="save_routine_dialog_title">Gostou do treino?</string>
+    <string name="save_routine_dialog_message">Quer salvar este treino como uma rotina?</string>
+    <string name="save_routine_dialog_name_label">Nome do treino</string>
+    <string name="save_routine_dialog_name_placeholder">Ex: Treino Livre A</string>
+    <string name="save_routine_dialog_day_label">Dia da semana</string>
+    <string name="save_routine_dialog_confirm">Salvar rotina</string>
+    <string name="save_routine_dialog_skip">Não, obrigado</string>
+    <string name="editar_perfil">editar perfil\n</string>
 
 </resources>

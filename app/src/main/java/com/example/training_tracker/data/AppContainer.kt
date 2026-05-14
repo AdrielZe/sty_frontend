@@ -1018,12 +1018,6 @@ class DefaultAppContainer(
                     isDefault = true
                 ),
                 Exercise(
-                    name = "Natação",
-                    muscleGroup = MuscleGroups.CARDIO,
-                    type = ExerciseType.CARDIO,
-                    isDefault = true
-                ),
-                Exercise(
                     name = "Circuito HIIT",
                     muscleGroup = MuscleGroups.CARDIO,
                     type = ExerciseType.CARDIO,
@@ -1158,12 +1152,6 @@ class DefaultAppContainer(
                     isDefault = true
                 ),
                 Exercise(
-                    name = "Postura da Criança (Child's Pose)",
-                    muscleGroup = MuscleGroups.STRETCHING,
-                    type = ExerciseType.STRETCHING,
-                    isDefault = true
-                ),
-                Exercise(
                     name = "Cobra (Abertura de Peito)",
                     muscleGroup = MuscleGroups.STRETCHING,
                     type = ExerciseType.STRETCHING,
@@ -1177,12 +1165,6 @@ class DefaultAppContainer(
                 ),
                 Exercise(
                     name = "Pigeon Pose",
-                    muscleGroup = MuscleGroups.STRETCHING,
-                    type = ExerciseType.STRETCHING,
-                    isDefault = true
-                ),
-                Exercise(
-                    name = "World's Greatest Stretch",
                     muscleGroup = MuscleGroups.STRETCHING,
                     type = ExerciseType.STRETCHING,
                     isDefault = true

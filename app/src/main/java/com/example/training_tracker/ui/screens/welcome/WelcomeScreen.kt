@@ -47,7 +47,8 @@ fun WelcomeScreen(
             )
             StyLogo(
                 titleSize = 48.sp,
-                layout = StyLogoLayout.VERTICAL
+                layout = StyLogoLayout.VERTICAL,
+                centerTitle = true
             )
 
             Spacer(modifier = Modifier.height(48.dp))

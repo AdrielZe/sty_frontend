@@ -384,6 +384,7 @@
     <string name="serie_upper">SETS</string>
     <string name="reps">REPS</string>
     <string name="mins">MINS</string>
+    <string name="minutos_label">min</string>
     <string name="intensidade_muscular">MUSCLE INTENSITY 📈</string>
     <string name="outro">OTHER</string>
     <string name="serie">set</string>
@@ -439,6 +440,23 @@
     <string name="historico_de_recordes">RECORDS HISTORY</string>
     <string name="recorde_atual">Current record</string>
     <string name="recorde_anterior">Previous record</string>
+    <string name="exercicios_registrados">EXERCISES</string>
+    <string name="melhor_melhora">IMPROVEMENT</string>
+    <string name="prs_count">%d PRs</string>
+    <string name="buscar_exercicio_records">Search exercise...</string>
+    <string name="calorias_queimadas">~%d kcal</string>
+    <string name="calorias_queimadas_label">CALORIES BURNED</string>
+    <string name="calorias_semana">Weekly calories</string>
+    <string name="peso_corporal_label">Weight (kg)</string>
+    <string name="idade_label">Age</string>
+    <string name="genero_label">Gender</string>
+    <string name="masculino_label">Male</string>
+    <string name="feminino_label">Female</string>
+    <string name="outro_label">Other</string>
+    <string name="dados_corporais">BODY DATA</string>
+    <string name="configure_peso_perfil">Set your weight in profile to see calories</string>
+    <string name="dados_corporais_info">This information is used to calculate the calories burned in your workouts. The more accurate it is, the more precise your results will be!</string>
+    <string name="anos_label">yrs</string>
     <string name="tem_certeza_que_deseja_remover_o_treino">Are you sure you wish to remove the workout %1$s?</string>
     <string name="criar">Create</string>
     <string name="home">Home</string>
@@ -463,4 +481,13 @@
     <string name="nome_de_usu_rio">Username</string>
     <string name="estat_sticas">Statistics</string>
     <string name="salvar">Save</string>
+
+    <!-- SaveRoutineDialog -->
+    <string name="save_routine_dialog_title">Did you enjoy the workout?</string>
+    <string name="save_routine_dialog_message">Would you like to save this workout as a routine?</string>
+    <string name="save_routine_dialog_name_label">Workout name</string>
+    <string name="save_routine_dialog_name_placeholder">E.g: Free Workout A</string>
+    <string name="save_routine_dialog_day_label">Day of week</string>
+    <string name="save_routine_dialog_confirm">Save routine</string>
+    <string name="save_routine_dialog_skip">No, thanks</string>
 </resources>
