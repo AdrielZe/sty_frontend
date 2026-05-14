@@ -33,6 +33,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -56,6 +57,7 @@ fun UserProfileScreen(
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
     var showEditNameDialog by remember { mutableStateOf(false) }
+    var showBodyDataDialog by remember { mutableStateOf(false) }
 
     val imageCropperLauncher = rememberLauncherForActivityResult(
         contract = com.canhub.cropper.CropImageContract()
@@ -148,8 +150,21 @@ fun UserProfileScreen(
                                 PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
                             )
                         },
-                        onEditNameClick = { showEditNameDialog = true }
+                        onEditNameClick = { showEditNameDialog = true },
+                        onEditBodyDataClick = { showBodyDataDialog = true }
                     )
+                    if (showBodyDataDialog) {
+                        BodyDataDialog(
+                            initialWeight = state.user.weightKg,
+                            initialAge = state.user.ageYears,
+                            initialGender = state.user.gender,
+                            onDismiss = { showBodyDataDialog = false },
+                            onConfirm = { w, a, g ->
+                                viewModel.updateBodyData(w, a, g)
+                                showBodyDataDialog = false
+                            }
+                        )
+                    }
                 }
             }
         }
@@ -161,7 +176,8 @@ fun ProfileContent(
     user: User,
     stats: UserStats,
     onEditPhotoClick: () -> Unit,
-    onEditNameClick: () -> Unit
+    onEditNameClick: () -> Unit,
+    onEditBodyDataClick: () -> Unit = {}
 ) {
     val headerGradient = Brush.verticalGradient(
         colors = listOf(CyanDark.copy(alpha = 0.85f), CyanAccent.copy(alpha = 0.4f), Color.Transparent)
@@ -297,6 +313,24 @@ fun ProfileContent(
             Spacer(modifier = Modifier.height(12.dp))
             HeaviestLiftCard(
                 stats = stats,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp)
+            )
+            Spacer(modifier = Modifier.height(24.dp))
+        }
+
+        item {
+            SectionLabel(
+                text = stringResource(R.string.dados_corporais),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp)
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            BodyDataCard(
+                user = user,
+                onEditClick = onEditBodyDataClick,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 20.dp)
@@ -482,6 +516,357 @@ private fun HeaviestLiftCard(stats: UserStats, modifier: Modifier = Modifier) {
                 )
             }
         }
+    }
+}
+
+@Composable
+fun BodyDataCard(
+    user: User,
+    onEditClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val fireColor = Color(0xFFFF5722)
+
+    Card(
+        modifier = modifier,
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+            // Removido o SpaceBetween, vamos controlar o espaço com weight(1f)
+        ) {
+
+            // CONTAINER DOS DADOS
+            // O weight(1f) garante que esta Row nunca empurre o botão para fora da tela.
+            Row(
+                modifier = Modifier.weight(1f),
+                // SpaceEvenly distribui o espaço dinamicamente, sem fixar em 20dp
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                if (user.weightKg != null) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = "${if (user.weightKg!! % 1f == 0f) user.weightKg.toInt().toString() else user.weightKg.toString()} kg",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = fireColor,
+                            maxLines = 1 // Evita quebra de linha indesejada
+                        )
+                        Text(
+                            text = stringResource(R.string.peso_corporal_label),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                } else {
+                    // Mensagem de fallback, agora ocupa bem o espaço sem quebrar
+                    Text(
+                        text = stringResource(R.string.configure_peso_perfil),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(end = 8.dp)
+                    )
+                }
+
+                // Tiramos a idade e gênero de DENTRO do if do peso.
+                // Agora eles aparecem mesmo se o peso for nulo (caso você queira esse comportamento)
+                if (user.ageYears != null) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = "${user.ageYears}",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1
+                        )
+                        Text(
+                            text = stringResource(R.string.idade_label),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+
+                if (user.gender != null) {
+                    val genderLabel = when (user.gender) {
+                        "MALE" -> stringResource(R.string.masculino_label)
+                        "FEMALE" -> stringResource(R.string.feminino_label)
+                        else -> stringResource(R.string.outro_label)
+                    }
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = genderLabel,
+                            // Diminuí de titleMedium para titleSmall para caber melhor ao lado de outros dados
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            // Trunca o texto com "..." se faltar espaço (ex: tela muito fina)
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        Text(
+                            text = stringResource(R.string.genero_label),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
+
+
+            IconButton(
+                onClick = onEditClick,
+                modifier = Modifier.padding(start = 8.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Edit,
+                    contentDescription = stringResource(R.string.editar_perfil),
+                    tint = CyanAccent,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun BodyDataDialog(
+    initialWeight: Float?,
+    initialAge: Int?,
+    initialGender: String?,
+    onDismiss: () -> Unit,
+    onConfirm: (Float?, Int?, String?) -> Unit
+) {
+    var weightText by remember {
+        mutableStateOf(
+            initialWeight?.let {
+                if (it % 1f == 0f) it.toInt().toString() else it.toString()
+            } ?: ""
+        )
+    }
+    var ageText by remember { mutableStateOf(initialAge?.toString() ?: "") }
+    var gender by remember { mutableStateOf(initialGender ?: "OTHER") }
+
+    androidx.compose.ui.window.Dialog(onDismissRequest = onDismiss) {
+        Surface(
+            shape = RoundedCornerShape(24.dp),
+            color = MaterialTheme.colorScheme.surface,
+            tonalElevation = 6.dp
+        ) {
+            Column(modifier = Modifier.padding(24.dp)) {
+
+                // Header
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(CyanAccent.copy(alpha = 0.15f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Person,
+                            contentDescription = null,
+                            tint = CyanAccent,
+                            modifier = Modifier.size(22.dp)
+                        )
+                    }
+                    Column {
+                        Text(
+                            text = stringResource(R.string.dados_corporais),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = stringResource(R.string.perfil),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+
+                Spacer(Modifier.height(16.dp))
+
+                // Info banner
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(CyanAccent.copy(alpha = 0.08f))
+                        .padding(12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    verticalAlignment = Alignment.Top
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.LocalFireDepartment,
+                        contentDescription = null,
+                        tint = CyanAccent,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Text(
+                        text = stringResource(R.string.dados_corporais_info),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        lineHeight = 18.sp
+                    )
+                }
+
+                Spacer(Modifier.height(20.dp))
+
+                // Weight + Age side by side
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    BodyDataField(
+                        modifier = Modifier.weight(1f),
+                        label = stringResource(R.string.peso_corporal_label),
+                        value = weightText,
+                        suffix = "kg",
+                        maxLength = 5,
+                        keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal,
+                        onValueChange = { newVal ->
+                            val filtered = newVal.filter { it.isDigit() || it == '.' || it == ',' }
+                            val separatorCount = filtered.count { it == '.' || it == ',' }
+                            if (separatorCount <= 1 && filtered.length <= 5) weightText = filtered
+                        }
+                    )
+                    BodyDataField(
+                        modifier = Modifier.weight(1f),
+                        label = stringResource(R.string.idade_label),
+                        value = ageText,
+                        suffix = stringResource(R.string.anos_label),
+                        maxLength = 2,
+                        onValueChange = { newVal ->
+                            val filtered = newVal.filter { it.isDigit() }
+                            if (filtered.length <= 2) ageText = filtered
+                        }
+                    )
+                }
+
+                Spacer(Modifier.height(20.dp))
+
+                // Gender
+                Text(
+                    text = stringResource(R.string.genero_label),
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(Modifier.height(8.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    listOf(
+                        "MALE" to R.string.masculino_label,
+                        "FEMALE" to R.string.feminino_label,
+                        "OTHER" to R.string.outro_label
+                    ).forEach { (value, resId) ->
+                        val selected = gender == value
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(
+                                    if (selected) CyanAccent
+                                    else MaterialTheme.colorScheme.surfaceVariant
+                                )
+                                .border(
+                                    width = 1.dp,
+                                    color = if (selected) CyanAccent else MaterialTheme.colorScheme.outlineVariant,
+                                    shape = RoundedCornerShape(12.dp)
+                                )
+                                .clickable { gender = value }
+                                .padding(vertical = 10.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = stringResource(resId),
+                                style = MaterialTheme.typography.labelMedium.copy(
+                                    color = if (selected) Color.Black else MaterialTheme.colorScheme.onSurface,
+                                    fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
+                                ),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                    }
+                }
+
+                Spacer(Modifier.height(24.dp))
+
+                // Buttons
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OutlinedButton(
+                        onClick = onDismiss,
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(12.dp),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                    ) {
+                        Text(stringResource(R.string.cancelar), color = MaterialTheme.colorScheme.onSurface)
+                    }
+                    Button(
+                        onClick = {
+                            val weight = weightText.replace(',', '.').toFloatOrNull()
+                            val age = ageText.toIntOrNull()
+                            onConfirm(weight, age, gender)
+                        },
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = CyanAccent)
+                    ) {
+                        Text(stringResource(R.string.salvar), color = Color.Black, fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun BodyDataField(
+    modifier: Modifier = Modifier,
+    label: String,
+    value: String,
+    suffix: String,
+    maxLength: Int,
+    keyboardType: androidx.compose.ui.text.input.KeyboardType = androidx.compose.ui.text.input.KeyboardType.Number,
+    onValueChange: (String) -> Unit
+) {
+    Column(modifier = modifier) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Spacer(Modifier.height(6.dp))
+        OutlinedTextField(
+            value = value,
+            onValueChange = onValueChange,
+            singleLine = true,
+            suffix = { Text(suffix, color = MaterialTheme.colorScheme.onSurfaceVariant) },
+            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = keyboardType),
+            shape = RoundedCornerShape(12.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = CyanAccent,
+                unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                cursorColor = CyanAccent
+            ),
+            modifier = Modifier.fillMaxWidth()
+        )
     }
 }
 

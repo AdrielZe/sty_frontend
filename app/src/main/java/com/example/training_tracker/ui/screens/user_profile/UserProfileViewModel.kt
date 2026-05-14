@@ -97,6 +97,12 @@ class UserProfileViewModel(
         }
     }
 
+    fun updateBodyData(weightKg: Float?, ageYears: Int?, gender: String?) {
+        viewModelScope.launch {
+            userRepository.updateBodyData(weightKg, ageYears, gender)
+        }
+    }
+
     companion object {
         val Factory = viewModelFactory {
             initializer {
