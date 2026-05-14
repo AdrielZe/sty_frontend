@@ -120,7 +120,7 @@ fun CreateWorkoutScreen(
 
     if (showErrorMessage) {
         ErrorDialog(
-            text = stringResource(R.string.adicione_pelo_menos_3_exercicios_para_salvar_seu_treino),
+            text = stringResource(R.string.adicione_pelo_menos_1_exercicios_para_salvar_seu_treino),
             onDismissRequest = { showErrorMessage = false }
         )
     }

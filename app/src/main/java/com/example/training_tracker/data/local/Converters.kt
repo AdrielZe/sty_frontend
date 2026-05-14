@@ -5,6 +5,7 @@ import com.example.training_tracker.data.models.Exercise
 import com.example.training_tracker.data.models.ExerciseSet
 import com.example.training_tracker.data.models.ExerciseType
 import com.example.training_tracker.data.models.Records
+import com.example.training_tracker.data.models.Technique
 import com.example.training_tracker.data.models.WorkoutHistory
 import com.google.gson.reflect.TypeToken
 import java.time.DayOfWeek
@@ -104,7 +105,8 @@ class Converters {
     @TypeConverter
     fun toExerciseSet(value: String): List<ExerciseSet> {
         val listType = object: com.google.gson.reflect.TypeToken<List<ExerciseSet>>() {}.type
-        return gson.fromJson(value, listType)
+        val sets: List<ExerciseSet> = gson.fromJson(value, listType)
+        return sets.map { if (it.technique == null) it.copy(technique = Technique.NORMAL) else it }
     }
     @TypeConverter
     fun fromDayOfWeek(value: DayOfWeek?): String? = value?.name

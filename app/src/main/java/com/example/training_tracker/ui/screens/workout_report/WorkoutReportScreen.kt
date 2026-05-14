@@ -1167,7 +1167,7 @@ fun ExerciseSummaryCard(exercise: Exercise) {
                                 )
                             }
 
-                            if (set.technique != Technique.NORMAL) {
+                            if (set.technique != null && set.technique != Technique.NORMAL) {
                                 SetDot()
                                 Text(
                                     text = stringResource(set.technique.label),
