@@ -318,14 +318,14 @@ fun ActiveWorkoutCard(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(12.dp),
+                .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             // IMAGEM DO TREINO — rounded square with image + gradient overlay
             Box(
                 modifier = Modifier
-                    .size(64.dp)
-                    .clip(RoundedCornerShape(14.dp))
+                    .size(80.dp)
+                    .clip(RoundedCornerShape(16.dp))
                     .background(MaterialTheme.colorScheme.surfaceVariant)
             ) {
                 AsyncImage(
@@ -348,23 +348,23 @@ fun ActiveWorkoutCard(
                 )
             }
 
-            Spacer(Modifier.width(14.dp))
+            Spacer(Modifier.width(16.dp))
 
             // TEXTOS
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = title,
-                    style = MaterialTheme.typography.titleSmall.copy(
+                    style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
                     ),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
-                Spacer(Modifier.height(4.dp))
+                Spacer(Modifier.height(6.dp))
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     WorkoutInfoChip(
                         icon = Icons.AutoMirrored.Filled.List,
@@ -436,9 +436,9 @@ fun MuscleBadgeRegistered(muscle: MuscleGroups) {
     ) {
         Text(
             text = stringResource(muscle.resId),
-            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
             color = CyanAccent,
-            fontSize = 8.sp,
+            fontSize = 10.sp,
             fontWeight = FontWeight.Bold,
             letterSpacing = 0.5.sp
         )
@@ -452,12 +452,12 @@ private fun WorkoutInfoChip(icon: androidx.compose.ui.graphics.vector.ImageVecto
             imageVector = icon,
             contentDescription = null,
             tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.size(12.dp)
+            modifier = Modifier.size(14.dp)
         )
-        Spacer(Modifier.width(3.dp))
+        Spacer(Modifier.width(4.dp))
         Text(
             text = label,
-            style = MaterialTheme.typography.labelSmall,
+            style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
@@ -624,7 +624,7 @@ fun DaySection(
                 }
                 Text(
                     day,
-                    style = MaterialTheme.typography.titleSmall.copy(
+                    style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.Bold,
                         color = if (isHighlighted || hasWorkouts) CyanAccent
                                 else MaterialTheme.colorScheme.onSurfaceVariant,
@@ -639,8 +639,8 @@ fun DaySection(
             ) {
                 Text(
                     count.toString(),
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-                    fontSize = 10.sp,
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 3.dp),
+                    fontSize = 12.sp,
                     color = if (hasWorkouts) CyanAccent else TextGray,
                     fontWeight = FontWeight.Bold
                 )
@@ -716,13 +716,13 @@ fun NoActivityCard(onCreateWorkoutClick: () -> Unit) {
         Column {
             Text(
                 text = stringResource(R.string.nenhuma_atividade),
-                style = MaterialTheme.typography.bodySmall,
+                style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Text(
                 text = stringResource(R.string.toque_para_adicionar_treino),
-                style = MaterialTheme.typography.labelSmall,
+                style = MaterialTheme.typography.labelMedium,
                 color = CyanAccent.copy(alpha = 0.7f)
             )
         }

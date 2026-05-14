@@ -150,7 +150,8 @@ fun MainTabsScreen(
                     onNavigateBack = { tabsNavController.popBackStack() },
                     onMuscleGroupSelected = viewModel::onMuscleGroupSelected,
                     onExerciseClick = viewModel::onExerciseSelected,
-                    onDismissHistory = viewModel::onDismissHistory
+                    onDismissHistory = viewModel::onDismissHistory,
+                    onSearchQueryChanged = viewModel::onSearchQueryChanged
                 )
             }
 
