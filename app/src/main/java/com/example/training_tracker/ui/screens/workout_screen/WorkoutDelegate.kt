@@ -217,8 +217,8 @@ class WorkoutDelegateImpl(
         )
     }
 
-    private fun String.parseToDouble(): Double {
-        return this.replace(",", ".").toDoubleOrNull() ?: 0.0
+    private fun String?.parseToDouble(): Double {
+        return this?.replace(",", ".")?.toDoubleOrNull() ?: 0.0
     }
 
     override suspend fun updateExerciseRecords(workout: Workout): Pair<MutableMap<String, MutableList<Double>>, MutableMap<String, MutableList<Double>>> {
@@ -354,20 +354,25 @@ class WorkoutDelegateImpl(
 
             val updatedSets = exercise.exerciseSets.map { set ->
                 val lastSet = lastPerformance?.exerciseSets?.find { it.set == set.set }
+                val safeTechnique = set.technique ?: Technique.NORMAL
+                val safePreviousReps = lastSet?.reps.orEmpty()
+                val safePreviousWeight = lastSet?.weight.orEmpty()
+                val safePreviousTime = lastSet?.time.orEmpty()
+                val safePreviousDistance = lastSet?.distance.orEmpty()
                 when (exercise.type) {
                     ExerciseType.CARDIO -> set.copy(
-                        previousDistance = lastSet?.distance ?: "",
-                        previousTime = lastSet?.time ?: "",
-                        technique = set.technique ?: Technique.NORMAL,
+                        previousDistance = safePreviousDistance,
+                        previousTime = safePreviousTime,
+                        technique = safeTechnique,
                     )
                     ExerciseType.STRETCHING -> set.copy(
-                        previousTime = lastSet?.time ?: "",
-                        technique = set.technique ?: Technique.NORMAL,
+                        previousTime = safePreviousTime,
+                        technique = safeTechnique,
                     )
                     else -> set.copy(
-                        previousWeight = lastSet?.weight ?: "",
-                        previousReps = lastSet?.reps ?: "",
-                        technique = set.technique ?: Technique.NORMAL,
+                        previousWeight = safePreviousWeight,
+                        previousReps = safePreviousReps,
+                        technique = safeTechnique,
                     )
                 }
             }

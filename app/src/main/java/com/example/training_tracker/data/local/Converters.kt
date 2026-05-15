@@ -66,8 +66,25 @@ class Converters {
     fun toExerciseList(value: String): List<Exercise> {
         val listType = object : com.google.gson.reflect.TypeToken<List<Exercise>>() {}.type
         val exercises: List<Exercise> = gson.fromJson(value, listType)
-        return exercises.map { it.copy(type = it.type ?: ExerciseType.STRENGTH) }
+        return exercises.map {
+            it.copy(
+                type = it.type ?: ExerciseType.STRENGTH,
+                exerciseSets = it.exerciseSets.map { set -> sanitizeExerciseSet(set) }
+            )
+        }
     }
+
+    private fun sanitizeExerciseSet(it: ExerciseSet) = it.copy(
+        reps = it.reps ?: "",
+        weight = it.weight ?: "",
+        previousReps = it.previousReps ?: "",
+        previousWeight = it.previousWeight ?: "",
+        time = it.time ?: "",
+        distance = it.distance ?: "",
+        previousTime = it.previousTime ?: "",
+        previousDistance = it.previousDistance ?: "",
+        technique = it.technique ?: Technique.NORMAL
+    )
 
     @TypeConverter
     fun fromRecords(records: Records?): String? {
@@ -107,15 +124,7 @@ class Converters {
     fun toExerciseSet(value: String): List<ExerciseSet> {
         val listType = object: com.google.gson.reflect.TypeToken<List<ExerciseSet>>() {}.type
         val sets: List<ExerciseSet> = gson.fromJson(value, listType)
-        return sets.map {
-            it.copy(
-                reps = it.reps ?: "",
-                weight = it.weight ?: "",
-                previousReps = it.previousReps ?: "",
-                previousWeight = it.previousWeight ?: "",
-                technique = it.technique ?: Technique.NORMAL
-            )
-        }
+        return sets.map { sanitizeExerciseSet(it) }
     }
     @TypeConverter
     fun fromDayOfWeek(value: DayOfWeek?): String? = value?.name
