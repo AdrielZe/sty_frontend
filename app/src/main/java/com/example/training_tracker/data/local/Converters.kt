@@ -7,19 +7,27 @@ import com.example.training_tracker.data.models.ExerciseType
 import com.example.training_tracker.data.models.Records
 import com.example.training_tracker.data.models.Technique
 import com.example.training_tracker.data.models.WorkoutHistory
+import com.google.gson.Gson
+import com.google.gson.TypeAdapter
+import com.google.gson.TypeAdapterFactory
 import com.google.gson.reflect.TypeToken
+import com.google.gson.stream.JsonReader
+import com.google.gson.stream.JsonToken
+import com.google.gson.stream.JsonWriter
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.LocalTime
 
 class Converters {
-    private val gson = com.google.gson.Gson()
+    private val gson = com.google.gson.GsonBuilder()
+        .registerTypeAdapterFactory(SafeEnumTypeAdapterFactory())
+        .create()
 
     @TypeConverter
     fun fromExerciseType(value: ExerciseType) = value.name
 
     @TypeConverter
-    fun toExerciseType(value: String) = ExerciseType.valueOf(value)
+    fun toExerciseType(value: String) = runCatching { ExerciseType.valueOf(value) }.getOrDefault(ExerciseType.STRENGTH)
 
     // Converte o Mapa com histórico de listas para String (JSON)
     @TypeConverter
@@ -65,7 +73,7 @@ class Converters {
     @TypeConverter
     fun toExerciseList(value: String): List<Exercise> {
         val listType = object : com.google.gson.reflect.TypeToken<List<Exercise>>() {}.type
-        val exercises: List<Exercise> = gson.fromJson(value, listType)
+        val exercises: List<Exercise> = gson.fromJson(value, listType) ?: return emptyList()
         return exercises.map {
             it.copy(
                 type = it.type ?: ExerciseType.STRENGTH,
@@ -123,7 +131,7 @@ class Converters {
     @TypeConverter
     fun toExerciseSet(value: String): List<ExerciseSet> {
         val listType = object: com.google.gson.reflect.TypeToken<List<ExerciseSet>>() {}.type
-        val sets: List<ExerciseSet> = gson.fromJson(value, listType)
+        val sets: List<ExerciseSet> = gson.fromJson(value, listType) ?: return emptyList()
         return sets.map { sanitizeExerciseSet(it) }
     }
     @TypeConverter
@@ -141,8 +149,23 @@ class Converters {
     // Ensina o Room a Ler (String -> Map)
     @TypeConverter
     fun fromStringToMap(jsonString: String): MutableMap<String, Int> {
-        // O TypeToken é necessário para o Gson entender os tipos dentro do Map
         val mapType = object : TypeToken<MutableMap<String, Int>>() {}.type
         return gson.fromJson(jsonString, mapType) ?: mutableMapOf()
+    }
+}
+
+// Returns null for any unknown enum value instead of throwing JsonSyntaxException
+class SafeEnumTypeAdapterFactory : TypeAdapterFactory {
+    override fun <T> create(gson: Gson, type: TypeToken<T>): TypeAdapter<T>? {
+        val rawType = type.rawType
+        if (!rawType.isEnum) return null
+        val delegate = gson.getDelegateAdapter(this, type)
+        return object : TypeAdapter<T>() {
+            override fun write(out: JsonWriter, value: T?) = delegate.write(out, value)
+            override fun read(input: JsonReader): T? {
+                if (input.peek() == JsonToken.NULL) { input.nextNull(); return null }
+                return runCatching { delegate.read(input) }.getOrElse { input.skipValue(); null }
+            }
+        }
     }
 }
