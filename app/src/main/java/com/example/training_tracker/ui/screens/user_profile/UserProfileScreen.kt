@@ -43,7 +43,6 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import coil.size.Size
 import com.example.training_tracker.data.models.User
 import com.example.training_tracker.ui.theme.AppTheme
 import com.example.training_tracker.R
@@ -429,7 +428,6 @@ private fun AvatarWithEdit(user: User, onEditPhotoClick: () -> Unit) {
                 AsyncImage(
                     model = ImageRequest.Builder(LocalContext.current)
                         .data(user.profilePicture)
-                        .size(Size.ORIGINAL)
                         .build(),
                     contentDescription = stringResource(R.string.foto_de_perfil),
                     modifier = Modifier.fillMaxSize(),

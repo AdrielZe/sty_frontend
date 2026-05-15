@@ -92,7 +92,6 @@ import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import coil.size.Size
 import com.example.training_tracker.R
 import com.example.training_tracker.ui.components.StyLogo
 import com.example.training_tracker.ui.components.StyLogoLayout
@@ -334,7 +333,6 @@ fun HomeContent(
                     AsyncImage(
                         model = ImageRequest.Builder(LocalContext.current)
                             .data(homeUiState.user?.profilePicture)
-                            .size(Size.ORIGINAL)
                             .build(),
                         contentDescription = stringResource(R.string.foto_de_perfil_expandida),
                         modifier = Modifier.fillMaxSize(),
@@ -1063,7 +1061,6 @@ fun CustomTopBar(
                 AsyncImage(
                     model = ImageRequest.Builder(LocalContext.current)
                         .data(user.profilePicture)
-                        .size(Size.ORIGINAL)
                         .build(),
                     contentDescription = stringResource(id = R.string.content_description_profile),
                     modifier = Modifier
