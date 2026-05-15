@@ -540,7 +540,11 @@ fun ExerciseCardUtils(
                             modifier = Modifier
                                 .size(100.dp) // Define um tamanho seguro, redondo e harmônico
                                 .clip(CircleShape)
-                                .border(width = 1.dp, color = AppTheme.accent.light, shape = CircleShape)
+                                .border(
+                                    width = 1.dp,
+                                    color = AppTheme.accent.light,
+                                    shape = CircleShape
+                                )
                                 .background(color = Color.White),
                             model = ImageRequest.Builder(LocalContext.current)
                                 .data(cardImage)
@@ -701,7 +705,11 @@ fun TimeScrollPicker(
                     .align(Alignment.Center)
                     .height(itemHeightDp)
                     .fillMaxWidth()
-                    .border(1.dp, AppTheme.accent.light.copy(alpha = 0.35f), RoundedCornerShape(8.dp))
+                    .border(
+                        1.dp,
+                        AppTheme.accent.light.copy(alpha = 0.35f),
+                        RoundedCornerShape(8.dp)
+                    )
             )
         }
     }
@@ -1133,7 +1141,10 @@ fun SetLine(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp)
-                        .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(12.dp))
+                        .background(
+                            MaterialTheme.colorScheme.surfaceVariant,
+                            RoundedCornerShape(12.dp)
+                        )
                         .border(
                             width = 1.dp,
                             color = when {
@@ -1283,7 +1294,7 @@ fun SetLine(
 
                     Column(modifier = Modifier.weight(3f)) {
                         Text(
-                            stringResource(R.string.tempo_min),
+                            stringResource(R.string.tempo_min_stretch),
                             fontSize = 10.sp,
                             color = if (isErrorReps) Color.Red else TextGray,
                             fontWeight = FontWeight.Bold,
@@ -1294,7 +1305,10 @@ fun SetLine(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(56.dp)
-                                .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(12.dp))
+                                .background(
+                                    MaterialTheme.colorScheme.surfaceVariant,
+                                    RoundedCornerShape(12.dp)
+                                )
                                 .border(
                                     width = 1.dp,
                                     color = when {

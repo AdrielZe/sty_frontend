@@ -566,5 +566,6 @@
     <string name="save_routine_dialog_confirm">Salvar rotina</string>
     <string name="save_routine_dialog_skip">Não, obrigado</string>
     <string name="editar_perfil">editar perfil\n</string>
+    <string name="tempo_min_stretch">TEMPO (MIN)</string>
 
 </resources>
