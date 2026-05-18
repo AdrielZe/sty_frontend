@@ -434,6 +434,7 @@
     <string name="reps">REPS</string>
     <string name="mins">MINS</string>
     <string name="minutos_label">min</string>
+    <string name="segundos_label">seg</string>
     <string name="intensidade_muscular">INTENSIDADE MUSCULAR 📈</string>
     <string name="outro">OUTRO</string>
     <string name="serie">série</string>
@@ -566,6 +567,10 @@
     <string name="save_routine_dialog_confirm">Salvar rotina</string>
     <string name="save_routine_dialog_skip">Não, obrigado</string>
     <string name="editar_perfil">editar perfil\n</string>
-    <string name="tempo_min_stretch">TEMPO (MIN)</string>
+    <string name="tempo_min_stretch">TEMPO (MM:SS)</string>
+    <string name="tempo_hh_mm">Tempo (HH:MM)</string>
+    <string name="tempo_mm_ss">Tempo (MM:SS)</string>
+    <string name="m_n">Mín</string>
+    <string name="m_x">Máx</string>
 
 </resources>

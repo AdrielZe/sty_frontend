@@ -9,6 +9,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.training_tracker.GymTrackerApplication
 import com.example.training_tracker.data.models.Exercise
+import com.example.training_tracker.data.models.ExerciseSet
 import com.example.training_tracker.data.models.ExerciseType
 import com.example.training_tracker.data.models.MuscleGroups
 import com.example.training_tracker.domain.repository.ExerciseRepository
@@ -211,6 +212,43 @@ class WorkoutEditViewModel(
             } catch (e: Exception) {
                 _uiEvent.send("Erro ao atualizar grupo muscular: ${e.message}")
             }
+        }
+    }
+
+    fun setExerciseSetCount(exerciseId: String, count: Int) {
+        val clamped = count.coerceIn(1, 10)
+        val currentWorkout = uiState.value.workout ?: return
+        val updatedExercises = currentWorkout.exercises.map { exercise ->
+            if (exercise.id != exerciseId) return@map exercise
+            val current = exercise.exerciseSets
+            val newSets = when {
+                clamped > current.size -> current + (current.size + 1..clamped).map { n -> ExerciseSet(set = n) }
+                clamped < current.size -> current.take(clamped)
+                else -> current
+            }
+            exercise.copy(exerciseSets = newSets)
+        }
+        val updatedWorkout = currentWorkout.copy(exercises = updatedExercises)
+        viewModelScope.launch {
+            try { workoutRepository.updateWorkout(updatedWorkout) }
+            catch (e: Exception) { _uiEvent.send("Erro ao atualizar séries: ${e.message}") }
+        }
+    }
+
+    fun updateExerciseSetTarget(exerciseId: String, setNumber: Int, targetReps: String, targetWeight: String) {
+        val currentWorkout = uiState.value.workout ?: return
+        val updatedExercises = currentWorkout.exercises.map { exercise ->
+            if (exercise.id != exerciseId) return@map exercise
+            val newSets = exercise.exerciseSets.map { set ->
+                if (set.set == setNumber) set.copy(targetReps = targetReps, targetWeight = targetWeight)
+                else set
+            }
+            exercise.copy(exerciseSets = newSets)
+        }
+        val updatedWorkout = currentWorkout.copy(exercises = updatedExercises)
+        viewModelScope.launch {
+            try { workoutRepository.updateWorkout(updatedWorkout) }
+            catch (e: Exception) { _uiEvent.send("Erro ao atualizar metas: ${e.message}") }
         }
     }
 

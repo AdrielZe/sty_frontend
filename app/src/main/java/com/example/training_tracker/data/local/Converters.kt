@@ -91,7 +91,9 @@ class Converters {
         distance = it.distance ?: "",
         previousTime = it.previousTime ?: "",
         previousDistance = it.previousDistance ?: "",
-        technique = it.technique ?: Technique.NORMAL
+        technique = it.technique ?: Technique.NORMAL,
+        targetReps = it.targetReps ?: "",
+        targetWeight = it.targetWeight ?: ""
     )
 
     @TypeConverter

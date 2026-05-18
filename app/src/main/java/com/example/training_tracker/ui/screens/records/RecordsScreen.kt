@@ -572,10 +572,7 @@ fun ExerciseHistoryContent(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
+        Column(modifier = Modifier.fillMaxWidth()) {
             history.forEachIndexed { index, value ->
                 Row(
                     modifier = Modifier
@@ -601,6 +598,38 @@ fun ExerciseHistoryContent(
                             fontWeight = FontWeight.Black
                         )
                     )
+                }
+
+                if (index < history.lastIndex) {
+                    val older = history[index + 1]
+                    val pct = if (older != 0.0) ((value - older) / older) * 100.0 else 0.0
+                    val isGain = pct >= 0
+                    val pctColor = if (isGain) Color(0xFF4CAF50) else Color(0xFFF44336)
+                    val arrow = if (isGain) "▲" else "▼"
+                    val pctText = "$arrow ${"%.1f".format(abs(pct))}%"
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 2.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .background(pctColor.copy(alpha = 0.12f), RoundedCornerShape(100.dp))
+                                .padding(horizontal = 10.dp, vertical = 3.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = pctText,
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    color = pctColor,
+                                    fontSize = 11.sp
+                                )
+                            )
+                        }
+                    }
                 }
             }
         }

@@ -32,6 +32,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
@@ -54,11 +55,19 @@ import com.example.training_tracker.data.models.Exercise
 import com.example.training_tracker.data.models.ExerciseType
 import com.example.training_tracker.data.models.MuscleGroups
 import com.example.training_tracker.data.models.Workout
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
+import com.example.training_tracker.data.models.ExerciseSet
 import com.example.training_tracker.ui.components.MuscleGroupPickerDialog
-import com.example.training_tracker.ui.screens.create_workout.ExerciseBadge
 import com.example.training_tracker.ui.screens.home.MainGradientButton
 import com.example.training_tracker.ui.theme.AppTheme
 import com.example.training_tracker.ui.theme.Dimens
+import com.example.training_tracker.ui.utils.CardioTimePickerDialog
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -74,6 +83,7 @@ fun WorkoutDetailsScreen(
     var showEditWorkoutNameDialog by remember { mutableStateOf(false) }
     var exerciseToDelete by remember { mutableStateOf<Exercise?>(null) }
     var exerciseToChangeMuscle by remember { mutableStateOf<Exercise?>(null) }
+    var expandedExerciseId by remember { mutableStateOf<String?>(null) }
 
     val scrollState = rememberScrollState()
 
@@ -303,6 +313,14 @@ fun WorkoutDetailsScreen(
                                     number = index + 1,
                                     exercise = exercise,
                                     isEditMode = uiState.isEditMode,
+                                    isExpanded = expandedExerciseId == exercise.id,
+                                    onToggleExpand = {
+                                        expandedExerciseId = if (expandedExerciseId == exercise.id) null else exercise.id
+                                    },
+                                    onSetCountChange = { count -> viewModel.setExerciseSetCount(exercise.id, count) },
+                                    onSetTargetChange = { setNum, reps, weight ->
+                                        viewModel.updateExerciseSetTarget(exercise.id, setNum, reps, weight)
+                                    },
                                     onRemove = { exerciseToDelete = exercise },
                                     onChangeMuscleGroup = { exerciseToChangeMuscle = exercise }
                                 )
@@ -457,9 +475,19 @@ fun ExerciseDetailItem(
     number: Int,
     exercise: Exercise,
     isEditMode: Boolean,
+    isExpanded: Boolean = false,
+    onToggleExpand: () -> Unit = {},
+    onSetCountChange: (Int) -> Unit = {},
+    onSetTargetChange: (setNumber: Int, reps: String, weight: String) -> Unit = { _, _, _ -> },
     onRemove: () -> Unit,
     onChangeMuscleGroup: () -> Unit = {}
 ) {
+    val exerciseType = exercise.type ?: ExerciseType.STRENGTH
+    val isStrength = exerciseType == ExerciseType.STRENGTH
+    val isCardio = exerciseType == ExerciseType.CARDIO
+    val setCount = exercise.exerciseSets.size
+    var showTimePickerForSet by remember { mutableStateOf<Int?>(null) }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -470,116 +498,306 @@ fun ExerciseDetailItem(
         shape = RoundedCornerShape(16.dp),
         border = BorderStroke(1.dp, Color.Gray.copy(alpha = 0.1f))
     ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // Badge do Número
-            Surface(
-                modifier = Modifier.size(36.dp),
-                shape = CircleShape,
-                color = AppTheme.accent.light.copy(alpha = 0.15f)
+        Column(modifier = Modifier.fillMaxWidth()) {
+            Row(
+                modifier = Modifier.padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Text(
-                        text = number.toString(),
-                        color = AppTheme.accent.light,
-                        fontWeight = FontWeight.ExtraBold,
-                        fontSize = 14.sp
-                    )
+                // Badge do Número
+                Surface(
+                    modifier = Modifier.size(36.dp),
+                    shape = CircleShape,
+                    color = AppTheme.accent.light.copy(alpha = 0.15f)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Text(
+                            text = number.toString(),
+                            color = AppTheme.accent.light,
+                            fontWeight = FontWeight.ExtraBold,
+                            fontSize = 14.sp
+                        )
+                    }
                 }
-            }
 
-            Spacer(modifier = Modifier.width(16.dp))
+                Spacer(modifier = Modifier.width(16.dp))
 
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = exercise.name,
-                    style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = exercise.name,
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
 
-                Spacer(modifier = Modifier.height(4.dp))
+                    Spacer(modifier = Modifier.height(4.dp))
 
-                val exerciseType = exercise.type ?: ExerciseType.STRENGTH
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        when (exerciseType) {
+                            ExerciseType.STRENGTH -> {
+                                exercise.muscleGroup?.let { muscle ->
+                                    ExerciseBadge(
+                                        text = stringResource(muscle.resId).uppercase(),
+                                        backgroundColor = AppTheme.accent.light
+                                    )
+                                }
+                                if (isEditMode) {
+                                    Icon(
+                                        imageVector = Icons.Default.Edit,
+                                        contentDescription = stringResource(R.string.editar_grupo_muscular),
+                                        tint = AppTheme.accent.light.copy(alpha = 0.7f),
+                                        modifier = Modifier.size(14.dp).clickable { onChangeMuscleGroup() }
+                                    )
+                                }
+                            }
+                            ExerciseType.CARDIO -> {
+                                ExerciseBadge(text = "CARDIO", backgroundColor = Color(0xFFFF9800))
+                                if (isEditMode) {
+                                    Icon(
+                                        imageVector = Icons.Default.Edit,
+                                        contentDescription = stringResource(R.string.editar_grupo_muscular),
+                                        tint = Color(0xFFFF9800).copy(alpha = 0.7f),
+                                        modifier = Modifier.size(14.dp).clickable { onChangeMuscleGroup() }
+                                    )
+                                }
+                            }
+                            ExerciseType.STRETCHING -> {
+                                ExerciseBadge(text = "ALONGAMENTO", backgroundColor = Color(0xFF4CAF50))
+                                if (isEditMode) {
+                                    Icon(
+                                        imageVector = Icons.Default.Edit,
+                                        contentDescription = stringResource(R.string.editar_grupo_muscular),
+                                        tint = Color(0xFF4CAF50).copy(alpha = 0.7f),
+                                        modifier = Modifier.size(14.dp).clickable { onChangeMuscleGroup() }
+                                    )
+                                }
+                            }
+                        }
 
-                when (exerciseType) {
-                    ExerciseType.STRENGTH -> {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            exercise.muscleGroup?.let { muscle ->
-                                ExerciseBadge(
-                                    text = stringResource(muscle.resId).uppercase(),
-                                    backgroundColor = AppTheme.accent.light
+                        if (isEditMode) {
+                            // Sets summary chip — tappable to expand
+                            val firstTarget = exercise.exerciseSets.firstOrNull { it.targetReps.isNotBlank() }?.targetReps ?: ""
+                            val summaryText = if (isStrength) {
+                                if (firstTarget.isNotBlank()) "$setCount × $firstTarget reps"
+                                else "$setCount ${if (setCount == 1) stringResource(R.string.serie) else stringResource(R.string.series)}"
+                            } else {
+                                if (firstTarget.isNotBlank()) "$setCount × $firstTarget"
+                                else "$setCount ${if (setCount == 1) stringResource(R.string.serie) else stringResource(R.string.series)}"
+                            }
+                            Row(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(4.dp))
+                                    .background(AppTheme.accent.light.copy(alpha = 0.12f))
+                                    .clickable { onToggleExpand() }
+                                    .padding(horizontal = 6.dp, vertical = 2.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(2.dp)
+                            ) {
+                                Text(
+                                    text = summaryText,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Black,
+                                    fontSize = 11.sp,
+                                    color = AppTheme.accent.light
+                                )
+                                Icon(
+                                    imageVector = if (isExpanded) Icons.Default.KeyboardArrowDown else Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                                    contentDescription = null,
+                                    tint = AppTheme.accent.light,
+                                    modifier = Modifier.size(14.dp)
                                 )
                             }
-                            Icon(
-                                imageVector = Icons.Default.Edit,
-                                contentDescription = stringResource(R.string.editar_grupo_muscular),
-                                tint = AppTheme.accent.light.copy(alpha = 0.7f),
-                                modifier = Modifier
-                                    .size(14.dp)
-                                    .clickable { onChangeMuscleGroup() }
-                            )
                         }
                     }
-                    ExerciseType.CARDIO -> {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            ExerciseBadge(
-                                text = "CARDIO",
-                                backgroundColor = Color(0xFFFF9800)
-                            )
-                            Icon(
-                                imageVector = Icons.Default.Edit,
-                                contentDescription = stringResource(R.string.editar_grupo_muscular),
-                                tint = Color(0xFFFF9800).copy(alpha = 0.7f),
-                                modifier = Modifier
-                                    .size(14.dp)
-                                    .clickable { onChangeMuscleGroup() }
-                            )
-                        }
-                    }
-                    ExerciseType.STRETCHING -> {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            ExerciseBadge(
-                                text = "ALONGAMENTO",
-                                backgroundColor = Color(0xFF4CAF50)
-                            )
-                            Icon(
-                                imageVector = Icons.Default.Edit,
-                                contentDescription = stringResource(R.string.editar_grupo_muscular),
-                                tint = Color(0xFF4CAF50).copy(alpha = 0.7f),
-                                modifier = Modifier
-                                    .size(14.dp)
-                                    .clickable { onChangeMuscleGroup() }
-                            )
-                        }
+                }
+
+                if (isEditMode) {
+                    IconButton(
+                        onClick = onRemove,
+                        modifier = Modifier.background(MaterialTheme.colorScheme.error.copy(alpha = 0.1f), CircleShape)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.size(20.dp)
+                        )
                     }
                 }
             }
 
-            if (isEditMode) {
-                IconButton(
-                    onClick = onRemove,
-                    modifier = Modifier.background(MaterialTheme.colorScheme.error.copy(alpha = 0.1f), CircleShape)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Delete,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.size(20.dp)
+            // ── Expandable sets panel (edit mode only) ──────────────────────
+            AnimatedVisibility(visible = isExpanded && isEditMode) {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
+
+                    // Set count stepper
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = Dimens.paddingMedium, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        IconButton(
+                            onClick = { onSetCountChange(setCount - 1) },
+                            enabled = setCount > 1,
+                            modifier = Modifier.size(32.dp)
+                        ) {
+                            Text(
+                                "−", fontSize = 20.sp, fontWeight = FontWeight.Bold,
+                                color = if (setCount > 1) AppTheme.accent.light else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                            )
+                        }
+                        Text(
+                            text = "$setCount ${if (setCount == 1) stringResource(R.string.serie) else stringResource(R.string.series)}",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(horizontal = 16.dp)
+                        )
+                        IconButton(
+                            onClick = { onSetCountChange(setCount + 1) },
+                            enabled = setCount < 10,
+                            modifier = Modifier.size(32.dp)
+                        ) {
+                            Text(
+                                "+", fontSize = 20.sp, fontWeight = FontWeight.Bold,
+                                color = if (setCount < 10) AppTheme.accent.light else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                            )
+                        }
+                    }
+
+                    // Column headers
+                    val headerStyle = MaterialTheme.typography.labelSmall.copy(
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
                     )
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = Dimens.paddingMedium),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("Set", style = headerStyle, modifier = Modifier.width(28.dp), textAlign = TextAlign.Center)
+                        if (isStrength) {
+                            Text("Mín", style = headerStyle, modifier = Modifier.weight(1f), textAlign = TextAlign.Center)
+                            Text("Máx", style = headerStyle, modifier = Modifier.weight(1f), textAlign = TextAlign.Center)
+                            Text("Peso (kg)", style = headerStyle, modifier = Modifier.weight(1.3f), textAlign = TextAlign.Center)
+                        } else {
+                            Text(
+                                if (isCardio) "Tempo (HH:MM)" else "Tempo (MM:SS)",
+                                style = headerStyle, modifier = Modifier.weight(1f), textAlign = TextAlign.Center
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    exercise.exerciseSets.forEach { set ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = Dimens.paddingMedium, vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Text(
+                                text = "${set.set}",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = AppTheme.accent.light,
+                                modifier = Modifier.width(28.dp),
+                                textAlign = TextAlign.Center
+                            )
+                            if (isStrength) {
+                                val repsParts = set.targetReps.split("-")
+                                val minReps = repsParts.getOrElse(0) { "" }
+                                val maxReps = repsParts.getOrElse(1) { "" }
+                                val isMaxError = maxReps.isNotBlank() &&
+                                    minReps.toIntOrNull() != null &&
+                                    maxReps.toIntOrNull() != null &&
+                                    maxReps.toInt() < minReps.toInt()
+
+                                OutlinedTextField(
+                                    value = minReps,
+                                    onValueChange = { raw ->
+                                        val v = raw.filter { it.isDigit() }.take(3)
+                                        onSetTargetChange(set.set, if (maxReps.isBlank()) v else "$v-$maxReps", set.targetWeight)
+                                    },
+                                    modifier = Modifier.weight(1f).height(52.dp),
+                                    placeholder = { Text("8", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)) },
+                                    singleLine = true,
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next),
+                                    shape = RoundedCornerShape(8.dp),
+                                    textStyle = MaterialTheme.typography.bodyMedium.copy(textAlign = TextAlign.Center),
+                                    colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AppTheme.accent.light, unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
+                                )
+                                OutlinedTextField(
+                                    value = maxReps,
+                                    onValueChange = { raw ->
+                                        val v = raw.filter { it.isDigit() }.take(3)
+                                        onSetTargetChange(set.set, if (v.isBlank()) minReps else "$minReps-$v", set.targetWeight)
+                                    },
+                                    modifier = Modifier.weight(1f).height(52.dp),
+                                    placeholder = { Text("12", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)) },
+                                    isError = isMaxError,
+                                    singleLine = true,
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next),
+                                    shape = RoundedCornerShape(8.dp),
+                                    textStyle = MaterialTheme.typography.bodyMedium.copy(textAlign = TextAlign.Center),
+                                    colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AppTheme.accent.light, unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f), errorBorderColor = MaterialTheme.colorScheme.error)
+                                )
+                                OutlinedTextField(
+                                    value = set.targetWeight,
+                                    onValueChange = { onSetTargetChange(set.set, set.targetReps, it.filter { c -> c.isDigit() || c == '.' }.take(6)) },
+                                    modifier = Modifier.weight(1.3f).height(52.dp),
+                                    placeholder = { Text("80", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)) },
+                                    singleLine = true,
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal, imeAction = ImeAction.Done),
+                                    shape = RoundedCornerShape(8.dp),
+                                    textStyle = MaterialTheme.typography.bodyMedium.copy(textAlign = TextAlign.Center),
+                                    colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AppTheme.accent.light, unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
+                                )
+                            } else {
+                                Box(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .height(52.dp)
+                                        .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f), RoundedCornerShape(8.dp))
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .clickable { showTimePickerForSet = set.set },
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = set.targetReps.ifBlank { "00:00" },
+                                        style = MaterialTheme.typography.bodyMedium.copy(textAlign = TextAlign.Center),
+                                        color = if (set.targetReps.isBlank())
+                                            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                                        else
+                                            MaterialTheme.colorScheme.onSurface
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
                 }
             }
         }
+    }
+
+    showTimePickerForSet?.let { targetSetNum ->
+        val currentTime = exercise.exerciseSets.find { it.set == targetSetNum }?.targetReps ?: ""
+        CardioTimePickerDialog(
+            initialTime = currentTime,
+            showHours = isCardio,
+            showSeconds = !isCardio,
+            onDismiss = { showTimePickerForSet = null },
+            onConfirm = { formatted ->
+                onSetTargetChange(targetSetNum, formatted, "")
+                showTimePickerForSet = null
+            }
+        )
     }
 }
 

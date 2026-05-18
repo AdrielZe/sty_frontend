@@ -561,7 +561,7 @@ fun ExerciseCardUtils(
                         val isCardio = exercise.type == ExerciseType.CARDIO
                         val isStretching = exercise.type == ExerciseType.STRETCHING
                         val isWeightError = showErrors && if (isCardio) (set.distance ?: "").replace(',', '.').toDoubleOrNull() == null else if (isStretching) false else set.weight.isBlank()
-                        val isRepsError = showErrors && if (isCardio) !(set.time ?: "").contains(":") else if (isStretching) (set.time ?: "").toIntOrNull() == null else (set.reps.toIntOrNull() ?: 0) <= 0
+                        val isRepsError = showErrors && if (isCardio || isStretching) !(set.time ?: "").contains(":") else (set.reps.toIntOrNull() ?: 0) <= 0
 
                         SetLine(
                             modifier = Modifier.fillMaxWidth(),
@@ -572,10 +572,10 @@ fun ExerciseCardUtils(
                             },
                             inputValueWeight = if (isCardio) set.distance ?: "" else set.weight,
                             previousReps = when {
-                                isCardio || isStretching -> set.previousTime ?: ""
-                                else -> set.previousReps
+                                isCardio || isStretching -> set.targetReps.ifEmpty { set.previousTime ?: "" }
+                                else -> set.targetReps.ifEmpty { set.previousReps }
                             },
-                            previousWeight = if (isCardio) set.previousDistance ?: "" else set.previousWeight,
+                            previousWeight = if (isCardio) set.previousDistance ?: "" else set.targetWeight.ifEmpty { set.previousWeight },
                             isDeleteMode = isDeleteMode,
                             isCompleted = set.isCompleted,
                             isErrorWeight = isWeightError,
@@ -720,13 +720,24 @@ fun CardioTimePickerDialog(
     initialTime: String,
     onDismiss: () -> Unit,
     onConfirm: (String) -> Unit,
-    showHours: Boolean = true
+    showHours: Boolean = true,
+    showSeconds: Boolean = false  // MM:SS mode for stretching
 ) {
-    val initialHours = if (showHours) initialTime.substringBefore(":", "0").toIntOrNull() ?: 0 else 0
-    val initialMinutes = if (showHours) initialTime.substringAfter(":", "0").toIntOrNull() ?: 0
-                         else initialTime.substringBefore(":", initialTime).toIntOrNull() ?: 0
-    var selectedHours by remember { mutableStateOf(initialHours) }
-    var selectedMinutes by remember { mutableStateOf(initialMinutes) }
+    // Parse based on mode
+    // showHours=true  → "HH:MM"
+    // showSeconds=true → "MM:SS"
+    // else            → "MM" (legacy)
+    val parts = initialTime.split(":")
+    val initialA = parts.getOrNull(0)?.toIntOrNull() ?: 0  // hours or minutes
+    val initialB = parts.getOrNull(1)?.toIntOrNull() ?: 0  // minutes or seconds
+
+    var selectedA by remember { mutableStateOf(initialA) }
+    var selectedB by remember { mutableStateOf(initialB) }
+
+    val labelA = if (showHours) "HRS" else "MIN"
+    val labelB = if (showSeconds) "SEG" else "MIN"
+    val rangeA = if (showHours) 0..23 else 0..59
+    val rangeB = 0..59
 
     Dialog(onDismissRequest = onDismiss) {
         Surface(shape = RoundedCornerShape(16.dp), color = MaterialTheme.colorScheme.surface) {
@@ -740,16 +751,14 @@ fun CardioTimePickerDialog(
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    if (showHours) {
-                        TimeScrollPicker(range = 0..23, selected = selectedHours, onSelect = { selectedHours = it }, label = "HRS")
-                        Text(
-                            ":",
-                            style = MaterialTheme.typography.headlineLarge,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 24.dp)
-                        )
-                    }
-                    TimeScrollPicker(range = 0..59, selected = selectedMinutes, onSelect = { selectedMinutes = it }, label = "MIN")
+                    TimeScrollPicker(range = rangeA, selected = selectedA, onSelect = { selectedA = it }, label = labelA)
+                    Text(
+                        ":",
+                        style = MaterialTheme.typography.headlineLarge,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 24.dp)
+                    )
+                    TimeScrollPicker(range = rangeB, selected = selectedB, onSelect = { selectedB = it }, label = labelB)
                 }
                 Spacer(Modifier.height(20.dp))
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
@@ -757,11 +766,7 @@ fun CardioTimePickerDialog(
                         Text("Cancelar", color = MaterialTheme.colorScheme.secondary)
                     }
                     TextButton(onClick = {
-                        if (showHours) {
-                            onConfirm("${selectedHours.toString().padStart(2, '0')}:${selectedMinutes.toString().padStart(2, '0')}")
-                        } else {
-                            onConfirm(selectedMinutes.toString().padStart(2, '0'))
-                        }
+                        onConfirm("${selectedA.toString().padStart(2, '0')}:${selectedB.toString().padStart(2, '0')}")
                     }) {
                         Text("OK", color = AppTheme.accent.light, fontWeight = FontWeight.Bold)
                     }
@@ -1267,7 +1272,8 @@ fun SetLine(
                         onRepsChange(setNumber, time)
                         showTimePicker = false
                     },
-                    showHours = false
+                    showHours = false,
+                    showSeconds = true
                 )
             }
 

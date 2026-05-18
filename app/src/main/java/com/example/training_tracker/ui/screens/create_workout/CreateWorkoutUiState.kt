@@ -12,7 +12,8 @@ data class CreateWorkoutUiState(
     val isWorkoutSaved: Boolean = false,
     val showErrors: Boolean = false,
     val pendingExerciseName: String? = null,
-    val showMuscleGroupPicker: Boolean = false
+    val showMuscleGroupPicker: Boolean = false,
+    val expandedExerciseId: String? = null
 ) {
     val isNameValid = workoutName.isNotBlank()
     val isDayValid = selectedDay != null

@@ -11,5 +11,7 @@ data class ExerciseSet(
     val distance: String ?= "",
     val previousTime: String ?= "",
     val previousDistance: String ?= "",
-    val technique: Technique = Technique.NORMAL
+    val technique: Technique = Technique.NORMAL,
+    val targetReps: String = "",
+    val targetWeight: String = ""
 )

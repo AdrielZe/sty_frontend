@@ -1145,8 +1145,11 @@ fun ExerciseSummaryCard(exercise: Exercise) {
                                     maxLines = 1
                                 )
                             } else if (exercise.type == ExerciseType.STRETCHING) {
+                                val timeStr = set.time ?: "--"
+                                val minutes = timeStr.split(":").getOrNull(0)?.toIntOrNull() ?: -1
+                                val unit = if (minutes == 0) stringResource(R.string.segundos_label) else stringResource(R.string.minutos_label)
                                 Text(
-                                    text = "${set.time ?: "--"} ${stringResource(R.string.minutos_label)}",
+                                    text = "$timeStr $unit",
                                     style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
                                     color = AppTheme.accent.light,
                                     maxLines = 1

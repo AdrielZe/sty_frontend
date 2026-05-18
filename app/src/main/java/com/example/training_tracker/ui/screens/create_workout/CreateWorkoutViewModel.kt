@@ -9,6 +9,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.training_tracker.GymTrackerApplication
 import com.example.training_tracker.R
 import com.example.training_tracker.data.models.Exercise
+import com.example.training_tracker.data.models.ExerciseSet
 import com.example.training_tracker.data.models.ExerciseType
 import com.example.training_tracker.data.models.MuscleGroups
 import com.example.training_tracker.data.models.Workout
@@ -210,6 +211,45 @@ class CreateWorkoutViewModel(
                 showMuscleGroupPicker = false,
                 pendingExerciseName = null
             )
+        }
+    }
+
+    fun toggleExerciseExpanded(exerciseId: String) {
+        _draftState.update {
+            it.copy(expandedExerciseId = if (it.expandedExerciseId == exerciseId) null else exerciseId)
+        }
+    }
+
+    fun setExerciseSetCount(exerciseId: String, count: Int) {
+        val clamped = count.coerceIn(1, 10)
+        _draftState.update { state ->
+            val exercises = state.exercises.map { exercise ->
+                if (exercise.id != exerciseId) return@map exercise
+                val current = exercise.exerciseSets
+                val newSets = when {
+                    clamped > current.size -> current + (current.size + 1..clamped).map { n ->
+                        ExerciseSet(set = n)
+                    }
+                    clamped < current.size -> current.take(clamped)
+                    else -> current
+                }
+                exercise.copy(exerciseSets = newSets)
+            }
+            state.copy(exercises = exercises)
+        }
+    }
+
+    fun updateExerciseSetTarget(exerciseId: String, setNumber: Int, targetReps: String, targetWeight: String) {
+        _draftState.update { state ->
+            val exercises = state.exercises.map { exercise ->
+                if (exercise.id != exerciseId) return@map exercise
+                val newSets = exercise.exerciseSets.map { set ->
+                    if (set.set == setNumber) set.copy(targetReps = targetReps, targetWeight = targetWeight)
+                    else set
+                }
+                exercise.copy(exerciseSets = newSets)
+            }
+            state.copy(exercises = exercises)
         }
     }
 

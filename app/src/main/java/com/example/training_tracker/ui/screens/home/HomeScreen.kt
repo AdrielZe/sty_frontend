@@ -1,6 +1,5 @@
 package com.example.training_tracker.ui.screens.home
 
-import android.graphics.drawable.Icon
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.BorderStroke
@@ -15,17 +14,16 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -36,17 +34,15 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.AccessibilityNew
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Bolt
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.FitnessCenter
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Timer
-import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.MailOutline
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -76,35 +72,71 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.PlatformTextStyle
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import coil.size.Size
 import com.example.training_tracker.R
-import com.example.training_tracker.ui.components.StyLogo
-import com.example.training_tracker.ui.components.StyLogoLayout
 import com.example.training_tracker.data.models.MuscleGroups
 import com.example.training_tracker.data.models.User
 import com.example.training_tracker.data.models.Workout
-import com.example.training_tracker.data.models.extensions.isValidToComplete
 import com.example.training_tracker.ui.theme.AppTheme
-
 import com.example.training_tracker.ui.theme.GreenGradient
 import com.example.training_tracker.ui.theme.Typography
+import java.time.DayOfWeek
+import java.time.LocalDate
+import java.time.format.TextStyle as JTextStyle
+import java.util.Locale
 import kotlin.math.abs
 
+// =============================================================================
+// === Sty design tokens — theme-aware                                       ===
+// =============================================================================
+private object Sty {
+    val BgStart: Color
+        @Composable get() = if (isSystemInDarkTheme()) Color(0xFF131319) else Color(0xFFFDFDFD)
+    val BgEnd: Color
+        @Composable get() = if (isSystemInDarkTheme()) Color(0xFF0C0C11) else Color(0xFFF5F5FA)
+    val Surface: Color
+        @Composable get() = if (isSystemInDarkTheme()) Color(0xFF181820) else Color(0xFFFFFFFF)
+    val Surface2: Color
+        @Composable get() = if (isSystemInDarkTheme()) Color(0xFF1F1F29) else Color(0xFFF0F4F8)
+    val Border: Color
+        @Composable get() = if (isSystemInDarkTheme()) Color.White.copy(alpha = 0.07f) else Color.Black.copy(alpha = 0.06f)
+    val BorderStrong: Color
+        @Composable get() = if (isSystemInDarkTheme()) Color.White.copy(alpha = 0.14f) else Color.Black.copy(alpha = 0.12f)
+    val TextMain: Color
+        @Composable get() = if (isSystemInDarkTheme()) Color(0xFFECECF3) else Color(0xFF1A1A2E)
+    val TextDim: Color
+        @Composable get() = if (isSystemInDarkTheme()) Color(0xFF9A9AAA) else Color(0xFF55556A)
+    val TextFaint: Color
+        @Composable get() = if (isSystemInDarkTheme()) Color(0xFF61616F) else Color(0xFF9898AA)
+    val OnAccent: Color = Color(0xFF08131E)
+    val GreenAccent: Color = Color(0xFF5AD479)
+    val GoldAccent: Color = Color(0xFFFFC46B)
+
+    val BgBrush: Brush
+        @Composable get() = Brush.verticalGradient(listOf(BgStart, BgEnd))
+}
+
+// =============================================================================
+// === Public entry points                                                   ===
+// =============================================================================
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun HomeScreen(
@@ -119,34 +151,28 @@ fun HomeScreen(
     homeViewModel: HomeViewModel = viewModel(factory = HomeViewModel.Factory)
 ) {
     when (homeUiState) {
-        is HomeUiState.Loading -> {
-            HomeLoadingScreen()
-        }
-
-        is HomeUiState.Error -> {
-            HomeErrorScreen(message = homeUiState.message)
-        }
-
-        is HomeUiState.Success -> {
-            HomeContent(
-                modifier = modifier,
-                onClickWorkoutCard = onClickWorkoutCard,
-                onNavigateToCreateWorkout = onNavigateToCreateWorkout,
-                onNavigateToRegisteredWorkouts = onNavigateToRegisteredWorkouts,
-                onNavigateToWorkoutsHistory = onNavigateToWorkoutsHistory,
-                onClickBrowseWorkouts = onClickBrowseWorkouts,
-                onNavigateToFreestyleWorkout = onNavigateToFreestyleWorkout,
-                homeUiState = homeUiState,
-                homeViewModel = homeViewModel,
-            )
-        }
+        is HomeUiState.Loading -> HomeLoadingScreen()
+        is HomeUiState.Error -> HomeErrorScreen(message = homeUiState.message)
+        is HomeUiState.Success -> HomeContent(
+            modifier = modifier,
+            onClickWorkoutCard = onClickWorkoutCard,
+            onNavigateToCreateWorkout = onNavigateToCreateWorkout,
+            onNavigateToRegisteredWorkouts = onNavigateToRegisteredWorkouts,
+            onNavigateToWorkoutsHistory = onNavigateToWorkoutsHistory,
+            onClickBrowseWorkouts = onClickBrowseWorkouts,
+            onNavigateToFreestyleWorkout = onNavigateToFreestyleWorkout,
+            homeUiState = homeUiState,
+            homeViewModel = homeViewModel,
+        )
     }
 }
 
 @Composable
 fun HomeLoadingScreen() {
     Box(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Sty.BgBrush),
         contentAlignment = Alignment.Center
     ) {
         CircularProgressIndicator(color = AppTheme.accent.light)
@@ -156,7 +182,9 @@ fun HomeLoadingScreen() {
 @Composable
 fun HomeErrorScreen(message: String?) {
     Box(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Sty.BgBrush),
         contentAlignment = Alignment.Center
     ) {
         Text(
@@ -168,6 +196,9 @@ fun HomeErrorScreen(message: String?) {
     }
 }
 
+// =============================================================================
+// === Main scrollable content                                               ===
+// =============================================================================
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun HomeContent(
@@ -186,9 +217,9 @@ fun HomeContent(
     var showFreestyleNameDialog by remember { mutableStateOf(false) }
 
     Scaffold(
-        modifier = Modifier
-            .fillMaxSize(),
-        containerColor = MaterialTheme.colorScheme.background,
+        modifier = Modifier.fillMaxSize(),
+        containerColor = Color.Transparent,
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             CustomTopBar(
                 onProfileClick = { isProfileExpanded = true },
@@ -199,68 +230,45 @@ fun HomeContent(
             FloatingActionButton(
                 onClick = onNavigateToCreateWorkout,
                 containerColor = AppTheme.accent.light,
-                contentColor = Color.Black,
+                contentColor = Sty.OnAccent,
                 shape = CircleShape,
                 modifier = Modifier
-                    .size(64.dp)
-                    .shadow(elevation = 8.dp, shape = CircleShape)
+                    .size(58.dp)
+                    .shadow(elevation = 12.dp, shape = CircleShape)
             ) {
                 Icon(
                     imageVector = Icons.Default.Add,
                     contentDescription = stringResource(id = R.string.home_create_new_workout_button),
-                    modifier = Modifier.size(32.dp)
+                    modifier = Modifier.size(28.dp)
                 )
             }
         }
     ) { innerPadding ->
         Column(
             modifier = modifier
-                .padding(horizontal = 20.dp)
                 .padding(innerPadding)
                 .fillMaxSize()
+                .background(Sty.BgBrush)
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.Start,
         ) {
-            Spacer(modifier = Modifier.height(4.dp))
-
-            // Greeting block
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = stringResource(
-                            id = R.string.home_greeting,
-                            homeUiState.user?.name
-                                ?: stringResource(id = R.string.home_default_user_name)
-                        ),
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onBackground,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    homeUiState.currentDate?.let { date ->
-                        Text(
-                            text = date,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            HomeSectionHeader(
-                title = stringResource(id = R.string.home_scheduled_workout_today),
-                actionLabel = stringResource(R.string.home_browse_workouts),
-                onActionClick = onClickBrowseWorkouts
+            // === Greeting ============================================================
+            GreetingBlock(
+                name = homeUiState.user?.name ?: stringResource(R.string.home_default_user_name),
+                dateLine = homeUiState.currentDate
             )
 
-            Spacer(modifier = Modifier.height(12.dp))
+            // === Week strip ==========================================================
+            WeekStrip(
+                completedThisWeek = homeUiState.workoutsCompletedThisWeek
+            )
+
+            // === Today's workout — hero ============================================
+            SectionHeader(
+                title = stringResource(id = R.string.home_scheduled_workout_today),
+                actionLabel = stringResource(R.string.home_browse_workouts).trim(),
+                onActionClick = onClickBrowseWorkouts
+            )
 
             if (homeUiState.todayWorkouts.isNotEmpty()) {
                 homeUiState.todayWorkouts.forEach { workout ->
@@ -273,37 +281,45 @@ fun HomeContent(
                 EmptyWorkoutCard()
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            // === Quick stats tiles ==================================================
+            if (homeUiState.weeklyCalories > 0 || homeUiState.totalWorkoutsCompleted > 0) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 10.dp),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    StatTile(
+                        modifier = Modifier.weight(1f),
+                        label = stringResource(R.string.calorias_semana),
+                        value = homeUiState.weeklyCalories.toString(),
+                        unit = "kcal",
+                        accent = true,
+                        icon = { Icon(Icons.Default.LocalFireDepartment, null, modifier = Modifier.size(16.dp)) },
+                    )
+                    StatTile(
+                        modifier = Modifier.weight(1f),
+                        label = stringResource(R.string.treinos_totais),
+                        value = homeUiState.totalWorkoutsCompleted.toString(),
+                        unit = null,
+                        accent = false,
+                        icon = { Icon(Icons.Default.FitnessCenter, null, modifier = Modifier.size(16.dp), tint = Sty.GoldAccent) },
+                        iconBg = Sty.GoldAccent.copy(alpha = 0.12f),
+                    )
+                }
+            }
 
-            HomeSectionHeader(title = stringResource(R.string.treino_livre))
-
-            Spacer(modifier = Modifier.height(12.dp))
-
+            // === Freestyle ==========================================================
+            SectionHeader(title = stringResource(R.string.treino_livre))
             FreestyleWorkoutCard(
                 activeWorkout = homeUiState.activeFreestyleWorkout,
                 onClick = { showFreestyleNameDialog = true },
                 viewModel = homeViewModel
             )
 
-            Spacer(modifier = Modifier.height(24.dp))
-
-            HomeSectionHeader(title = stringResource(R.string.progresso))
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            if (homeUiState.user?.weightKg != null && homeUiState.weeklyCalories > 0) {
-                Spacer(modifier = Modifier.height(12.dp))
-                WeeklyCaloriesCard(calories = homeUiState.weeklyCalories)
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            if (homeUiState.totalWorkoutsCompleted > 0) MomentumCard(count = homeUiState.totalWorkoutsCompleted) else EmptyMomentumCard()
-
-            Spacer(modifier = Modifier.height(12.dp))
-
+            // === Weekly goal ========================================================
+            SectionHeader(title = stringResource(R.string.meta_semanal))
             val weeklyGoal = homeUiState.user?.weeklyGoal
-
             if (weeklyGoal != null && weeklyGoal > 0) {
                 WeeklyProgressCard(
                     currentWorkouts = homeUiState.workoutsCompletedThisWeek,
@@ -314,7 +330,7 @@ fun HomeContent(
                 SetWeeklyGoalCard(onClick = { showGoalDialog = true })
             }
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(100.dp))
         }
     }
 
@@ -322,7 +338,7 @@ fun HomeContent(
         Dialog(onDismissRequest = { isProfileExpanded = false }) {
             Box(
                 modifier = Modifier
-                    .size(300.dp) // Tamanho da imagem expandida
+                    .size(300.dp)
                     .clip(CircleShape)
                     .background(MaterialTheme.colorScheme.surfaceVariant)
                     .border(BorderStroke(4.dp, AppTheme.accent.gradient), CircleShape)
@@ -333,6 +349,7 @@ fun HomeContent(
                     AsyncImage(
                         model = ImageRequest.Builder(LocalContext.current)
                             .data(homeUiState.user?.profilePicture)
+                            .size(Size.ORIGINAL)
                             .build(),
                         contentDescription = stringResource(R.string.foto_de_perfil_expandida),
                         modifier = Modifier.fillMaxSize(),
@@ -341,7 +358,6 @@ fun HomeContent(
                         placeholder = painterResource(id = R.drawable.gym)
                     )
                 } else {
-                    // Imagem padrão
                     Image(
                         painter = painterResource(id = R.drawable.gym),
                         contentDescription = stringResource(R.string.foto_de_perfil_padrao),
@@ -368,137 +384,587 @@ fun HomeContent(
         FreestyleWorkoutNameDialog(
             onDismiss = { showFreestyleNameDialog = false },
             onConfirm = { name ->
-                homeViewModel.startFreestyleWorkout(name) {
-                    onNavigateToFreestyleWorkout()
-                }
+                homeViewModel.startFreestyleWorkout(name) { onNavigateToFreestyleWorkout() }
                 showFreestyleNameDialog = false
             }
         )
     }
 }
 
+// =============================================================================
+// === Top bar — STY logo + gradient avatar                                  ===
+// =============================================================================
 @Composable
-fun FreestyleWorkoutNameDialog(
-    onDismiss: () -> Unit,
-    onConfirm: (String) -> Unit
+fun CustomTopBar(
+    onProfileClick: () -> Unit,
+    user: User?
 ) {
-    var workoutName by remember { mutableStateOf("") }
+    Row(
+        modifier = Modifier
+            .statusBarsPadding()
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp, vertical = 14.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        com.example.training_tracker.ui.components.StyLogo(
+            titleSize = 22.sp,
+            layout = com.example.training_tracker.ui.components.StyLogoLayout.VERTICAL
+        )
 
-    Dialog(onDismissRequest = onDismiss) {
-        Card(
+        Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-                // Adicionando uma borda sutil em degradê ou cor de destaque
-                .border(1.dp, AppTheme.accent.light.copy(alpha = 0.2f), RoundedCornerShape(28.dp)),
-            shape = RoundedCornerShape(28.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f)
-            ),
-            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+                .size(38.dp)
+                .clip(CircleShape)
+                .background(AppTheme.accent.gradient)
+                .border(BorderStroke(1.dp, Color.White.copy(alpha = 0.18f)), CircleShape)
+                .clickable { onProfileClick() },
+            contentAlignment = Alignment.Center
         ) {
-            Column(
-                modifier = Modifier.padding(vertical = 32.dp, horizontal = 24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+            if (!user?.profilePicture.isNullOrEmpty()) {
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(user?.profilePicture)
+                        .size(Size.ORIGINAL)
+                        .build(),
+                    contentDescription = stringResource(id = R.string.content_description_profile),
+                    modifier = Modifier.fillMaxSize().clip(CircleShape),
+                    contentScale = ContentScale.Crop
+                )
+            } else {
+                Text(
+                    text = (user?.name?.firstOrNull()?.uppercase() ?: "A"),
+                    color = Sty.OnAccent,
+                    fontFamily = com.example.training_tracker.ui.theme.Montserrat,
+                    fontWeight = FontWeight.Black,
+                    fontSize = 15.sp
+                )
+            }
+        }
+    }
+}
+
+// =============================================================================
+// === Greeting                                                              ===
+// =============================================================================
+@Composable
+private fun GreetingBlock(name: String, dateLine: String?) {
+    Column(modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp)) {
+        if (!dateLine.isNullOrBlank()) {
+            Text(
+                text = dateLine.uppercase(Locale.getDefault()),
+                color = Sty.TextDim,
+                fontFamily = com.example.training_tracker.ui.theme.Montserrat,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 11.sp,
+                letterSpacing = 1.5.sp
+            )
+            Spacer(Modifier.height(6.dp))
+        }
+        Text(
+            text = buildAnnotatedString {
+                append("Olá, ")
+                withStyle(SpanStyle(color = AppTheme.accent.light)) { append(name) }
+                append(".")
+            },
+            color = Sty.TextMain,
+            fontFamily = com.example.training_tracker.ui.theme.Montserrat,
+            fontWeight = FontWeight.Black,
+            fontSize = 30.sp,
+            letterSpacing = (-0.5).sp,
+            lineHeight = 33.sp,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+    }
+}
+
+// =============================================================================
+// === Week strip                                                            ===
+// =============================================================================
+@RequiresApi(Build.VERSION_CODES.O)
+@Composable
+private fun WeekStrip(completedThisWeek: Int) {
+    // Build a Mon→Sun list with status derived from today + count.
+    val today = remember { LocalDate.now() }
+    val monday = remember(today) { today.minusDays(((today.dayOfWeek.value + 6) % 7).toLong()) }
+    val days = remember(today, completedThisWeek) {
+        (0..6).map { i ->
+            val date = monday.plusDays(i.toLong())
+            val initial = date.dayOfWeek
+                .getDisplayName(JTextStyle.NARROW, Locale("pt", "BR"))
+                .uppercase(Locale("pt", "BR"))
+            val status = when {
+                date.isEqual(today) -> WeekStatus.TODAY
+                date.isBefore(today) && i < completedThisWeek -> WeekStatus.DONE
+                date.isBefore(today) -> WeekStatus.REST
+                else -> WeekStatus.PLANNED
+            }
+            Triple(initial, status, date.dayOfMonth)
+        }
+    }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp, vertical = 16.dp),
+        horizontalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
+        days.forEach { (label, status, _) ->
+            WeekDayCell(
+                modifier = Modifier.weight(1f),
+                label = label,
+                status = status
+            )
+        }
+    }
+}
+
+private enum class WeekStatus { DONE, TODAY, PLANNED, REST }
+
+@Composable
+private fun WeekDayCell(modifier: Modifier, label: String, status: WeekStatus) {
+    val isToday = status == WeekStatus.TODAY
+    val bg: Brush = if (isToday) AppTheme.accent.gradient else Brush.linearGradient(listOf(Sty.Surface, Sty.Surface))
+    val borderColor = if (isToday) Color.Transparent else Sty.Border
+    Column(
+        modifier = modifier
+            .clip(RoundedCornerShape(14.dp))
+            .background(bg)
+            .border(BorderStroke(1.dp, borderColor), RoundedCornerShape(14.dp))
+            .padding(vertical = 10.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
+        Text(
+            text = label,
+            fontFamily = com.example.training_tracker.ui.theme.Montserrat,
+            fontWeight = FontWeight.Bold,
+            fontSize = 11.sp,
+            letterSpacing = 0.6.sp,
+            color = if (isToday) Sty.OnAccent.copy(alpha = 0.85f) else Sty.TextDim
+        )
+        Box(
+            modifier = Modifier
+                .size(18.dp)
+                .clip(CircleShape)
+                .then(
+                    when (status) {
+                        WeekStatus.DONE -> Modifier.background(AppTheme.accent.light)
+                        WeekStatus.TODAY -> Modifier.background(Sty.OnAccent.copy(alpha = 0.85f))
+                        WeekStatus.PLANNED -> Modifier.border(1.dp, Sty.BorderStrong, CircleShape)
+                        WeekStatus.REST -> Modifier.background(Sty.Surface2)
+                    }
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            when (status) {
+                WeekStatus.DONE -> Icon(
+                    Icons.Default.Check, null,
+                    tint = Sty.OnAccent,
+                    modifier = Modifier.size(11.dp)
+                )
+                WeekStatus.TODAY -> Icon(
+                    Icons.Default.Bolt, null,
+                    tint = AppTheme.accent.light,
+                    modifier = Modifier.size(11.dp)
+                )
+                else -> {}
+            }
+        }
+    }
+}
+
+// =============================================================================
+// === Section header                                                        ===
+// =============================================================================
+@Composable
+fun HomeSectionHeader(
+    title: String,
+    actionLabel: String? = null,
+    onActionClick: (() -> Unit)? = null,
+    modifier: Modifier = Modifier
+) = SectionHeader(title, actionLabel, onActionClick, modifier)
+
+@Composable
+private fun SectionHeader(
+    title: String,
+    actionLabel: String? = null,
+    onActionClick: (() -> Unit)? = null,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            text = title.uppercase(Locale.getDefault()),
+            fontFamily = com.example.training_tracker.ui.theme.Montserrat,
+            fontWeight = FontWeight.Bold,
+            fontSize = 11.sp,
+            letterSpacing = 2.sp,
+            color = Sty.TextDim
+        )
+        if (actionLabel != null && onActionClick != null) {
+            Row(
+                modifier = Modifier.clickable { onActionClick() },
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(2.dp)
             ) {
-                // Ícone moderno no topo
+                Text(
+                    text = actionLabel,
+                    fontFamily = com.example.training_tracker.ui.theme.Montserrat,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 12.sp,
+                    color = AppTheme.accent.light
+                )
+                Icon(
+                    Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                    null,
+                    tint = AppTheme.accent.light,
+                    modifier = Modifier.size(14.dp)
+                )
+            }
+        }
+    }
+}
+
+// =============================================================================
+// === Hero workout card                                                     ===
+// =============================================================================
+@Composable
+fun WorkoutCard(modifier: Modifier = Modifier, workout: Workout?, onClick: () -> Unit) {
+    val isCompleted = workout?.isCompleted == true
+    val muscleGroups = remember(workout) {
+        workout?.exercises?.mapNotNull { it.muscleGroup }?.distinct() ?: emptyList()
+    }
+
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 4.dp)
+            .height(230.dp)
+            .clip(RoundedCornerShape(26.dp))
+            .background(Sty.Surface)
+            .border(BorderStroke(1.dp, Sty.Border), RoundedCornerShape(26.dp))
+            .clickable { onClick() }
+    ) {
+        AsyncImage(
+            model = ImageRequest.Builder(LocalContext.current)
+                .data(getWorkoutImageRes(workout))
+                .build(),
+            contentDescription = null,
+            modifier = Modifier.matchParentSize(),
+            contentScale = ContentScale.Crop,
+            alpha = if (isCompleted) 0.25f else 0.85f
+        )
+        // Scrim
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .background(
+                    Brush.verticalGradient(
+                        0f to Color.Transparent,
+                        0.35f to Color.Black.copy(alpha = 0.10f),
+                        1f to Color.Black.copy(alpha = 0.78f)
+                    )
+                )
+        )
+
+        // Content (chips + title + meta)
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(18.dp),
+            verticalArrangement = Arrangement.Bottom
+        ) {
+            // chip row
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                StyChip(
+                    text = if (isCompleted) stringResource(R.string.completed) else "HOJE",
+                    accent = !isCompleted,
+                    accentBrush = if (isCompleted) GreenGradient else AppTheme.accent.gradient
+                )
+                muscleGroups.take(2).forEach { mg ->
+                    StyChip(text = stringResource(id = mg.resId).uppercase(Locale.getDefault()))
+                }
+            }
+            Spacer(Modifier.height(8.dp))
+            Text(
+                text = workout?.name ?: stringResource(R.string.home_default_workout_name),
+                color = Color.White,
+                fontFamily = com.example.training_tracker.ui.theme.Montserrat,
+                fontWeight = FontWeight.Black,
+                fontSize = 24.sp,
+                letterSpacing = (-0.25).sp,
+                lineHeight = 26.sp,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.padding(end = 64.dp)
+            )
+            // Inline progress bar if in-progress
+            if (workout?.isOnGoing == true && !isCompleted) {
+                Spacer(Modifier.height(8.dp))
                 Box(
                     modifier = Modifier
-                        .size(56.dp)
-                        .background(AppTheme.accent.light.copy(alpha = 0.1f), CircleShape),
-                    contentAlignment = Alignment.Center
+                        .fillMaxWidth(0.55f)
+                        .height(4.dp)
+                        .clip(CircleShape)
+                        .background(Color.White.copy(alpha = 0.2f))
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Edit, // Certifique-se de importar Icons.Default.Edit
-                        contentDescription = null,
-                        tint = AppTheme.accent.light,
-                        modifier = Modifier.size(28.dp)
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth(workout.progress)
+                            .fillMaxHeight()
+                            .background(AppTheme.accent.gradient)
                     )
                 }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Text(
-                    text = stringResource(R.string.nome_do_treino),
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.ExtraBold, // Mais peso para modernidade
-                    color = MaterialTheme.colorScheme.onSurface
+            }
+            Spacer(Modifier.height(10.dp))
+            // meta row
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        Icons.Default.FitnessCenter, null,
+                        tint = Color.White.copy(alpha = 0.85f),
+                        modifier = Modifier.size(14.dp)
+                    )
+                    Spacer(Modifier.width(5.dp))
+                    Text(
+                        text = stringResource(
+                            id = R.string.home_workout_exercise_count,
+                            workout?.exercises?.size ?: 0
+                        ),
+                        color = Color.White.copy(alpha = 0.85f),
+                        fontSize = 11.5.sp,
+                        letterSpacing = 0.6.sp,
+                        maxLines = 1
+                    )
+                }
+                Box(
+                    modifier = Modifier
+                        .size(3.dp)
+                        .clip(CircleShape)
+                        .background(Color.White.copy(alpha = 0.5f))
                 )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        Icons.Default.Timer, null,
+                        tint = Color.White.copy(alpha = 0.85f),
+                        modifier = Modifier.size(14.dp)
+                    )
+                    Spacer(Modifier.width(5.dp))
+                    Text(
+                        text = "${workout?.estimatedTime ?: 0} min",
+                        color = Color.White.copy(alpha = 0.85f),
+                        fontSize = 11.5.sp,
+                        letterSpacing = 0.6.sp,
+                        maxLines = 1
+                    )
+                }
+            }
+        }
 
-                Text(
-                    text = stringResource(R.string.como_quer_chamar_o_seu_treino),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color.Gray,
-                    textAlign = TextAlign.Center
+        // Play CTA — bottom right
+        if (!isCompleted) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(16.dp)
+                    .size(50.dp)
+                    .shadow(elevation = 14.dp, shape = CircleShape, spotColor = AppTheme.accent.light)
+                    .clip(CircleShape)
+                    .background(AppTheme.accent.light)
+                    .clickable { onClick() },
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    Icons.Default.PlayArrow, null,
+                    tint = Sty.OnAccent,
+                    modifier = Modifier.size(24.dp)
                 )
+            }
+        }
+    }
+}
 
-                Spacer(modifier = Modifier.height(24.dp))
+@Composable
+private fun StyChip(
+    text: String,
+    accent: Boolean = false,
+    accentBrush: Brush = AppTheme.accent.gradient
+) {
+    val shape = RoundedCornerShape(100.dp)
+    Box(
+        modifier = Modifier
+            .clip(shape)
+            .then(
+                if (accent) Modifier.background(accentBrush)
+                else Modifier
+                    .background(Color.White.copy(alpha = 0.14f))
+                    .border(BorderStroke(1.dp, Color.White.copy(alpha = 0.18f)), shape)
+            )
+            .padding(horizontal = 9.dp, vertical = 4.dp)
+    ) {
+        Text(
+            text = text,
+            color = if (accent) Sty.OnAccent else Color.White,
+            fontFamily = com.example.training_tracker.ui.theme.Montserrat,
+            fontWeight = FontWeight.Black,
+            fontSize = 10.sp,
+            letterSpacing = 1.2.sp
+        )
+    }
+}
 
-                OutlinedTextField(
-                    value = workoutName,
-                    onValueChange = { workoutName = it },
-                    placeholder = {
-                        Text(
-                            text = stringResource(R.string.ex_treino_de_sexta),
-                            color = Color.Gray.copy(alpha = 0.6f)
-                        )
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp),
-                    singleLine = true,
-                    textStyle = TextStyle(fontWeight = FontWeight.Medium, fontSize = 16.sp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = AppTheme.accent.light,
-                        unfocusedBorderColor = Color.Gray.copy(alpha = 0.3f),
-                        cursorColor = AppTheme.accent.light,
-                        focusedContainerColor = AppTheme.accent.light.copy(alpha = 0.02f)
+// =============================================================================
+// === Empty workout card (rest day)                                         ===
+// =============================================================================
+@Composable
+fun EmptyWorkoutCard(modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 4.dp)
+            .height(200.dp)
+            .clip(RoundedCornerShape(26.dp))
+            .background(Sty.Surface)
+            .border(BorderStroke(1.dp, Sty.Border), RoundedCornerShape(26.dp))
+    ) {
+        AsyncImage(
+            model = ImageRequest.Builder(LocalContext.current)
+                .data(R.drawable.relax_no_workout)
+                .build(),
+            contentDescription = null,
+            modifier = Modifier.matchParentSize(),
+            contentScale = ContentScale.Crop,
+            alpha = 0.25f
+        )
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .background(
+                    Brush.verticalGradient(
+                        listOf(Color.Transparent, Color.Black.copy(alpha = 0.75f))
                     )
                 )
+        )
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(20.dp),
+            verticalArrangement = Arrangement.Bottom
+        ) {
+            StyChip(text = "DESCANSO", accent = false)
+            Spacer(Modifier.height(10.dp))
+            Text(
+                text = stringResource(id = R.string.home_no_workout_scheduled_today),
+                color = Color.White,
+                fontFamily = com.example.training_tracker.ui.theme.Montserrat,
+                fontWeight = FontWeight.Black,
+                fontSize = 20.sp,
+                lineHeight = 22.sp,
+                letterSpacing = (-0.25).sp
+            )
+            Spacer(Modifier.height(4.dp))
+            Text(
+                text = stringResource(R.string.dica_faca_um_leve_agachamento_ou_uma_caminhada_de_15_minutos),
+                color = Color.White.copy(alpha = 0.7f),
+                fontSize = 12.sp,
+                lineHeight = 16.sp
+            )
+        }
+    }
+}
 
-                Spacer(modifier = Modifier.height(32.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    TextButton(
-                        onClick = onDismiss,
-                        modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(14.dp)
-                    ) {
-                        Text(
-                            text = stringResource(R.string.cancelar),
-                            color = Color.Gray,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                    }
-
-                    Button(
-                        onClick = { if (workoutName.isNotBlank()) onConfirm(workoutName) },
-                        enabled = workoutName.isNotBlank(),
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(48.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = AppTheme.accent.light,
-                            contentColor = Color.Black,
-                            disabledContainerColor = AppTheme.accent.light.copy(alpha = 0.3f)
-                        ),
-                        shape = RoundedCornerShape(14.dp),
-                        elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
-                    ) {
-                        Text(
-                            text = stringResource(R.string.iniciar),
-                            style = MaterialTheme.typography.labelLarge,
-                            fontWeight = FontWeight.ExtraBold
-                        )
-                    }
+// =============================================================================
+// === Stat tiles                                                            ===
+// =============================================================================
+@Composable
+private fun StatTile(
+    modifier: Modifier = Modifier,
+    label: String,
+    value: String,
+    unit: String?,
+    accent: Boolean,
+    icon: @Composable () -> Unit,
+    iconBg: Color = AppTheme.accent.light.copy(alpha = 0.12f),
+) {
+    Box(
+        modifier = modifier
+            .clip(RoundedCornerShape(20.dp))
+            .background(Sty.Surface)
+            .border(BorderStroke(1.dp, Sty.Border), RoundedCornerShape(20.dp))
+            .padding(14.dp)
+            .defaultMinSize(minHeight = 96.dp)
+    ) {
+        if (accent) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.CenterStart)
+                    .fillMaxHeight()
+                    .width(3.dp)
+                    .background(AppTheme.accent.gradient)
+            )
+        }
+        // floater icon top-right
+        Box(
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .size(28.dp)
+                .clip(CircleShape)
+                .background(iconBg),
+            contentAlignment = Alignment.Center
+        ) {
+            androidx.compose.runtime.CompositionLocalProvider(
+                androidx.compose.material3.LocalContentColor provides AppTheme.accent.light
+            ) { icon() }
+        }
+        Column(modifier = Modifier.align(Alignment.BottomStart)) {
+            Text(
+                text = label.uppercase(Locale.getDefault()),
+                color = Sty.TextDim,
+                fontFamily = com.example.training_tracker.ui.theme.Montserrat,
+                fontWeight = FontWeight.Bold,
+                fontSize = 10.5.sp,
+                letterSpacing = 1.4.sp
+            )
+            Spacer(Modifier.height(6.dp))
+            Row(verticalAlignment = Alignment.Bottom) {
+                Text(
+                    text = value,
+                    color = Sty.TextMain,
+                    fontFamily = com.example.training_tracker.ui.theme.Montserrat,
+                    fontWeight = FontWeight.Black,
+                    fontSize = 28.sp,
+                    letterSpacing = (-0.5).sp,
+                    lineHeight = 28.sp
+                )
+                if (!unit.isNullOrBlank()) {
+                    Spacer(Modifier.width(2.dp))
+                    Text(
+                        text = unit,
+                        color = Sty.TextDim,
+                        fontFamily = com.example.training_tracker.ui.theme.Montserrat,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 12.sp,
+                        modifier = Modifier.padding(bottom = 3.dp)
+                    )
                 }
             }
         }
     }
 }
 
+// =============================================================================
+// === Freestyle row                                                         ===
+// =============================================================================
 @Composable
 fun FreestyleWorkoutCard(
     activeWorkout: Workout? = null,
@@ -511,10 +977,12 @@ fun FreestyleWorkoutCard(
     if (showCancelDialog) {
         AlertDialog(
             onDismissRequest = { showCancelDialog = false },
+            containerColor = Sty.Surface,
             title = {
                 Text(
                     text = stringResource(R.string.cancelar_treino),
-                    style = Typography.titleMedium
+                    style = Typography.titleMedium,
+                    color = Sty.TextMain
                 )
             },
             text = {
@@ -523,222 +991,301 @@ fun FreestyleWorkoutCard(
                         R.string.tem_certeza_que_deseja_cancelar_e_remover_o_treino,
                         activeWorkout?.name ?: "this"
                     ),
-                    style = Typography.bodyLarge
+                    style = Typography.bodyLarge,
+                    color = Sty.TextDim
                 )
             },
             confirmButton = {
-                TextButton(
-                    onClick = {
-                        viewModel.removeFreestyleWorkout()
-                        showCancelDialog = false
-                    }
-                ) {
+                TextButton(onClick = {
+                    viewModel.removeFreestyleWorkout()
+                    showCancelDialog = false
+                }) {
                     Text(
                         text = stringResource(R.string.confirmar),
-                        color = MaterialTheme.colorScheme.secondary,
+                        color = AppTheme.accent.light,
                         fontWeight = FontWeight.Bold
                     )
                 }
             },
             dismissButton = {
-                TextButton(
-                    onClick = { showCancelDialog = false }
-                ) {
-                    Text(
-                        text = stringResource(R.string.cancelar),
-                        color = Color.Gray
-                    )
+                TextButton(onClick = { showCancelDialog = false }) {
+                    Text(text = stringResource(R.string.cancelar), color = Sty.TextDim)
                 }
             }
         )
     }
 
-    Card(
+    val shape = RoundedCornerShape(18.dp)
+    Row(
         modifier = Modifier
             .fillMaxWidth()
-            .defaultMinSize(minHeight = 100.dp)
-            .clickable(enabled = !isLocked) { onClick() },
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = if (isLocked)
-                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
-            else
-                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-        ),
-        border = BorderStroke(
-            1.dp,
-            if (isLocked) Color.Gray.copy(alpha = 0.3f) else AppTheme.accent.light.copy(alpha = 0.3f)
-        )
+            .padding(horizontal = 16.dp, vertical = 4.dp)
+            .clip(shape)
+            .background(Sty.Surface)
+            .border(BorderStroke(1.dp, if (isLocked) Sty.Border else Sty.BorderStrong), shape)
+            .clickable(enabled = !isLocked) { onClick() }
+            .padding(horizontal = 16.dp, vertical = 13.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(14.dp)
     ) {
-        Row(
+        Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .size(40.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .background(
+                    if (isLocked) Color.White.copy(alpha = 0.05f)
+                    else AppTheme.accent.light.copy(alpha = 0.12f)
+                ),
+            contentAlignment = Alignment.Center
         ) {
-            Box(
-                modifier = Modifier
-                    .size(48.dp)
-                    .background(
-                        if (isLocked) Color.Gray.copy(alpha = 0.1f) else AppTheme.accent.light.copy(
-                            alpha = 0.1f
-                        ), CircleShape
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = if (isLocked) Icons.Default.Lock else Icons.Default.Bolt,
-                    contentDescription = null,
-                    tint = if (isLocked) Color.Gray else AppTheme.accent.light,
-                    modifier = Modifier.size(28.dp)
-                )
-            }
-            Spacer(modifier = Modifier.width(16.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = stringResource(R.string.treino_livre),
-                    style = Typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = if (isLocked) Color.Gray else AppTheme.accent.light
-                )
-                Text(
-                    text = if (isLocked)
-                        stringResource(
-                            R.string.treino_livre_em_andamento_finalize_ou_cancele_esse_treino_antes_de_iniciar_outro,
-                            activeWorkout.name
-                        )
-                    else
-                        stringResource(R.string.nao_planejou_seu_treino_inicie_um_treino_livre_e_adicione_os_exercicios_na_hora),
-                    style = Typography.labelSmall,
-                    color = if (isLocked) Color.Gray else MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                if (isLocked) {
-                    Text(
-                        text = stringResource(R.string.cancelar_treino),
-                        style = Typography.labelMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier
-                            .padding(top = 8.dp) // Um pequeno respiro entre a descrição e o botão
-                            .clip(RoundedCornerShape(4.dp)) // Deixa o efeito de clique arredondado
-                            .clickable { showCancelDialog = true }
-                            .padding(4.dp) // Padding interno para a área de clique ficar confortável
+            Icon(
+                imageVector = if (isLocked) Icons.Default.Lock else Icons.Default.Bolt,
+                contentDescription = null,
+                tint = if (isLocked) Sty.TextFaint else AppTheme.accent.light,
+                modifier = Modifier.size(20.dp)
+            )
+        }
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = stringResource(R.string.treino_livre).uppercase(Locale.getDefault()),
+                fontFamily = com.example.training_tracker.ui.theme.Montserrat,
+                fontWeight = FontWeight.Black,
+                fontSize = 13.sp,
+                letterSpacing = 0.5.sp,
+                color = if (isLocked) Sty.TextFaint else AppTheme.accent.light
+            )
+            Spacer(Modifier.height(2.dp))
+            Text(
+                text = if (isLocked)
+                    stringResource(
+                        R.string.treino_livre_em_andamento_finalize_ou_cancele_esse_treino_antes_de_iniciar_outro,
+                        activeWorkout.name
                     )
-                }
-            }
-            if (!isLocked) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                    contentDescription = null,
-                    tint = AppTheme.accent.light,
+                else
+                    stringResource(R.string.nao_planejou_seu_treino_inicie_um_treino_livre_e_adicione_os_exercicios_na_hora),
+                fontSize = 11.5.sp,
+                lineHeight = 15.sp,
+                color = Sty.TextDim
+            )
+            if (isLocked) {
+                Spacer(Modifier.height(6.dp))
+                Text(
+                    text = stringResource(R.string.cancelar_treino),
+                    fontFamily = com.example.training_tracker.ui.theme.Montserrat,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 11.sp,
+                    color = AppTheme.accent.light,
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(4.dp))
+                        .clickable { showCancelDialog = true }
+                        .padding(vertical = 2.dp)
                 )
             }
+        }
+        if (!isLocked) {
+            Icon(
+                Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                null,
+                tint = AppTheme.accent.light.copy(alpha = 0.8f)
+            )
         }
     }
 }
 
-fun getWorkoutImageRes(workout: Workout?): Int {
-    if (workout == null || workout.exercises.isEmpty()) return R.drawable.workout
+// =============================================================================
+// === Weekly goal card                                                      ===
+// =============================================================================
+@Composable
+fun WeeklyProgressCard(
+    currentWorkouts: Int,
+    goalWorkouts: Int,
+    onEditGoal: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val progress = if (goalWorkouts > 0) {
+        (currentWorkouts.toFloat() / goalWorkouts.toFloat()).coerceIn(0f, 1f)
+    } else 0f
 
-    val mostFrequentMuscleGroup = workout.exercises
-        .mapNotNull { it.muscleGroup }
-        .groupingBy { it }
-        .eachCount()
-        .maxByOrNull { it.value }?.key
+    val shape = RoundedCornerShape(22.dp)
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 4.dp)
+            .clip(shape)
+            .background(Sty.Surface)
+            .border(BorderStroke(1.dp, Sty.Border), shape)
+            .padding(horizontal = 18.dp, vertical = 16.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.Top,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = stringResource(R.string.consistencia_e_a_chave),
+                        color = Sty.TextMain,
+                        fontFamily = com.example.training_tracker.ui.theme.Montserrat,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp,
+                        letterSpacing = (-0.2).sp,
+                        modifier = Modifier.weight(1f, fill = false)
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Icon(
+                        Icons.Default.Edit,
+                        contentDescription = stringResource(R.string.editar_meta),
+                        modifier = Modifier
+                            .size(14.dp)
+                            .clickable { onEditGoal() },
+                        tint = Sty.TextFaint
+                    )
+                }
+                Spacer(Modifier.height(2.dp))
+                val remaining = (goalWorkouts - currentWorkouts).coerceAtLeast(0)
+                Text(
+                    text = if (remaining > 0)
+                        "$remaining ${if (remaining == 1) stringResource(R.string.treino) else stringResource(R.string.treinos)} restantes para bater a meta"
+                    else
+                        stringResource(R.string.objetivo_atingido),
+                    color = Sty.TextDim,
+                    fontSize = 12.sp,
+                    lineHeight = 15.sp
+                )
+            }
+            Spacer(Modifier.width(12.dp))
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(100.dp))
+                    .background(AppTheme.accent.light.copy(alpha = 0.10f))
+                    .border(BorderStroke(1.dp, AppTheme.accent.light.copy(alpha = 0.30f)), RoundedCornerShape(100.dp))
+                    .padding(horizontal = 10.dp, vertical = 5.dp)
+            ) {
+                Text(
+                    text = "$currentWorkouts / $goalWorkouts",
+                    fontFamily = com.example.training_tracker.ui.theme.Montserrat,
+                    fontWeight = FontWeight.Black,
+                    fontSize = 11.sp,
+                    letterSpacing = 0.4.sp,
+                    color = AppTheme.accent.light
+                )
+            }
+        }
 
-    return when (mostFrequentMuscleGroup) {
-        MuscleGroups.CHEST -> R.drawable.chest_workout
-        MuscleGroups.BACK -> R.drawable.back_workout
-        MuscleGroups.QUADRICEPS -> R.drawable.leg_workout
-        MuscleGroups.HAMSTRINGS -> R.drawable.hamstrings_workout_home
-        MuscleGroups.CALF -> R.drawable.calf_workout_home
-        MuscleGroups.GLUTE -> R.drawable.glute_workout_home
-        MuscleGroups.SHOULDERS -> R.drawable.shoulder_workout
-        MuscleGroups.BICEPS -> R.drawable.biceps_workout
-        MuscleGroups.TRICEPS -> R.drawable.triceps_workout
-        MuscleGroups.ABS -> R.drawable.abs_workout
-        MuscleGroups.CARDIO -> R.drawable.cardio_workout
-        MuscleGroups.STRETCHING -> R.drawable.stretching_workout
-        else -> R.drawable.biceps_workout
+        Spacer(Modifier.height(14.dp))
+
+        // progress bar
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(6.dp)
+                .clip(CircleShape)
+                .background(Sty.Surface2)
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(progress)
+                    .fillMaxHeight()
+                    .clip(CircleShape)
+                    .background(AppTheme.accent.gradient)
+            )
+        }
+
+        Spacer(Modifier.height(14.dp))
+
+        // pill dots
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            for (i in 0 until goalWorkouts) {
+                val filled = i < currentWorkouts
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(32.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .then(
+                            if (filled) Modifier.background(AppTheme.accent.gradient)
+                            else Modifier.background(Sty.Surface2)
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (filled) {
+                        Icon(
+                            Icons.Default.Check, null,
+                            tint = Sty.OnAccent,
+                            modifier = Modifier.size(13.dp)
+                        )
+                    } else {
+                        Text(
+                            text = "${i + 1}",
+                            color = Sty.TextFaint,
+                            fontFamily = com.example.training_tracker.ui.theme.Montserrat,
+                            fontWeight = FontWeight.Black,
+                            fontSize = 10.sp,
+                            letterSpacing = 0.6.sp
+                        )
+                    }
+                }
+            }
+        }
     }
 }
 
 @Composable
 fun SetWeeklyGoalCard(onClick: () -> Unit) {
-    val isSystemDark = isSystemInDarkTheme()
-    Card(
+    val shape = RoundedCornerShape(22.dp)
+    Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(130.dp)
-            .clickable { onClick() },
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = if (isSystemDark) MaterialTheme.colorScheme.surfaceVariant else Color.Black
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            .padding(horizontal = 16.dp, vertical = 4.dp)
+            .clip(shape)
+            .background(Sty.Surface)
+            .border(BorderStroke(1.dp, Sty.Border), shape)
+            .clickable { onClick() }
+            .padding(horizontal = 18.dp, vertical = 18.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(14.dp)
     ) {
-        Box(modifier = Modifier.fillMaxSize()) {
-            AsyncImage(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(R.drawable.strong_3k)
-                    .build(),
-                contentDescription = null,
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop,
-                alpha = if (isSystemDark) 0.2f else 0.4f
-            )
-
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        Brush.verticalGradient(
-                            colors = listOf(
-                                Color.Transparent,
-                                Color.Black.copy(alpha = 0.7f)
-                            )
-                        )
-                    )
-            )
-
-            Row(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(20.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Surface(
-                    modifier = Modifier.size(48.dp),
-                    shape = CircleShape,
-                    color = AppTheme.accent.light.copy(alpha = 0.2f),
-                    border = BorderStroke(1.dp, AppTheme.accent.light.copy(alpha = 0.5f))
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = null,
-                        tint = AppTheme.accent.light,
-                        modifier = Modifier.padding(12.dp)
-                    )
-                }
-                Spacer(modifier = Modifier.width(16.dp))
-                Column {
-                    Text(
-                        text = stringResource(R.string.defina_sua_meta_semanal),
-                        style = Typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    )
-                    Text(
-                        text = stringResource(R.string.quantos_treinos_voce_fara_esta_semana),
-                        style = Typography.bodySmall,
-                        color = Color.White.copy(alpha = 0.7f)
-                    )
-                }
-            }
+        Box(
+            modifier = Modifier
+                .size(44.dp)
+                .clip(CircleShape)
+                .background(AppTheme.accent.light.copy(alpha = 0.12f))
+                .border(BorderStroke(1.dp, AppTheme.accent.light.copy(alpha = 0.3f)), CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(Icons.Default.Add, null, tint = AppTheme.accent.light, modifier = Modifier.size(22.dp))
         }
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = stringResource(R.string.defina_sua_meta_semanal),
+                color = Sty.TextMain,
+                fontFamily = com.example.training_tracker.ui.theme.Montserrat,
+                fontWeight = FontWeight.Bold,
+                fontSize = 15.sp,
+                letterSpacing = (-0.2).sp
+            )
+            Spacer(Modifier.height(2.dp))
+            Text(
+                text = stringResource(R.string.quantos_treinos_voce_fara_esta_semana),
+                color = Sty.TextDim,
+                fontSize = 12.sp,
+                lineHeight = 15.sp
+            )
+        }
+        Icon(
+            Icons.AutoMirrored.Filled.KeyboardArrowRight, null,
+            tint = AppTheme.accent.light
+        )
     }
 }
 
+// =============================================================================
+// === Weekly goal picker (kept functional, restyled)                        ===
+// =============================================================================
 @Composable
 fun WeeklyGoalPickerDialog(
     currentGoal: Int,
@@ -764,9 +1311,7 @@ fun WeeklyGoalPickerDialog(
         }
     }
 
-    LaunchedEffect(Unit) {
-        listState.scrollToItem(currentGoal - 1)
-    }
+    LaunchedEffect(Unit) { listState.scrollToItem(currentGoal - 1) }
 
     Dialog(onDismissRequest = onDismiss) {
         Card(
@@ -774,28 +1319,28 @@ fun WeeklyGoalPickerDialog(
                 .fillMaxWidth()
                 .padding(16.dp),
             shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+            colors = CardDefaults.cardColors(containerColor = Sty.Surface)
         ) {
             Column(
                 modifier = Modifier.padding(24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = stringResource(R.string.meta_semanal),
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold,
+                    text = stringResource(R.string.meta_semanal).uppercase(Locale.getDefault()),
+                    fontFamily = com.example.training_tracker.ui.theme.Montserrat,
+                    fontWeight = FontWeight.Black,
+                    fontSize = 13.sp,
+                    letterSpacing = 2.sp,
                     color = AppTheme.accent.light
                 )
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(Modifier.height(6.dp))
                 Text(
                     text = stringResource(R.string.escolha_seu_objetivo_de_treinos_por_semana),
                     style = MaterialTheme.typography.bodyMedium,
                     textAlign = TextAlign.Center,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = Sty.TextDim
                 )
-
-                Spacer(modifier = Modifier.height(24.dp))
-
+                Spacer(Modifier.height(20.dp))
                 Box(
                     modifier = Modifier
                         .height(180.dp)
@@ -803,13 +1348,10 @@ fun WeeklyGoalPickerDialog(
                     contentAlignment = Alignment.Center
                 ) {
                     Surface(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(50.dp),
-                        color = AppTheme.accent.light.copy(alpha = 0.1f),
+                        modifier = Modifier.fillMaxWidth().height(50.dp),
+                        color = AppTheme.accent.light.copy(alpha = 0.10f),
                         shape = RoundedCornerShape(12.dp)
                     ) {}
-
                     LazyColumn(
                         state = listState,
                         modifier = Modifier.fillMaxSize(),
@@ -819,17 +1361,11 @@ fun WeeklyGoalPickerDialog(
                         items(items) { num ->
                             val isSelected = num == selectedGoal
                             Box(
-                                modifier = Modifier
-                                    .height(50.dp)
-                                    .fillMaxWidth(),
+                                modifier = Modifier.height(50.dp).fillMaxWidth(),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
-                                    text = "$num ${
-                                        if (num == 1) stringResource(R.string.treino) else stringResource(
-                                            R.string.treinos
-                                        )
-                                    }",
+                                    text = "$num ${if (num == 1) stringResource(R.string.treino) else stringResource(R.string.treinos)}",
                                     style = if (isSelected) {
                                         MaterialTheme.typography.headlineMedium.copy(
                                             fontWeight = FontWeight.Bold,
@@ -837,7 +1373,7 @@ fun WeeklyGoalPickerDialog(
                                         )
                                     } else {
                                         MaterialTheme.typography.bodyLarge.copy(
-                                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                                            color = Sty.TextFaint
                                         )
                                     }
                                 )
@@ -845,28 +1381,24 @@ fun WeeklyGoalPickerDialog(
                         }
                     }
                 }
-
-                Spacer(modifier = Modifier.height(32.dp))
-
+                Spacer(Modifier.height(24.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.End
                 ) {
                     Text(
                         text = stringResource(R.string.cancelar),
-                        modifier = Modifier
-                            .clickable { onDismiss() }
-                            .padding(12.dp),
+                        modifier = Modifier.clickable { onDismiss() }.padding(12.dp),
                         style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = Sty.TextDim
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(Modifier.width(8.dp))
                     Button(
                         onClick = { onConfirm(selectedGoal) },
                         colors = ButtonDefaults.buttonColors(containerColor = AppTheme.accent.light),
                         shape = RoundedCornerShape(12.dp)
                     ) {
-                        Text("CONFIRMAR", color = Color.Black, fontWeight = FontWeight.Bold)
+                        Text("CONFIRMAR", color = Sty.OnAccent, fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -875,518 +1407,145 @@ fun WeeklyGoalPickerDialog(
 }
 
 @Composable
-fun WeeklyProgressCard(
-    currentWorkouts: Int,
-    goalWorkouts: Int,
-    onEditGoal: () -> Unit,
-    modifier: Modifier = Modifier
+fun FreestyleWorkoutNameDialog(
+    onDismiss: () -> Unit,
+    onConfirm: (String) -> Unit
 ) {
-    val progress = if (goalWorkouts > 0) {
-        (currentWorkouts.toFloat() / goalWorkouts.toFloat()).coerceIn(0f, 1f)
-    } else {
-        0f
-    }
+    var workoutName by remember { mutableStateOf("") }
 
-    Card(
-        modifier = modifier
-            .fillMaxWidth()
-            // 👇 1. defaultMinSize para permitir o card esticar verticalmente se precisar
-            .defaultMinSize(minHeight = 160.dp),
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Color.Transparent
-        ),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-    ) {
-        // Removi o fillMaxSize() daqui para a Box acompanhar o tamanho da Row interna
-        Box {
-
-            AsyncImage(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(R.drawable.count_backround)
-                    .build(),
-                contentDescription = stringResource(R.string.fundo_do_card),
-                contentScale = ContentScale.Crop,
-                // 👇 2. matchParentSize() garante que a imagem acompanhe o crescimento do card
-                modifier = Modifier.matchParentSize()
-            )
-
-            Box(
-                modifier = Modifier
-                    // 👇 2. matchParentSize() no overlay escuro tbm
-                    .matchParentSize()
-                    .background(Color.Black.copy(alpha = 0.5f))
-            )
-
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+                .border(1.dp, AppTheme.accent.light.copy(alpha = 0.2f), RoundedCornerShape(28.dp)),
+            shape = RoundedCornerShape(28.dp),
+            colors = CardDefaults.cardColors(containerColor = Sty.Surface),
+            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+        ) {
             Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    // Adicionei defaultMinSize na Column tbm para o SpaceBetween vertical funcionar certinho
-                    .defaultMinSize(minHeight = 160.dp)
-                    .padding(20.dp),
-                verticalArrangement = Arrangement.SpaceBetween
+                modifier = Modifier.padding(vertical = 32.dp, horizontal = 24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-
-                // --- LINHA DO TOPO ---
+                Box(
+                    modifier = Modifier
+                        .size(56.dp)
+                        .background(AppTheme.accent.light.copy(alpha = 0.1f), CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = null,
+                        tint = AppTheme.accent.light,
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
+                Spacer(Modifier.height(16.dp))
+                Text(
+                    text = stringResource(R.string.nome_do_treino),
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = Sty.TextMain
+                )
+                Text(
+                    text = stringResource(R.string.como_quer_chamar_o_seu_treino),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Sty.TextDim,
+                    textAlign = TextAlign.Center
+                )
+                Spacer(Modifier.height(24.dp))
+                OutlinedTextField(
+                    value = workoutName,
+                    onValueChange = { workoutName = it },
+                    placeholder = {
+                        Text(
+                            text = stringResource(R.string.ex_treino_de_sexta),
+                            color = Sty.TextFaint
+                        )
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    singleLine = true,
+                    textStyle = TextStyle(fontWeight = FontWeight.Medium, fontSize = 16.sp, color = Sty.TextMain),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = AppTheme.accent.light,
+                        unfocusedBorderColor = Sty.BorderStrong,
+                        cursorColor = AppTheme.accent.light,
+                        focusedContainerColor = AppTheme.accent.light.copy(alpha = 0.02f),
+                        focusedTextColor = Sty.TextMain,
+                        unfocusedTextColor = Sty.TextMain
+                    )
+                )
+                Spacer(Modifier.height(32.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    // Removi o Arrangement.SpaceBetween daqui, pois o weight() vai fazer o trabalho!
-                    verticalAlignment = Alignment.Top
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-
-                    // LADO ESQUERDO (Textos + Lápis)
-                    Column(
-                        // 👇 3. A SALVAÇÃO HORIZONTAL: weight(1f)
-                        // Impede que os textos empurrem o botão "X / Y" para fora da tela.
-                        modifier = Modifier.weight(1f)
+                    TextButton(
+                        onClick = onDismiss,
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(14.dp)
                     ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(
-                                text = stringResource(R.string.progresso_semanal),
-                                color = Color.White,
-                                style = Typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                // 👇 4. fill = false permite que o texto quebre de linha
-                                // sem empurrar o ícone de lápis para longe se sobrar espaço.
-                                modifier = Modifier.weight(1f, fill = false)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Icon(
-                                imageVector = Icons.Default.Edit,
-                                contentDescription = stringResource(R.string.editar_meta),
-                                modifier = Modifier
-                                    .size(16.dp) // Aumentei um tiquinho (14.dp é bem ruim de clicar)
-                                    .clickable { onEditGoal() },
-                                tint = AppTheme.accent.light
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.height(4.dp))
-
                         Text(
-                            text = stringResource(R.string.consistencia_e_a_chave),
-                            color = Color.LightGray,
-                            style = Typography.labelSmall
+                            text = stringResource(R.string.cancelar),
+                            color = Sty.TextDim,
+                            fontWeight = FontWeight.SemiBold
                         )
                     }
-
-                    // Um espaço seguro entre os textos e o contador para eles nunca se colarem
-                    Spacer(modifier = Modifier.width(16.dp))
-
-                    // LADO DIREITO (Contador X / Y)
-                    Surface(
-                        color = AppTheme.accent.light.copy(alpha = 0.1f),
-                        shape = CircleShape,
-                        border = BorderStroke(1.dp, AppTheme.accent.light.copy(alpha = 0.3f))
+                    Button(
+                        onClick = { if (workoutName.isNotBlank()) onConfirm(workoutName) },
+                        enabled = workoutName.isNotBlank(),
+                        modifier = Modifier.weight(1f).height(48.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = AppTheme.accent.light,
+                            contentColor = Sty.OnAccent,
+                            disabledContainerColor = AppTheme.accent.light.copy(alpha = 0.3f)
+                        ),
+                        shape = RoundedCornerShape(14.dp),
+                        elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
                     ) {
                         Text(
-                            text = "$currentWorkouts / $goalWorkouts",
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                            color = AppTheme.accent.light,
-                            style = Typography.labelMedium,
+                            text = stringResource(R.string.iniciar),
+                            style = MaterialTheme.typography.labelLarge,
                             fontWeight = FontWeight.ExtraBold
                         )
                     }
                 }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // --- BLOCO DA BARRA DE PROGRESSO ---
-                Column {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(8.dp)
-                            .clip(CircleShape)
-                            .background(Color.White.copy(alpha = 0.2f))
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth(fraction = progress)
-                                .fillMaxHeight() // fillMaxHeight aqui está seguro, pois o pai tem altura fixa de 8.dp
-                                .background(AppTheme.accent.gradient)
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = if (progress >= 1f) stringResource(R.string.objetivo_atingido) else stringResource(
-                            R.string.completo, (progress * 100).toInt()
-                        ),
-                        color = if (progress >= 1f) Color.White else Color.LightGray,
-                        style = Typography.labelSmall,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
             }
         }
     }
 }
 
-
-@Composable
-fun CustomTopBar(
-    onProfileClick: () -> Unit,
-    user: User?
-) {
-    Row(
-        modifier = Modifier
-            .statusBarsPadding()
-            .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 14.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        StyLogo(
-            titleSize = 22.sp,
-            layout = StyLogoLayout.VERTICAL
-        )
-
-        Box(
-            modifier = Modifier
-                .size(44.dp)
-                .clip(CircleShape)
-                .background(
-                    Brush.linearGradient(
-                        listOf(
-                            AppTheme.accent.dark.copy(alpha = 0.6f),
-                            com.example.training_tracker.ui.theme.AppTheme.accent.light.copy(alpha = 0.3f)
-                        )
-                    )
-                )
-                .clickable { onProfileClick() },
-            contentAlignment = Alignment.Center
-        ) {
-            if (user?.profilePicture != null) {
-                AsyncImage(
-                    model = ImageRequest.Builder(LocalContext.current)
-                        .data(user.profilePicture)
-                        .build(),
-                    contentDescription = stringResource(id = R.string.content_description_profile),
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .clip(CircleShape),
-                    contentScale = ContentScale.Crop
-                )
-            } else {
-                Image(
-                    painter = painterResource(id = R.drawable.gym),
-                    contentDescription = stringResource(R.string.foto_de_perfil_padr_o),
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .clip(CircleShape),
-                    contentScale = ContentScale.Crop
-                )
-            }
-        }
+// =============================================================================
+// === Workout image resolver (unchanged contract — used by other screens)   ===
+// =============================================================================
+fun getWorkoutImageRes(workout: Workout?): Int {
+    if (workout == null || workout.exercises.isEmpty()) return R.drawable.workout
+    val mostFrequentMuscleGroup = workout.exercises
+        .mapNotNull { it.muscleGroup }
+        .groupingBy { it }
+        .eachCount()
+        .maxByOrNull { it.value }?.key
+    return when (mostFrequentMuscleGroup) {
+        MuscleGroups.CHEST -> R.drawable.chest_workout
+        MuscleGroups.BACK -> R.drawable.back_workout
+        MuscleGroups.QUADRICEPS -> R.drawable.leg_workout
+        MuscleGroups.HAMSTRINGS -> R.drawable.hamstrings_workout_home
+        MuscleGroups.CALF -> R.drawable.calf_workout_home
+        MuscleGroups.GLUTE -> R.drawable.glute_workout_home
+        MuscleGroups.SHOULDERS -> R.drawable.shoulder_workout
+        MuscleGroups.BICEPS -> R.drawable.biceps_workout
+        MuscleGroups.TRICEPS -> R.drawable.triceps_workout
+        MuscleGroups.ABS -> R.drawable.abs_workout
+        MuscleGroups.CARDIO -> R.drawable.cardio_workout
+        MuscleGroups.STRETCHING -> R.drawable.stretching_workout
+        else -> R.drawable.biceps_workout
     }
 }
 
-@Composable
-fun HomeSectionHeader(
-    title: String,
-    actionLabel: String? = null,
-    onActionClick: (() -> Unit)? = null,
-    modifier: Modifier = Modifier
-) {
-    Row(
-        modifier = modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Text(
-            text = title,
-            style = Typography.titleMedium.copy(brush = AppTheme.accent.gradient),
-            fontWeight = FontWeight.Bold
-        )
-        if (actionLabel != null && onActionClick != null) {
-            Surface(
-                shape = RoundedCornerShape(20.dp),
-                color = AppTheme.accent.light.copy(alpha = 0.12f),
-                modifier = Modifier.clickable { onActionClick() }
-            ) {
-                Row(
-                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(2.dp)
-                ) {
-                    Text(
-                        text = actionLabel.trim(),
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.SemiBold,
-                        color = AppTheme.accent.light
-                    )
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                        contentDescription = null,
-                        tint = AppTheme.accent.light,
-                        modifier = Modifier.size(14.dp)
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun MainGradientButton(
-    text: String,
-    onClick: () -> Unit
-) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            // 👇 1. defaultMinSize para manter os 64.dp de design, mas permitindo expansão
-            .defaultMinSize(minHeight = 64.dp)
-            .shadow(
-                elevation = 16.dp,
-                shape = RoundedCornerShape(32.dp),
-                spotColor = AppTheme.accent.light.copy(alpha = 0.5f)
-            )
-            .clip(RoundedCornerShape(32.dp))
-            .background(
-                brush = AppTheme.accent.gradient
-            )
-            .clickable { onClick() },
-        contentAlignment = Alignment.Center
-    ) {
-        Row(
-            // 👇 2. Um padding de segurança para o conteúdo nunca colar nas bordas arredondadas do botão
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
-        ) {
-            Icon(
-                imageVector = Icons.Default.Add,
-                contentDescription = null,
-                tint = Color.White,
-                modifier = Modifier.size(24.dp)
-            )
-            Spacer(modifier = Modifier.width(12.dp))
-            Text(
-                text = text,
-                color = Color.White,
-                fontWeight = FontWeight.Bold,
-                fontSize = 16.sp,
-                letterSpacing = 1.sp,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-                textAlign = TextAlign.Center, // Mantém o texto alinhado se quebrar a linha
-                // 👇 4. weight(1f, fill = false) mantém tudo centralizado, mas permite que o texto encolha sem vazar do botão!
-                modifier = Modifier.weight(1f, fill = false)
-            )
-        }
-    }
-}
-@Composable
-fun WorkoutCard(modifier: Modifier = Modifier, workout: Workout?, onClick: () -> Unit) {
-    val isCompleted = workout?.isCompleted == true
-    val isSystemDark = isSystemInDarkTheme()
-
-    val muscleGroups = remember(workout) {
-        workout?.exercises?.mapNotNull { it.muscleGroup }?.distinct() ?: emptyList()
-    }
-
-    Card(
-        onClick = onClick,
-        modifier = modifier
-            .fillMaxWidth()
-            .defaultMinSize(minHeight = 200.dp)
-            .padding(vertical = 8.dp),
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = if (isSystemDark) MaterialTheme.colorScheme.surface else Color(0XFF0D0D0D)
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-    ) {
-        Box {
-            AsyncImage(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(getWorkoutImageRes(workout))
-                    .build(),
-                contentDescription = null,
-                modifier = Modifier.matchParentSize(),
-                contentScale = ContentScale.Crop,
-                alpha = if (isCompleted) 0.2f else if (isSystemDark) 0.5f else 0.7f
-            )
-
-            Box(
-                modifier = Modifier
-                    .matchParentSize()
-                    .background(
-                        Brush.verticalGradient(
-                            colors = listOf(
-                                Color.Transparent,
-                                if (isCompleted) Color.Black.copy(alpha = 0.4f) else Color.Black.copy(
-                                    alpha = if (isSystemDark) 0.8f else 0.9f
-                                )
-                            )
-                        )
-                    )
-            )
-
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .defaultMinSize(minHeight = 200.dp)
-                    .padding(20.dp),
-                verticalArrangement = Arrangement.SpaceBetween
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(
-                                brush = if (isCompleted) GreenGradient else AppTheme.accent.gradient,
-                                alpha = 0.9f
-                            )
-                    ) {
-                        Text(
-                            text = if (isCompleted) stringResource(R.string.completed) else stringResource(R.string.today),
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                            color = Color.White,
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.ExtraBold,
-                            letterSpacing = 1.sp
-                        )
-                    }
-
-                    if (workout?.id == "freestyle_workout_id") {
-                        Spacer(Modifier.width(5.dp))
-                        Box(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(
-                                    brush = if (isCompleted) GreenGradient else AppTheme.accent.gradient,
-                                    alpha = 0.9f
-                                )
-                        ) {
-                            Text(
-                                text = stringResource(R.string.livre),
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                                color = Color.White,
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.ExtraBold,
-                                letterSpacing = 1.sp
-                            )
-                        }
-                    }
-                }
-
-                // --- COLUNA DE BAIXO (Nome, Status, Infos e Músculos) ---
-                Column(
-                    // 👇 3. PROTEÇÃO DO ÍCONE: Se não estiver completo, adiciona um padding na direita
-                    // para garantir que o título e as infos nunca encostem na seta branca gigante!
-                    modifier = Modifier.padding(end = if (!isCompleted) 48.dp else 0.dp)
-                ) {
-                    Text(
-                        text = workout?.name ?: stringResource(id = R.string.home_default_workout_name),
-                        style = Typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    if (workout?.isOnGoing == true && !isCompleted) {
-                        Column {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth(0.6f)
-                                    .height(4.dp)
-                                    .clip(CircleShape)
-                                    .background(Color.White.copy(alpha = 0.2f))
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxWidth(workout.progress)
-                                        .fillMaxHeight()
-                                        .background(AppTheme.accent.gradient)
-                                )
-                            }
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                text = "${(workout.progress * 100).toInt()}% ${stringResource(R.string.completed)}",
-                                color = Color.White.copy(alpha = 0.7f),
-                                style = Typography.labelSmall
-                            )
-                        }
-                        Spacer(modifier = Modifier.height(8.dp))
-                    }
-
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.FitnessCenter,
-                            contentDescription = null,
-                            tint = Color.White.copy(alpha = 0.7f),
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = stringResource(
-                                id = R.string.home_workout_exercise_count,
-                                workout?.exercises?.size ?: 0
-                            ),
-                            color = Color.White.copy(alpha = 0.7f),
-                            style = Typography.bodySmall,
-                            maxLines = 1 // Bom garantir aqui tbm
-                        )
-                        Spacer(modifier = Modifier.width(16.dp))
-                        Icon(
-                            imageVector = Icons.Default.Timer,
-                            contentDescription = null,
-                            tint = Color.White.copy(alpha = 0.7f),
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = "${workout?.estimatedTime ?: 0} min",
-                            color = Color.White.copy(alpha = 0.7f),
-                            style = Typography.bodySmall,
-                            maxLines = 1
-                        )
-                    }
-
-                    if (muscleGroups.isNotEmpty()) {
-                        Spacer(modifier = Modifier.height(8.dp))
-                        LazyRow(
-                            horizontalArrangement = Arrangement.spacedBy(4.dp),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            items(muscleGroups) { muscle ->
-                                MuscleBadge(muscle = muscle)
-                            }
-                        }
-                    }
-                }
-            }
-
-            // --- BOTÃO DE SETA ABSOLUTO ---
-            if (!isCompleted) {
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.CenterEnd)
-                        .padding(end = 16.dp)
-                        .size(40.dp)
-                        .background(Color.White.copy(alpha = 0.2f), CircleShape),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                        contentDescription = null,
-                        tint = Color.White
-                    )
-                }
-            }
-        }
-    }
-}
-
+// =============================================================================
+// === Used by RegisteredWorkoutsScreen / WorkoutHistoryScreen — preserved   ===
+// =============================================================================
 @Composable
 fun MuscleBadge(muscle: MuscleGroups) {
     Surface(
@@ -1406,9 +1565,7 @@ fun MuscleBadge(muscle: MuscleGroups) {
                 letterSpacing = 0.5.sp,
                 textAlign = TextAlign.Center,
                 style = LocalTextStyle.current.copy(
-                    platformStyle = PlatformTextStyle(
-                        includeFontPadding = false
-                    ),
+                    platformStyle = PlatformTextStyle(includeFontPadding = false),
                     lineHeight = 18.sp
                 )
             )
@@ -1416,113 +1573,73 @@ fun MuscleBadge(muscle: MuscleGroups) {
     }
 }
 
+// Used by WorkoutEditScreen — kept identical to previous shape.
 @Composable
-fun EmptyWorkoutCard(modifier: Modifier = Modifier) {
-    val isSystemDark = isSystemInDarkTheme()
-    Card(
-        modifier = modifier
+fun MainGradientButton(text: String, onClick: () -> Unit) {
+    Box(
+        modifier = Modifier
             .fillMaxWidth()
-            .defaultMinSize(minHeight = 200.dp),
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = if (isSystemDark) MaterialTheme.colorScheme.surfaceVariant else Color.Black
-        )
+            .defaultMinSize(minHeight = 64.dp)
+            .shadow(
+                elevation = 16.dp,
+                shape = RoundedCornerShape(32.dp),
+                spotColor = AppTheme.accent.light.copy(alpha = 0.5f)
+            )
+            .clip(RoundedCornerShape(32.dp))
+            .background(brush = AppTheme.accent.gradient)
+            .clickable { onClick() },
+        contentAlignment = Alignment.Center
     ) {
-        Box(modifier = Modifier.fillMaxSize()) {
-            AsyncImage(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(R.drawable.relax_no_workout)
-                    .build(),
-                contentDescription = null,
-                modifier = Modifier.matchParentSize(),
-                contentScale = ContentScale.Crop,
-                alpha = if (isSystemDark) 0.3f else 0.55f
+        Row(
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Icon(
+                Icons.Default.Add, null,
+                tint = Color.White,
+                modifier = Modifier.size(24.dp)
             )
-
-            Box(
-                modifier = Modifier
-                    .matchParentSize()
-                    .background(
-                        Brush.verticalGradient(
-                            colors = listOf(
-                                Color.Transparent,
-                                Color.Black.copy(alpha = if (isSystemDark) 0.7f else 0.85f)
-                            )
-                        )
-                    )
+            Spacer(Modifier.width(12.dp))
+            Text(
+                text = text,
+                color = Color.White,
+                fontWeight = FontWeight.Bold,
+                fontSize = 16.sp,
+                letterSpacing = 1.sp,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.weight(1f, fill = false)
             )
-
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .defaultMinSize(minHeight = 200.dp)
-                    .padding(24.dp),
-                verticalArrangement = Arrangement.Bottom
-            ) {
-                Text(
-                    text = stringResource(id = R.string.home_no_workout_scheduled_today),
-                    color = Color.White,
-                    style = Typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(Color.White.copy(alpha = 0.2f))
-                        .padding(12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.AccessibilityNew,
-                        contentDescription = null,
-                        tint = AppTheme.accent.light,
-                        modifier = Modifier.size(28.dp)
-                    )
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Text(
-                        text = stringResource(R.string.dica_faca_um_leve_agachamento_ou_uma_caminhada_de_15_minutos),
-                        color = Color.White,
-                        style = Typography.bodySmall,
-                        fontWeight = FontWeight.Medium,
-                        lineHeight = 18.sp,
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-            }
         }
     }
 }
 
+// =============================================================================
+// Kept for back-compat — no longer referenced from HomeContent, but still
+// callable in case other screens link to them.
+// =============================================================================
 @Composable
 fun MomentumCard(count: Int) {
     val isSystemDark = isSystemInDarkTheme()
-
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            // 👇 1. defaultMinSize para garantir o visual padrão, mas permitir o crescimento
             .defaultMinSize(minHeight = 150.dp)
             .clip(RoundedCornerShape(24.dp))
-            .background(if (isSystemDark) MaterialTheme.colorScheme.surface else Color(0XFF262525))
+            .background(if (isSystemDark) Sty.Surface else Color(0xFF262525))
     ) {
         AsyncImage(
-            model = ImageRequest.Builder(LocalContext.current)
-                .data(R.drawable.gym)
-                .build(),
+            model = ImageRequest.Builder(LocalContext.current).data(R.drawable.gym).build(),
             contentDescription = null,
-            // 👇 2. matchParentSize() para a imagem preencher o fundo independentemente da altura que o Box assumir
             modifier = Modifier.matchParentSize(),
             contentScale = ContentScale.Crop,
             alpha = 0.4f
         )
-
         Column(
             modifier = Modifier
-                .fillMaxWidth() // Adicionado para a Row interna se comportar bem
+                .fillMaxWidth()
                 .padding(24.dp)
                 .align(Alignment.CenterStart)
         ) {
@@ -1536,7 +1653,6 @@ fun MomentumCard(count: Int) {
             )
             Spacer(Modifier.height(8.dp))
             Row(
-                // 👇 3. fillMaxWidth() no lugar de fillMaxSize() para acompanhar a altura dinâmica da Column
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
@@ -1548,46 +1664,35 @@ fun MomentumCard(count: Int) {
                     color = Color.White,
                     modifier = Modifier.weight(1f)
                 )
-
-                Spacer(modifier = Modifier.width(16.dp))
-
-                Column(horizontalAlignment = Alignment.End) {
-                    Text(
-                        text = "$count",
-                        style = Typography.headlineMedium,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = AppTheme.accent.light,
-                    )
-                }
+                Spacer(Modifier.width(16.dp))
+                Text(
+                    text = "$count",
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = AppTheme.accent.light,
+                )
             }
         }
     }
 }
+
 @Composable
 fun EmptyMomentumCard() {
-    val isSystemDark = isSystemInDarkTheme()
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .height(180.dp)
             .clip(RoundedCornerShape(24.dp))
-            .background(if (isSystemDark) MaterialTheme.colorScheme.surface else Color.Black),
+            .background(Sty.Surface),
     ) {
         AsyncImage(
-            model = ImageRequest.Builder(LocalContext.current)
-                .data(R.drawable.start_today)
-                .build(),
+            model = ImageRequest.Builder(LocalContext.current).data(R.drawable.start_today).build(),
             contentDescription = null,
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop,
             alpha = 0.4f
         )
-
-        Column(
-            modifier = Modifier
-                .padding(24.dp)
-                .align(Alignment.CenterStart)
-        ) {
+        Column(modifier = Modifier.padding(24.dp).align(Alignment.CenterStart)) {
             Text(
                 stringResource(R.string.comece_hoje),
                 style = MaterialTheme.typography.headlineSmall.copy(
@@ -1596,16 +1701,16 @@ fun EmptyMomentumCard() {
                     lineHeight = 24.sp
                 )
             )
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(Modifier.height(8.dp))
             Text(
                 stringResource(R.string.voce_nao_completou_nenhum_treino_ainda),
                 fontSize = 14.sp,
-                color = if (isSystemDark) MaterialTheme.colorScheme.onSurface else Color.White
+                color = Color.White
             )
             Text(
                 stringResource(R.string.comece_hoje_para_acompanhar_seu_progresso),
                 fontSize = 14.sp,
-                color = if (isSystemDark) MaterialTheme.colorScheme.onSurface else Color.White
+                color = Color.White
             )
         }
     }
@@ -1617,25 +1722,15 @@ fun WeeklyCaloriesCard(calories: Int) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
-        ),
-        border = androidx.compose.foundation.BorderStroke(
-            1.dp,
-            fireColor.copy(alpha = 0.25f)
-        )
+        colors = CardDefaults.cardColors(containerColor = Sty.Surface),
+        border = BorderStroke(1.dp, fireColor.copy(alpha = 0.25f))
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 16.dp),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(14.dp)
-            ) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
                 Box(
                     modifier = Modifier
                         .size(44.dp)
@@ -1644,8 +1739,7 @@ fun WeeklyCaloriesCard(calories: Int) {
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        Icons.Default.LocalFireDepartment,
-                        contentDescription = null,
+                        Icons.Default.LocalFireDepartment, null,
                         tint = fireColor,
                         modifier = Modifier.size(24.dp)
                     )
@@ -1654,7 +1748,7 @@ fun WeeklyCaloriesCard(calories: Int) {
                     Text(
                         text = stringResource(R.string.calorias_semana),
                         style = MaterialTheme.typography.labelSmall.copy(
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            color = Sty.TextDim,
                             fontWeight = FontWeight.ExtraBold,
                             letterSpacing = 1.sp
                         )

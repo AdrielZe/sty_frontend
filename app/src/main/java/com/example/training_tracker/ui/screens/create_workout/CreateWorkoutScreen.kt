@@ -24,12 +24,19 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.FitnessCenter
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -77,6 +84,7 @@ import com.example.training_tracker.ui.screens.workout_details.AddStretchingSele
 import com.example.training_tracker.ui.theme.AppTheme
 
 import com.example.training_tracker.ui.theme.Dimens
+import com.example.training_tracker.ui.utils.CardioTimePickerDialog
 import com.example.training_tracker.ui.utils.ErrorDialog
 import java.time.DayOfWeek
 import java.time.format.TextStyle
@@ -391,6 +399,12 @@ fun CreateWorkoutScreen(
             uiState.exercises.forEach { exercise ->
                 ExerciseItem(
                     exercise = exercise,
+                    isExpanded = uiState.expandedExerciseId == exercise.id,
+                    onToggleExpand = { viewModel.toggleExerciseExpanded(exercise.id) },
+                    onSetCountChange = { count -> viewModel.setExerciseSetCount(exercise.id, count) },
+                    onSetTargetChange = { setNum, reps, weight ->
+                        viewModel.updateExerciseSetTarget(exercise.id, setNum, reps, weight)
+                    },
                     onDelete = { viewModel.removeExercise(exercise) }
                 )
                 Spacer(modifier = Modifier.height(Dimens.paddingSmall))
@@ -497,94 +511,323 @@ fun DaySelector(
 }
 
 @Composable
-fun ExerciseItem(exercise: Exercise, onDelete: () -> Unit) {
+fun ExerciseItem(
+    exercise: Exercise,
+    isExpanded: Boolean = false,
+    onToggleExpand: () -> Unit = {},
+    onSetCountChange: (Int) -> Unit = {},
+    onSetTargetChange: (setNumber: Int, reps: String, weight: String) -> Unit = { _, _, _ -> },
+    onDelete: () -> Unit
+) {
+    val isStrength = exercise.type == ExerciseType.STRENGTH
+    val isCardio = exercise.type == ExerciseType.CARDIO
+    val isStretching = exercise.type == ExerciseType.STRETCHING
+    var showTimePickerForSet by remember { mutableStateOf<Int?>(null) }
+    val setCount = exercise.exerciseSets.size
+
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         shape = RoundedCornerShape(Dimens.cornerRadius),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(Dimens.paddingMedium),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            // A Column recebe o weight(1f) para empurrar a lixeira para o canto,
-            // garantindo que textos grandes quebrem de linha sem sobrepor o botão.
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(6.dp)
+        Column(modifier = Modifier.fillMaxWidth()) {
+            // ── Header row ──────────────────────────────────────────────────
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(Dimens.paddingMedium),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(
-                    text = exercise.name,
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
-                )
-
-                // Renderiza as tags dependendo do tipo de exercício
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
-                    when (exercise.type) {
-                        ExerciseType.STRENGTH -> {
-                            exercise.muscleGroup?.let { muscle ->
-                                ExerciseBadge(
-                                    text = stringResource(muscle.resId).uppercase(),
-                                    backgroundColor = AppTheme.accent.light
-                                )
+                    Text(
+                        text = exercise.name,
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        when (exercise.type) {
+                            ExerciseType.STRENGTH -> {
+                                exercise.muscleGroup?.let { muscle ->
+                                    ExerciseBadge(
+                                        text = stringResource(muscle.resId).uppercase(),
+                                        backgroundColor = AppTheme.accent.light
+                                    )
+                                }
+                                // Sets summary chip — tappable to expand
+                                val firstTarget = exercise.exerciseSets
+                                    .firstOrNull { it.targetReps.isNotBlank() }?.targetReps ?: ""
+                                val summaryText = if (firstTarget.isNotBlank())
+                                    "$setCount × $firstTarget reps"
+                                else
+                                    "$setCount ${if (setCount == 1) stringResource(R.string.serie) else stringResource(R.string.series)}"
+                                SetsSummaryChip(summaryText, isExpanded, onToggleExpand)
                             }
-                        }
-                        ExerciseType.CARDIO -> {
-                            ExerciseBadge(
-                                text = "CARDIO",
-                                backgroundColor = Color(0xFFFF9800) // Laranja para cardio
-                            )
-
-                            val cardioDetails = listOfNotNull(
-                                exercise.time?.takeIf { it.isNotBlank() }?.let { "$it min" },
-                                exercise.distance?.takeIf { it.isNotBlank() }?.let { "$it km" }
-                            ).joinToString(" • ")
-
-                            if (cardioDetails.isNotEmpty()) {
-                                Text(
-                                    text = cardioDetails,
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    fontWeight = FontWeight.Bold
-                                )
+                            ExerciseType.CARDIO -> {
+                                ExerciseBadge(text = "CARDIO", backgroundColor = Color(0xFFFF9800))
+                                val firstTime = exercise.exerciseSets
+                                    .firstOrNull { it.targetReps.isNotBlank() }?.targetReps ?: ""
+                                val summaryText = if (firstTime.isNotBlank())
+                                    "$setCount × $firstTime"
+                                else
+                                    "$setCount ${if (setCount == 1) stringResource(R.string.serie) else stringResource(R.string.series)}"
+                                SetsSummaryChip(summaryText, isExpanded, onToggleExpand)
                             }
-                        }
-                        ExerciseType.STRETCHING -> {
-                            ExerciseBadge(
-                                text = "ALONGAMENTO",
-                                backgroundColor = Color(0xFF4CAF50) // Verde para alongamento
-                            )
+                            ExerciseType.STRETCHING -> {
+                                ExerciseBadge(text = "ALONGAMENTO", backgroundColor = Color(0xFF4CAF50))
+                                val firstTime = exercise.exerciseSets
+                                    .firstOrNull { it.targetReps.isNotBlank() }?.targetReps ?: ""
+                                val summaryText = if (firstTime.isNotBlank())
+                                    "$setCount × $firstTime"
+                                else
+                                    "$setCount ${if (setCount == 1) stringResource(R.string.serie) else stringResource(R.string.series)}"
+                                SetsSummaryChip(summaryText, isExpanded, onToggleExpand)
+                            }
                         }
                     }
                 }
+
+                Spacer(modifier = Modifier.width(12.dp))
+
+                IconButton(onClick = onDelete) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = stringResource(id = R.string.content_description_remove),
+                        tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f)
+                    )
+                }
             }
 
-            Spacer(modifier = Modifier.width(12.dp))
+            // ── Expandable sets panel ────────────────────────────────────────
+            AnimatedVisibility(visible = isExpanded) {
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
 
-            // A lixeira sem weight() assume apenas o tamanho do próprio ícone
-            IconButton(onClick = onDelete) {
-                Icon(
-                    imageVector = Icons.Default.Delete,
-                    contentDescription = stringResource(id = R.string.content_description_remove),
-                    tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f)
-                )
-            }
+                        // Set count stepper
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = Dimens.paddingMedium, vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            IconButton(
+                                onClick = { onSetCountChange(setCount - 1) },
+                                enabled = setCount > 1,
+                                modifier = Modifier.size(32.dp)
+                            ) {
+                                Text(
+                                    "−",
+                                    fontSize = 20.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (setCount > 1) AppTheme.accent.light
+                                    else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                                )
+                            }
+                            Text(
+                                text = "$setCount ${if (setCount == 1) stringResource(R.string.serie) else stringResource(R.string.series)}",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(horizontal = 16.dp)
+                            )
+                            IconButton(
+                                onClick = { onSetCountChange(setCount + 1) },
+                                enabled = setCount < 10,
+                                modifier = Modifier.size(32.dp)
+                            ) {
+                                Text(
+                                    "+",
+                                    fontSize = 20.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (setCount < 10) AppTheme.accent.light
+                                    else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                                )
+                            }
+                        }
+
+                        // Column headers
+                        val headerLabelStyle = MaterialTheme.typography.labelSmall.copy(
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                        )
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = Dimens.paddingMedium),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text("Set", style = headerLabelStyle, modifier = Modifier.width(28.dp), textAlign = TextAlign.Center)
+                            if (isStrength) {
+                                Text(stringResource(R.string.m_n), style = headerLabelStyle, modifier = Modifier.weight(1f), textAlign = TextAlign.Center)
+                                Text(stringResource(R.string.m_x), style = headerLabelStyle, modifier = Modifier.weight(1f), textAlign = TextAlign.Center)
+                                Text(stringResource(R.string.peso_kg), style = headerLabelStyle, modifier = Modifier.weight(1.3f), textAlign = TextAlign.Center)
+                            } else if (isCardio) {
+                                Text(stringResource(R.string.tempo_hh_mm), style = headerLabelStyle, modifier = Modifier.weight(1f), textAlign = TextAlign.Center)
+                            }  else if (isStretching) {
+                                Text(stringResource(R.string.tempo_mm_ss), style = headerLabelStyle, modifier = Modifier.weight(1f), textAlign = TextAlign.Center)
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(4.dp))
+
+                        // One row per set
+                        exercise.exerciseSets.forEach { set ->
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = Dimens.paddingMedium, vertical = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                Text(
+                                    text = "${set.set}",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = AppTheme.accent.light,
+                                    modifier = Modifier.width(28.dp),
+                                    textAlign = TextAlign.Center
+                                )
+                                if (isStrength) {
+                                    val repsParts = set.targetReps.split("-")
+                                    val minReps = repsParts.getOrElse(0) { "" }
+                                    val maxReps = repsParts.getOrElse(1) { "" }
+                                    val isMaxError = maxReps.isNotBlank() &&
+                                        minReps.toIntOrNull() != null &&
+                                        maxReps.toIntOrNull() != null &&
+                                        maxReps.toInt() < minReps.toInt()
+
+                                    OutlinedTextField(
+                                        value = minReps,
+                                        onValueChange = { raw ->
+                                            val v = raw.filter { it.isDigit() }.take(3)
+                                            onSetTargetChange(set.set, if (maxReps.isBlank()) v else "$v-$maxReps", set.targetWeight)
+                                        },
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .height(52.dp),
+                                        placeholder = { Text("8", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)) },
+                                        singleLine = true,
+                                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next),
+                                        shape = RoundedCornerShape(8.dp),
+                                        textStyle = MaterialTheme.typography.bodyMedium.copy(textAlign = TextAlign.Center),
+                                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AppTheme.accent.light, unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
+                                    )
+                                    OutlinedTextField(
+                                        value = maxReps,
+                                        onValueChange = { raw ->
+                                            val v = raw.filter { it.isDigit() }.take(3)
+                                            onSetTargetChange(set.set, if (v.isBlank()) minReps else "$minReps-$v", set.targetWeight)
+                                        },
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .height(52.dp),
+                                        placeholder = { Text("12", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)) },
+                                        isError = isMaxError,
+                                        singleLine = true,
+                                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next),
+                                        shape = RoundedCornerShape(8.dp),
+                                        textStyle = MaterialTheme.typography.bodyMedium.copy(textAlign = TextAlign.Center),
+                                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AppTheme.accent.light, unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f), errorBorderColor = MaterialTheme.colorScheme.error)
+                                    )
+                                    OutlinedTextField(
+                                        value = set.targetWeight,
+                                        onValueChange = { onSetTargetChange(set.set, set.targetReps, it.filter { c -> c.isDigit() || c == '.' }.take(6)) },
+                                        modifier = Modifier
+                                            .weight(1.3f)
+                                            .height(52.dp),
+                                        placeholder = { Text("80", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)) },
+                                        singleLine = true,
+                                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal, imeAction = ImeAction.Done),
+                                        shape = RoundedCornerShape(8.dp),
+                                        textStyle = MaterialTheme.typography.bodyMedium.copy(textAlign = TextAlign.Center),
+                                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AppTheme.accent.light, unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
+                                    )
+                                } else {
+                                    // Cardio / Stretching — time only (tap to open picker)
+                                    Box(
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .height(52.dp)
+                                            .border(
+                                                1.dp,
+                                                MaterialTheme.colorScheme.outline.copy(alpha = 0.4f),
+                                                RoundedCornerShape(8.dp)
+                                            )
+                                            .clip(RoundedCornerShape(8.dp))
+                                            .clickable { showTimePickerForSet = set.set },
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(
+                                            text = set.targetReps.ifBlank { if (isCardio) "00:00" else "00:00" },
+                                            style = MaterialTheme.typography.bodyMedium.copy(textAlign = TextAlign.Center),
+                                            color = if (set.targetReps.isBlank())
+                                                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                                            else
+                                                MaterialTheme.colorScheme.onSurface
+                                        )
+                                    }
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(8.dp))
+                    }
+                }
         }
+    }
+
+    showTimePickerForSet?.let { targetSetNum ->
+        val currentTime = exercise.exerciseSets.find { it.set == targetSetNum }?.targetReps ?: ""
+        CardioTimePickerDialog(
+            initialTime = currentTime,
+            showHours = isCardio,
+            showSeconds = !isCardio,
+            onDismiss = { showTimePickerForSet = null },
+            onConfirm = { formatted ->
+                onSetTargetChange(targetSetNum, formatted, "")
+                showTimePickerForSet = null
+            }
+        )
     }
 }
 
+
+@Composable
+private fun SetsSummaryChip(summaryText: String, isExpanded: Boolean, onClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .clip(RoundedCornerShape(4.dp))
+            .background(AppTheme.accent.light.copy(alpha = 0.12f))
+            .clickable { onClick() }
+            .padding(horizontal = 6.dp, vertical = 2.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(2.dp)
+    ) {
+        Text(
+            text = summaryText,
+            style = MaterialTheme.typography.labelSmall,
+            fontWeight = FontWeight.Black,
+            fontSize = 11.sp,
+            color = AppTheme.accent.light
+        )
+        Icon(
+            imageVector = if (isExpanded) Icons.Default.KeyboardArrowDown
+            else Icons.AutoMirrored.Filled.KeyboardArrowRight,
+            contentDescription = null,
+            tint = AppTheme.accent.light,
+            modifier = Modifier.size(14.dp)
+        )
+    }
+}
 
 @Composable
 fun ExerciseBadge(text: String, backgroundColor: Color) {

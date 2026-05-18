@@ -385,6 +385,7 @@
     <string name="reps">REPS</string>
     <string name="mins">MINS</string>
     <string name="minutos_label">min</string>
+    <string name="segundos_label">sec</string>
     <string name="intensidade_muscular">MUSCLE INTENSITY 📈</string>
     <string name="outro">OTHER</string>
     <string name="serie">set</string>

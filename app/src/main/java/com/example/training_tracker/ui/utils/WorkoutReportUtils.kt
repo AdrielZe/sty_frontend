@@ -61,13 +61,10 @@ fun generateTotalWeightedTitle(context: Context, totalWeight: Double): String {
 
 fun generateTotalWeightedImage(totalWeight: Double): Int {
     return when {
-        totalWeight == 0.0 -> R.drawable.confused_0kg
-        totalWeight < 1500.0 -> R.drawable.feather_1kg
         totalWeight < 3000.0 -> R.drawable.lifting_2kg
         totalWeight < 4200.0 -> R.drawable.strong_3k
         totalWeight < 6000.0 -> R.drawable.strong_4k
-        totalWeight < 10000.0 -> R.drawable.strong_5k
-        else -> R.drawable.strong_6k
+        else -> R.drawable.strong_4k
     }
 }
 

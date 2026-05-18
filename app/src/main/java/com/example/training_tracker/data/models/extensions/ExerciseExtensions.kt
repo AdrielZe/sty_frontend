@@ -12,7 +12,7 @@ fun Exercise.isValidToComplete(): Boolean {
             distance != null && hasTime
         }
         ExerciseType.STRETCHING -> exerciseSets.all { set ->
-            (set.time ?: "").toIntOrNull() != null
+            (set.time ?: "").contains(":")
         }
         else -> exerciseSets.all { set ->
             val weight = set.weight.replace(',', '.').toDoubleOrNull() ?: 424242
