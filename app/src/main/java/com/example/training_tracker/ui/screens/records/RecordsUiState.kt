@@ -11,4 +11,5 @@ data class RecordsUiState(
     val selectedExerciseIsCardio: Boolean = false,
     val cardioRecords: Map<String, List<Double>> = emptyMap(),
     val searchQuery: String = "",
+    val showVolumeHistory: Boolean = false,
 )

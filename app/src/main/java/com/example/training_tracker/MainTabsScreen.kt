@@ -157,7 +157,12 @@ fun MainTabsScreen(
                     onMuscleGroupSelected = viewModel::onMuscleGroupSelected,
                     onExerciseClick = viewModel::onExerciseSelected,
                     onDismissHistory = viewModel::onDismissHistory,
-                    onSearchQueryChanged = viewModel::onSearchQueryChanged
+                    onSearchQueryChanged = viewModel::onSearchQueryChanged,
+                    onVolumeCardClick = viewModel::onVolumeCardClick,
+                    onDismissVolumeHistory = viewModel::onDismissVolumeHistory,
+                    onNavigateToExerciseData = {
+                        rootNavController.navigate(Routes.ExerciseData.name)
+                    },
                 )
             }
 

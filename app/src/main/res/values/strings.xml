@@ -492,6 +492,9 @@
     <string name="historico_de_recordes">HISTÓRICO DE RECORDES</string>
     <string name="recorde_atual">Recorde atual</string>
     <string name="recorde_anterior">Recorde anterior</string>
+    <string name="historico_de_volume">HISTÓRICO DE VOLUME</string>
+    <string name="ranking_de_volumes">RANKING DE VOLUMES</string>
+    <string name="volume_sessao">Volume da sessão</string>
     <string name="exercicios_registrados">EXERCÍCIOS</string>
     <string name="melhor_melhora">MELHORA</string>
     <string name="prs_count">%d PRs</string>
@@ -574,5 +577,35 @@
     <string name="m_x">Máx</string>
     <string name="missed_workout_singular">Você não completou o seu treino. Clique aqui para remarcá-lo e não perder a sua sequência.</string>
     <string name="missed_workout_plural">Você não completou os seus treinos. Clique aqui para remarcá-los e não perder a sua sequência.</string>
+
+    <!-- ExerciseDataScreen -->
+    <string name="dados_de_exercicios">DADOS DE EXERCÍCIOS</string>
+    <string name="ver_dados_de_exercicios">Dados detalhados dos exercícios</string>
+    <string name="ver_dados_subtitle">Acompanhe a evolução de cada exercício</string>
+    <string name="dados_total_exercicios">EXERCÍCIOS</string>
+    <string name="dados_total_sessoes">SESSÕES</string>
+    <string name="dados_volume_total">VOLUME TOTAL</string>
+    <string name="dados_ultima_vez">Última vez: %1$s</string>
+    <string name="dados_sessoes_count">%1$d sessões</string>
+    <string name="dados_sessao_count_single">%1$d sessão</string>
+    <string name="dados_nenhum_exercicio">Nenhum dado de exercício</string>
+    <string name="dados_nenhum_exercicio_sub">Complete treinos com exercícios de força para acompanhar seus dados aqui.</string>
+    <string name="dados_nenhum_resultado">Nenhum exercício encontrado</string>
+    <string name="dados_recorde">RECORDE</string>
+    <string name="dados_volume">MELHOR VOLUME</string>
+    <string name="dados_rm_estimado">1RM ESTIMADO</string>
+    <string name="dados_progressao_peso">PROGRESSÃO DE CARGA</string>
+    <string name="dados_progressao_volume">PROGRESSÃO DE VOLUME</string>
+    <string name="dados_historico_sessoes">HISTÓRICO DE SESSÕES</string>
+    <string name="dados_variacao_peso">VARIAÇÃO DE CARGA</string>
+    <string name="dados_variacao_volume">VARIAÇÃO DE VOLUME</string>
+    <string name="dados_desde_inicio">desde a 1ª sessão</string>
+    <string name="dados_variacao_media_sub">média entre sessões</string>
+    <string name="dados_variacao_total_sub">1ª → última sessão</string>
+    <string name="dados_pico">PICO</string>
+    <string name="dados_volume_sessao">VOLUME</string>
+    <string name="dados_series_reps">SÉRIES×REPS</string>
+    <string name="dados_reps_peso">%1$d reps × %2$s kg</string>
+    <string name="dados_dados_insuficientes">Complete mais sessões para ver o gráfico de evolução.</string>
 
 </resources>

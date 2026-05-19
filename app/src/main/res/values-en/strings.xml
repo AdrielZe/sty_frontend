@@ -443,6 +443,9 @@
     <string name="historico_de_recordes">RECORDS HISTORY</string>
     <string name="recorde_atual">Current record</string>
     <string name="recorde_anterior">Previous record</string>
+    <string name="historico_de_volume">VOLUME HISTORY</string>
+    <string name="ranking_de_volumes">VOLUME RANKING</string>
+    <string name="volume_sessao">Session volume</string>
     <string name="exercicios_registrados">EXERCISES</string>
     <string name="melhor_melhora">IMPROVEMENT</string>
     <string name="prs_count">%d PRs</string>
@@ -496,4 +499,34 @@
     <string name="save_routine_dialog_skip">No, thanks</string>
     <string name="missed_workout_singular">You didn\'t complete your workout. Tap here to reschedule it and keep your streak.</string>
     <string name="missed_workout_plural">You didn\'t complete your workouts. Tap here to reschedule them and keep your streak.</string>
+
+    <!-- ExerciseDataScreen -->
+    <string name="dados_de_exercicios">EXERCISE DATA</string>
+    <string name="ver_dados_de_exercicios">Detailed exercise data</string>
+    <string name="ver_dados_subtitle">Track the evolution of every exercise</string>
+    <string name="dados_total_exercicios">EXERCISES</string>
+    <string name="dados_total_sessoes">SESSIONS</string>
+    <string name="dados_volume_total">TOTAL VOLUME</string>
+    <string name="dados_ultima_vez">Last: %1$s</string>
+    <string name="dados_sessoes_count">%1$d sessions</string>
+    <string name="dados_sessao_count_single">%1$d session</string>
+    <string name="dados_nenhum_exercicio">No exercise data</string>
+    <string name="dados_nenhum_exercicio_sub">Complete workouts with strength exercises to track your data here.</string>
+    <string name="dados_nenhum_resultado">No exercise found</string>
+    <string name="dados_recorde">RECORD</string>
+    <string name="dados_volume">BEST VOLUME</string>
+    <string name="dados_rm_estimado">EST. 1RM</string>
+    <string name="dados_progressao_peso">WEIGHT PROGRESSION</string>
+    <string name="dados_progressao_volume">VOLUME PROGRESSION</string>
+    <string name="dados_historico_sessoes">SESSION HISTORY</string>
+    <string name="dados_variacao_peso">WEIGHT CHANGE</string>
+    <string name="dados_variacao_volume">VOLUME CHANGE</string>
+    <string name="dados_desde_inicio">since 1st session</string>
+    <string name="dados_variacao_media_sub">session average</string>
+    <string name="dados_variacao_total_sub">1st → last session</string>
+    <string name="dados_pico">PEAK</string>
+    <string name="dados_volume_sessao">VOLUME</string>
+    <string name="dados_series_reps">SETS×REPS</string>
+    <string name="dados_reps_peso">%1$d reps × %2$s kg</string>
+    <string name="dados_dados_insuficientes">Complete more sessions to see the evolution chart.</string>
 </resources>

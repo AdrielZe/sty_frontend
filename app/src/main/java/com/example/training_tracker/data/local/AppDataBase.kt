@@ -66,13 +66,6 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
-        private val MIGRATION_37_38 = object : Migration(37, 38) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL("ALTER TABLE workouts ADD COLUMN rescheduledToDayOfWeek TEXT DEFAULT NULL")
-                database.execSQL("ALTER TABLE workouts ADD COLUMN rescheduledWeekStart TEXT DEFAULT NULL")
-            }
-        }
-
         private val MIGRATION_36_37 = object : Migration(36, 37) {
             override fun migrate(database: SupportSQLiteDatabase) {
                 // Corrige a tabela de exercícios (coluna direta)
@@ -90,8 +83,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "app_database"
                 )
-                    .addMigrations(MIGRATION_32_33, MIGRATION_33_34, MIGRATION_34_35, MIGRATION_35_36, MIGRATION_36_37, MIGRATION_37_38)
-                    .fallbackToDestructiveMigration()
+                    .addMigrations(MIGRATION_32_33, MIGRATION_33_34, MIGRATION_34_35, MIGRATION_35_36, MIGRATION_36_37)
                     .build()
                 INSTANCE = instance
                 instance

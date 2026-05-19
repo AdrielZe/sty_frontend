@@ -100,7 +100,6 @@ import com.example.training_tracker.ui.theme.GreenGradient
 import com.example.training_tracker.ui.theme.Typography
 import java.time.DayOfWeek
 import java.time.LocalDate
-import java.time.temporal.TemporalAdjusters as JTemporalAdjusters
 import java.time.format.TextStyle as JTextStyle
 import java.util.Locale
 import kotlin.math.abs
@@ -216,8 +215,6 @@ fun HomeContent(
     var isProfileExpanded by remember { mutableStateOf(false) }
     var showGoalDialog by remember { mutableStateOf(false) }
     var showFreestyleNameDialog by remember { mutableStateOf(false) }
-    var rescheduleTargetDay by remember { mutableStateOf<DayOfWeek?>(null) }
-    var rescheduleMissedWorkouts by remember { mutableStateOf<List<Workout>>(emptyList()) }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -266,10 +263,6 @@ fun HomeContent(
                 completedThisWeek = homeUiState.workoutsCompletedThisWeek,
                 workoutsPerDayOfWeek = homeUiState.workoutsPerDayOfWeek,
                 completedWorkoutsPerDayOfWeek = homeUiState.completedWorkoutsPerDayOfWeek,
-                onBalloonActionClick = { day ->
-                    rescheduleTargetDay = day
-                    rescheduleMissedWorkouts = homeUiState.missedWorkoutsByDay[day] ?: emptyList()
-                }
             )
 
             // === Today's workout — hero ============================================
@@ -399,16 +392,6 @@ fun HomeContent(
         )
     }
 
-    if (rescheduleTargetDay != null && rescheduleMissedWorkouts.isNotEmpty()) {
-        RescheduleDialog(
-            workouts = rescheduleMissedWorkouts,
-            onDismiss = { rescheduleTargetDay = null },
-            onConfirm = { workout, newDay ->
-                homeViewModel.rescheduleWorkout(workout, newDay)
-                rescheduleTargetDay = null
-            }
-        )
-    }
 }
 
 // =============================================================================
@@ -508,28 +491,25 @@ private fun WeekStrip(
     completedThisWeek: Int,
     workoutsPerDayOfWeek: Map<DayOfWeek, Int>,
     completedWorkoutsPerDayOfWeek: Map<DayOfWeek, Int>,
-    onBalloonActionClick: (DayOfWeek) -> Unit
 ) {
     val today = remember { LocalDate.now() }
     val monday = remember(today) { today.minusDays(((today.dayOfWeek.value + 6) % 7).toLong()) }
-    val days = remember(today, completedThisWeek) {
+    val days = remember(today, completedWorkoutsPerDayOfWeek) {
         (0..6).map { i ->
             val date = monday.plusDays(i.toLong())
             val initial = date.dayOfWeek
                 .getDisplayName(JTextStyle.NARROW, Locale("pt", "BR"))
                 .uppercase(Locale("pt", "BR"))
+            val completedOnDay = completedWorkoutsPerDayOfWeek[date.dayOfWeek] ?: 0
             val status = when {
                 date.isEqual(today) -> WeekStatus.TODAY
-                date.isBefore(today) && i < completedThisWeek -> WeekStatus.DONE
+                date.isBefore(today) && completedOnDay > 0 -> WeekStatus.DONE
                 date.isBefore(today) -> WeekStatus.REST
                 else -> WeekStatus.PLANNED
             }
             Triple(initial, status, date.dayOfWeek)
         }
     }
-
-    var missedBalloonDay by remember { mutableStateOf<DayOfWeek?>(null) }
-    val missedBalloonCount = missedBalloonDay?.let { workoutsPerDayOfWeek[it] ?: 0 } ?: 0
 
     Column(
         modifier = Modifier
@@ -543,53 +523,12 @@ private fun WeekStrip(
             days.forEach { (label, status, dayOfWeek) ->
                 val scheduled = workoutsPerDayOfWeek[dayOfWeek] ?: 0
                 val completed = completedWorkoutsPerDayOfWeek[dayOfWeek] ?: 0
-                val isMissed = scheduled > 0 && completed < scheduled &&
-                        (status == WeekStatus.REST || status == WeekStatus.DONE)
                 WeekDayCell(
                     modifier = Modifier.weight(1f),
                     label = label,
                     status = status,
                     workoutCount = scheduled,
                     allCompleted = scheduled > 0 && completed >= scheduled,
-                    missed = isMissed,
-                    onMissedClick = if (isMissed) {
-                        { missedBalloonDay = if (missedBalloonDay == dayOfWeek) null else dayOfWeek }
-                    } else null
-                )
-            }
-        }
-
-        androidx.compose.animation.AnimatedVisibility(
-            visible = missedBalloonDay != null,
-            enter = androidx.compose.animation.fadeIn() + androidx.compose.animation.expandVertically(),
-            exit = androidx.compose.animation.fadeOut() + androidx.compose.animation.shrinkVertically()
-        ) {
-            val message = if (missedBalloonCount == 1)
-                stringResource(R.string.missed_workout_singular)
-            else
-                stringResource(R.string.missed_workout_plural)
-
-            Box(
-                modifier = Modifier
-                    .padding(top = 8.dp)
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(14.dp))
-                    .background(Color(0xFFE05555).copy(alpha = 0.12f))
-                    .border(BorderStroke(1.dp, Color(0xFFE05555).copy(alpha = 0.35f)), RoundedCornerShape(14.dp))
-                    .clickable {
-                        val day = missedBalloonDay
-                        missedBalloonDay = null
-                        if (day != null) onBalloonActionClick(day)
-                    }
-                    .padding(horizontal = 14.dp, vertical = 12.dp)
-            ) {
-                Text(
-                    text = message,
-                    fontFamily = com.example.training_tracker.ui.theme.Montserrat,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 12.sp,
-                    lineHeight = 17.sp,
-                    color = Color(0xFFE05555)
                 )
             }
         }
@@ -605,14 +544,12 @@ private fun WeekDayCell(
     status: WeekStatus,
     workoutCount: Int,
     allCompleted: Boolean,
-    missed: Boolean,
-    onMissedClick: (() -> Unit)? = null
 ) {
     val isToday = status == WeekStatus.TODAY
     val bg: Brush = if (isToday) AppTheme.accent.gradient else Brush.linearGradient(listOf(Sty.Surface, Sty.Surface))
     val borderColor = if (isToday) Color.Transparent else Sty.Border
 
-    Box(modifier = modifier.then(if (onMissedClick != null) Modifier.clickable { onMissedClick() } else Modifier)) {
+    Box(modifier = modifier) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -666,34 +603,20 @@ private fun WeekDayCell(
             }
         }
 
-        if (allCompleted || missed) {
+        if (allCompleted) {
             Box(
                 modifier = Modifier
                     .size(14.dp)
                     .align(Alignment.TopCenter)
                     .clip(CircleShape)
-                    .background(if (allCompleted) Sty.GreenAccent else Color(0xFFE05555)),
+                    .background(Sty.GreenAccent),
                 contentAlignment = Alignment.Center
             ) {
-                if (allCompleted) {
-                    Icon(
-                        Icons.Default.Check, null,
-                        tint = Sty.OnAccent,
-                        modifier = Modifier.size(9.dp)
-                    )
-                } else {
-                    Text(
-                        text = "×",
-                        fontFamily = com.example.training_tracker.ui.theme.Montserrat,
-                        fontWeight = FontWeight.Black,
-                        fontSize = 9.sp,
-                        lineHeight = 9.sp,
-                        color = Color.White,
-                        style = LocalTextStyle.current.copy(
-                            platformStyle = PlatformTextStyle(includeFontPadding = false)
-                        )
-                    )
-                }
+                Icon(
+                    Icons.Default.Check, null,
+                    tint = Sty.OnAccent,
+                    modifier = Modifier.size(9.dp)
+                )
             }
         }
     }
@@ -1633,197 +1556,6 @@ fun FreestyleWorkoutNameDialog(
                             style = MaterialTheme.typography.labelLarge,
                             fontWeight = FontWeight.ExtraBold
                         )
-                    }
-                }
-            }
-        }
-    }
-}
-
-// =============================================================================
-// === Reschedule dialog                                                     ===
-// =============================================================================
-@RequiresApi(Build.VERSION_CODES.O)
-@Composable
-private fun RescheduleDialog(
-    workouts: List<Workout>,
-    onDismiss: () -> Unit,
-    onConfirm: (Workout, DayOfWeek) -> Unit
-) {
-    var selectedWorkout by remember { mutableStateOf<Workout?>(if (workouts.size == 1) workouts.first() else null) }
-    var selectedDay by remember { mutableStateOf<DayOfWeek?>(null) }
-
-    val today = remember { LocalDate.now() }
-    val validDays = remember(today) {
-        DayOfWeek.entries.filter { day ->
-            val date = today.with(JTemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
-                .plusDays((day.value - 1).toLong())
-            !date.isBefore(today)
-        }
-    }
-
-    val dayLabel: (DayOfWeek) -> String = { day ->
-        day.getDisplayName(JTextStyle.SHORT, Locale("pt", "BR"))
-            .replaceFirstChar { it.uppercase() }
-            .take(3)
-    }
-
-    Dialog(onDismissRequest = onDismiss) {
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.dp),
-            shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(containerColor = Sty.Surface)
-        ) {
-            Column(
-                modifier = Modifier.padding(24.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                Text(
-                    text = "REMARCAR TREINO",
-                    fontFamily = com.example.training_tracker.ui.theme.Montserrat,
-                    fontWeight = FontWeight.Black,
-                    fontSize = 13.sp,
-                    letterSpacing = 2.sp,
-                    color = AppTheme.accent.light
-                )
-
-                // Workout list (skip if only one)
-                if (workouts.size > 1) {
-                    Text(
-                        text = "Selecione o treino:",
-                        fontFamily = com.example.training_tracker.ui.theme.Montserrat,
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 12.sp,
-                        color = Sty.TextDim
-                    )
-                    workouts.forEach { workout ->
-                        val isSelected = selectedWorkout?.id == workout.id
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(
-                                    if (isSelected) AppTheme.accent.light.copy(alpha = 0.12f)
-                                    else Sty.Surface2
-                                )
-                                .border(
-                                    BorderStroke(1.dp, if (isSelected) AppTheme.accent.light.copy(alpha = 0.4f) else Color.Transparent),
-                                    RoundedCornerShape(12.dp)
-                                )
-                                .clickable { selectedWorkout = workout; selectedDay = null }
-                                .padding(horizontal = 14.dp, vertical = 12.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(
-                                text = workout.name,
-                                fontFamily = com.example.training_tracker.ui.theme.Montserrat,
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 13.sp,
-                                color = if (isSelected) AppTheme.accent.light else Sty.TextMain
-                            )
-                            if (isSelected) {
-                                Icon(Icons.Default.Check, null, tint = AppTheme.accent.light, modifier = Modifier.size(16.dp))
-                            }
-                        }
-                    }
-                } else {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(AppTheme.accent.light.copy(alpha = 0.08f))
-                            .border(BorderStroke(1.dp, AppTheme.accent.light.copy(alpha = 0.25f)), RoundedCornerShape(12.dp))
-                            .padding(horizontal = 14.dp, vertical = 12.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(Icons.Default.FitnessCenter, null, tint = AppTheme.accent.light, modifier = Modifier.size(16.dp))
-                        Spacer(Modifier.width(10.dp))
-                        Text(
-                            text = workouts.first().name,
-                            fontFamily = com.example.training_tracker.ui.theme.Montserrat,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 14.sp,
-                            color = Sty.TextMain
-                        )
-                    }
-                }
-
-                // Day picker (only shown when a workout is selected)
-                androidx.compose.animation.AnimatedVisibility(visible = selectedWorkout != null) {
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text(
-                            text = "Escolha o novo dia:",
-                            fontFamily = com.example.training_tracker.ui.theme.Montserrat,
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 12.sp,
-                            color = Sty.TextDim
-                        )
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            validDays.forEach { day ->
-                                val isSelected = selectedDay == day
-                                Box(
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .clip(RoundedCornerShape(10.dp))
-                                        .background(
-                                            if (isSelected) AppTheme.accent.light
-                                            else Sty.Surface2
-                                        )
-                                        .border(
-                                            BorderStroke(1.dp, if (isSelected) Color.Transparent else Sty.BorderStrong),
-                                            RoundedCornerShape(10.dp)
-                                        )
-                                        .clickable { selectedDay = day }
-                                        .padding(vertical = 10.dp),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        text = dayLabel(day),
-                                        fontFamily = com.example.training_tracker.ui.theme.Montserrat,
-                                        fontWeight = FontWeight.Black,
-                                        fontSize = 10.sp,
-                                        color = if (isSelected) Sty.OnAccent else Sty.TextDim
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-
-                // Actions
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    TextButton(
-                        onClick = onDismiss,
-                        modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Text(text = "Cancelar", color = Sty.TextDim, fontWeight = FontWeight.SemiBold)
-                    }
-                    Button(
-                        onClick = {
-                            val w = selectedWorkout
-                            val d = selectedDay
-                            if (w != null && d != null) onConfirm(w, d)
-                        },
-                        enabled = selectedWorkout != null && selectedDay != null,
-                        modifier = Modifier.weight(1f),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = AppTheme.accent.light,
-                            contentColor = Sty.OnAccent,
-                            disabledContainerColor = AppTheme.accent.light.copy(alpha = 0.3f)
-                        ),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Text(text = "Remarcar", fontWeight = FontWeight.Bold, color = Sty.OnAccent)
                     }
                 }
             }

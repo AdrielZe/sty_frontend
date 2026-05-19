@@ -17,6 +17,5 @@ sealed interface HomeUiState {
         val weeklyCalories: Int = 0,
         val workoutsPerDayOfWeek: Map<DayOfWeek, Int> = emptyMap(),
         val completedWorkoutsPerDayOfWeek: Map<DayOfWeek, Int> = emptyMap(),
-        val missedWorkoutsByDay: Map<DayOfWeek, List<Workout>> = emptyMap(),
     ) : HomeUiState
 }

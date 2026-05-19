@@ -104,9 +104,7 @@ class HomeViewModel(
     ) { state, allWorkouts ->
         if (state !is HomeUiState.Success) return@combine state
         val currentWeekMonday = LocalDate.now().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
-        val today = LocalDate.now()
         val perDay = mutableMapOf<DayOfWeek, Int>()
-        val missedByDay = mutableMapOf<DayOfWeek, MutableList<Workout>>()
         for (workout in allWorkouts.filter { it.id != FREESTYLE_WORKOUT_ID }) {
             val isRescheduledThisWeek = workout.rescheduledWeekStart == currentWeekMonday && workout.rescheduledToDayOfWeek != null
             if (isRescheduledThisWeek) {
@@ -115,13 +113,9 @@ class HomeViewModel(
             } else if (workout.dayOfWeek != null) {
                 val day = workout.dayOfWeek
                 perDay[day] = (perDay[day] ?: 0) + 1
-                val date = currentWeekMonday.plusDays((day.value - 1).toLong())
-                if (date.isBefore(today)) {
-                    missedByDay.getOrPut(day) { mutableListOf() }.add(workout)
-                }
             }
         }
-        state.copy(workoutsPerDayOfWeek = perDay, missedWorkoutsByDay = missedByDay)
+        state.copy(workoutsPerDayOfWeek = perDay)
     }
     .catch { e ->
         emit(HomeUiState.Error(e.message))
@@ -154,18 +148,6 @@ class HomeViewModel(
                 )
             }
             onConfirm()
-        }
-    }
-
-    fun rescheduleWorkout(workout: Workout, newDay: DayOfWeek) {
-        viewModelScope.launch {
-            val currentWeekMonday = LocalDate.now().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
-            workoutRepository.updateWorkout(
-                workout.copy(
-                    rescheduledToDayOfWeek = newDay,
-                    rescheduledWeekStart = currentWeekMonday
-                )
-            )
         }
     }
 

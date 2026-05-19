@@ -21,9 +21,11 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ShowChart
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.filled.Insights
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -46,7 +48,10 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -68,6 +73,9 @@ fun RecordsScreen(
     onExerciseClick: (String, List<Double>) -> Unit,
     onDismissHistory: () -> Unit,
     onSearchQueryChanged: (String) -> Unit,
+    onVolumeCardClick: () -> Unit = {},
+    onDismissVolumeHistory: () -> Unit = {},
+    onNavigateToExerciseData: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Scaffold(
@@ -130,7 +138,15 @@ fun RecordsScreen(
                             .fillMaxWidth()
                             .padding(horizontal = 24.dp),
                         records = uiState.records,
-                        allHistories = (exerciseRecordsMap.values + uiState.cardioRecords.values).toList()
+                        allHistories = (exerciseRecordsMap.values + uiState.cardioRecords.values).toList(),
+                        onVolumeCardClick = onVolumeCardClick,
+                    )
+                }
+
+                item {
+                    ExerciseDataBanner(
+                        onClick = onNavigateToExerciseData,
+                        modifier = Modifier.padding(horizontal = 24.dp)
                     )
                 }
 
@@ -277,6 +293,17 @@ fun RecordsScreen(
                 )
             }
         }
+
+        if (uiState.showVolumeHistory) {
+            val volumeHistory = uiState.records?.volumeRecords ?: emptyList()
+            ModalBottomSheet(
+                onDismissRequest = onDismissVolumeHistory,
+                containerColor = MaterialTheme.colorScheme.surface,
+                dragHandle = { BottomSheetDefaults.DragHandle(color = AppTheme.accent.light.copy(alpha = 0.5f)) }
+            ) {
+                VolumeHistoryContent(history = volumeHistory)
+            }
+        }
     }
 }
 
@@ -287,6 +314,74 @@ private fun Double.toTimeString(): String {
     val seconds = total % 60
     return if (hours > 0) "%d:%02d:%02d".format(hours, minutes, seconds)
     else "%d:%02d".format(minutes, seconds)
+}
+
+@Composable
+fun ExerciseDataBanner(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(20.dp))
+            .clickable { onClick() }
+            .border(
+                width = 1.dp,
+                brush = AppTheme.accent.gradient,
+                shape = RoundedCornerShape(20.dp)
+            ),
+        colors = CardDefaults.cardColors(
+            containerColor = AppTheme.accent.light.copy(alpha = 0.1f)
+        ),
+        shape = RoundedCornerShape(20.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(44.dp)
+                    .background(AppTheme.accent.gradient, RoundedCornerShape(14.dp)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    Icons.Default.Insights,
+                    contentDescription = null,
+                    tint = Color.Black,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    stringResource(R.string.ver_dados_de_exercicios),
+                    style = MaterialTheme.typography.titleSmall.copy(
+                        fontWeight = FontWeight.ExtraBold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    ),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    stringResource(R.string.ver_dados_subtitle),
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f)
+                    ),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+            Icon(
+                Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                contentDescription = null,
+                tint = AppTheme.accent.light
+            )
+        }
+    }
 }
 
 @Composable
@@ -353,7 +448,8 @@ fun RecordsSearchBar(
 fun StatsRow(
     modifier: Modifier = Modifier,
     records: com.example.training_tracker.data.models.Records?,
-    allHistories: List<List<Double>>
+    allHistories: List<List<Double>>,
+    onVolumeCardClick: () -> Unit = {},
 ) {
     val bestVolume = records?.volumeRecords?.maxOrNull() ?: 0.0
     val totalExercises = (records?.exercisesRecordMap?.size ?: 0) + (records?.cardioRecordsMap?.size ?: 0)
@@ -382,7 +478,8 @@ fun StatsRow(
             modifier = Modifier.weight(1f),
             label = stringResource(R.string.melhor_volume),
             value = volumeFormatted,
-            icon = Icons.AutoMirrored.Filled.ShowChart
+            icon = Icons.AutoMirrored.Filled.ShowChart,
+            onClick = if ((records?.volumeRecords?.size ?: 0) > 0) onVolumeCardClick else null,
         )
         CompactStatCard(
             modifier = Modifier.weight(1f),
@@ -408,10 +505,14 @@ fun CompactStatCard(
     label: String,
     value: String,
     icon: ImageVector,
-    valueColor: Color = MaterialTheme.colorScheme.onSurface
+    valueColor: Color = MaterialTheme.colorScheme.onSurface,
+    onClick: (() -> Unit)? = null,
 ) {
+    val borderColor = if (onClick != null) AppTheme.accent.light.copy(alpha = 0.6f) else AppTheme.accent.light.copy(alpha = 0.3f)
     Card(
-        modifier = modifier.border(0.5.dp, AppTheme.accent.light.copy(alpha = 0.3f), RoundedCornerShape(16.dp)),
+        modifier = modifier
+            .border(0.5.dp, borderColor, RoundedCornerShape(16.dp))
+            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
         ),
@@ -638,11 +739,205 @@ fun ExerciseHistoryContent(
 }
 
 @Composable
+fun VolumeHistoryContent(history: List<Double>) {
+    val chronologicalHistory = remember(history) { history.reversed() }
+    val maxVal = chronologicalHistory.maxOrNull() ?: 1.0
+    val minVal = chronologicalHistory.minOrNull() ?: 0.0
+    val midVal = (maxVal + minVal) / 2.0
+
+    val formatVolume: (Double) -> String = { v ->
+        java.text.NumberFormat.getInstance(Locale.getDefault()).apply {
+            maximumFractionDigits = 1
+            minimumFractionDigits = 0
+        }.format(v) + " kg"
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(24.dp)
+            .navigationBarsPadding(),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = stringResource(R.string.historico_de_volume),
+            style = MaterialTheme.typography.headlineSmall.copy(
+                fontWeight = FontWeight.Black,
+                color = AppTheme.accent.light,
+                letterSpacing = 1.sp
+            )
+        )
+        Text(
+            text = stringResource(R.string.grafico_de_evolucao),
+            style = MaterialTheme.typography.labelSmall.copy(
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                fontWeight = FontWeight.Bold
+            )
+        )
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(200.dp)
+                .background(
+                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f),
+                    RoundedCornerShape(16.dp)
+                )
+                .padding(start = 8.dp, end = 16.dp, top = 16.dp, bottom = 16.dp)
+        ) {
+            if (history.size > 1) {
+                Row(modifier = Modifier.fillMaxSize()) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxHeight()
+                            .width(64.dp),
+                        verticalArrangement = Arrangement.SpaceBetween,
+                        horizontalAlignment = Alignment.End
+                    ) {
+                        Text(
+                            formatVolume(maxVal),
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                fontSize = 9.sp,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                            ),
+                            maxLines = 1
+                        )
+                        Text(
+                            formatVolume(midVal),
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                fontSize = 9.sp,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                            ),
+                            maxLines = 1
+                        )
+                        Text(
+                            formatVolume(minVal),
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                fontSize = 9.sp,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                            ),
+                            maxLines = 1
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    EvolutionChart(
+                        history = history,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
+            } else {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text(
+                        stringResource(R.string.adicione_mais_recordes_para_acompanhar_a_evolucao),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+                    )
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        Text(
+            text = stringResource(R.string.ranking_de_volumes),
+            modifier = Modifier.fillMaxWidth(),
+            style = MaterialTheme.typography.labelLarge.copy(
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+            )
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Column(modifier = Modifier.fillMaxWidth()) {
+            history.forEachIndexed { index, value ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(
+                            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f),
+                            RoundedCornerShape(12.dp)
+                        )
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(
+                            text = "#${index + 1}",
+                            style = MaterialTheme.typography.labelMedium.copy(
+                                fontWeight = FontWeight.Black,
+                                color = if (index == 0) AppTheme.accent.light else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+                            )
+                        )
+                        Text(
+                            text = stringResource(R.string.volume_sessao),
+                            style = MaterialTheme.typography.bodyMedium.copy(
+                                fontWeight = if (index == 0) FontWeight.Bold else FontWeight.Normal,
+                                color = if (index == 0) AppTheme.accent.light else MaterialTheme.colorScheme.onSurface
+                            )
+                        )
+                    }
+                    Text(
+                        text = formatVolume(value),
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Black)
+                    )
+                }
+
+                if (index < history.lastIndex) {
+                    val next = history[index + 1]
+                    val pct = if (next != 0.0) ((value - next) / next) * 100.0 else 0.0
+                    val isGain = pct >= 0
+                    val pctColor = if (isGain) Color(0xFF4CAF50) else Color(0xFFF44336)
+                    val arrow = if (isGain) "▲" else "▼"
+                    val pctText = "$arrow ${"%.1f".format(abs(pct))}%"
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 2.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .background(pctColor.copy(alpha = 0.12f), RoundedCornerShape(100.dp))
+                                .padding(horizontal = 10.dp, vertical = 3.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = pctText,
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    color = pctColor,
+                                    fontSize = 11.sp
+                                )
+                            )
+                        }
+                    }
+                }
+            }
+        }
+        Spacer(modifier = Modifier.height(32.dp))
+    }
+}
+
+@Composable
 fun EvolutionChart(
     history: List<Double>,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    valueFormatter: ((Double) -> String)? = null,
+    showSegmentDeltas: Boolean = false
 ) {
     val chronologicalHistory = remember(history) { history.reversed() }
+    val textMeasurer = rememberTextMeasurer()
+    val labelColor = MaterialTheme.colorScheme.onSurface
+    val gainColor = Color(0xFF4CAF50)
+    val lossColor = Color(0xFFE53935)
+    val neutralColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
     val maxWeight = chronologicalHistory.maxOrNull()?.toFloat() ?: 1f
     val minWeight = chronologicalHistory.minOrNull()?.toFloat() ?: 0f
     val range = if (maxWeight == minWeight) 1f else maxWeight - minWeight
@@ -707,12 +1002,71 @@ fun EvolutionChart(
             )
 
             // Points
-            points.forEach { point ->
+            points.forEachIndexed { index, point ->
                 drawCircle(color = Color.White, radius = 4.dp.toPx(), center = point)
                 drawCircle(
                     color = accentColor, radius = 4.dp.toPx(), center = point,
                     style = Stroke(width = 2.dp.toPx())
                 )
+
+                if (valueFormatter != null) {
+                    val label = valueFormatter(chronologicalHistory[index])
+                    val measured = textMeasurer.measure(
+                        text = label,
+                        style = TextStyle(fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                    )
+                    val labelX = (point.x - measured.size.width / 2f)
+                        .coerceIn(0f, (width - measured.size.width).coerceAtLeast(0f))
+                    val labelY = (point.y - 6.dp.toPx() - measured.size.height)
+                        .coerceAtLeast(0f)
+                    drawText(
+                        textLayoutResult = measured,
+                        color = labelColor,
+                        topLeft = Offset(labelX, labelY)
+                    )
+                }
+            }
+
+            // Segment-to-segment percentage deltas
+            if (showSegmentDeltas && points.size >= 2) {
+                for (i in 0 until points.lastIndex) {
+                    val previousValue = chronologicalHistory[i]
+                    val currentValue = chronologicalHistory[i + 1]
+                    if (previousValue <= 0.0) continue
+                    val pct = (currentValue - previousValue) / previousValue * 100.0
+                    val arrow = when {
+                        pct > 0.05 -> "▲"
+                        pct < -0.05 -> "▼"
+                        else -> "•"
+                    }
+                    val color = when {
+                        pct > 0.05 -> gainColor
+                        pct < -0.05 -> lossColor
+                        else -> neutralColor
+                    }
+                    val text = "$arrow ${"%.1f".format(kotlin.math.abs(pct))}%"
+                    val measured = textMeasurer.measure(
+                        text = text,
+                        style = TextStyle(fontSize = 8.sp, fontWeight = FontWeight.Bold)
+                    )
+                    val pA = points[i]
+                    val pB = points[i + 1]
+                    val midX = (pA.x + pB.x) / 2f
+                    val midY = (pA.y + pB.y) / 2f
+                    // Push the label perpendicular to the segment, away from the line.
+                    val verticalOffset = 12.dp.toPx()
+                    val ascending = pB.y < pA.y // newer point is higher on screen
+                    val labelY = (if (ascending) midY - verticalOffset - measured.size.height
+                                  else midY + verticalOffset)
+                        .coerceIn(0f, (height - measured.size.height).coerceAtLeast(0f))
+                    val labelX = (midX - measured.size.width / 2f)
+                        .coerceIn(0f, (width - measured.size.width).coerceAtLeast(0f))
+                    drawText(
+                        textLayoutResult = measured,
+                        color = color,
+                        topLeft = Offset(labelX, labelY)
+                    )
+                }
             }
         }
     }

@@ -24,12 +24,13 @@ class RecordsViewModel(
     private val _selectedMuscleGroup = MutableStateFlow<MuscleGroups?>(null)
     private val _selectedExerciseHistory = MutableStateFlow<Pair<String, List<Double>>?>(null)
     private val _searchQuery = MutableStateFlow("")
+    private val _showVolumeHistory = MutableStateFlow(false)
     private val _exercises = exerciseRepository.exercises
 
     val uiState: StateFlow<RecordsUiState> = combine(
         combine(recordsRepository.records, _selectedMuscleGroup, _exercises) { r, g, e -> Triple(r, g, e) },
-        combine(_selectedExerciseHistory, _searchQuery) { h, q -> h to q }
-    ) { (records, selectedGroup, allExercises), (selectedHistory, searchQuery) ->
+        combine(_selectedExerciseHistory, _searchQuery, _showVolumeHistory) { h, q, v -> Triple(h, q, v) }
+    ) { (records, selectedGroup, allExercises), (selectedHistory, searchQuery, showVolume) ->
 
         val cardioExerciseNames = allExercises
             .filter { it.type == ExerciseType.CARDIO }
@@ -79,6 +80,7 @@ class RecordsViewModel(
             selectedExerciseIsCardio = selectedIsCardio,
             cardioRecords = searchedCardioRecords,
             searchQuery = searchQuery,
+            showVolumeHistory = showVolume,
         )
     }.stateIn(
         scope = viewModelScope,
@@ -96,6 +98,14 @@ class RecordsViewModel(
 
     fun onDismissHistory() {
         _selectedExerciseHistory.value = null
+    }
+
+    fun onVolumeCardClick() {
+        _showVolumeHistory.value = true
+    }
+
+    fun onDismissVolumeHistory() {
+        _showVolumeHistory.value = false
     }
 
     fun onSearchQueryChanged(query: String) {

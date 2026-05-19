@@ -29,8 +29,14 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import android.net.Uri
 import com.example.training_tracker.data.routes.Routes
 import com.example.training_tracker.ui.screens.create_workout.CreateWorkoutScreen
+import com.example.training_tracker.ui.screens.exercise_data.EXERCISE_NAME_ARG
+import com.example.training_tracker.ui.screens.exercise_data.ExerciseDataScreen
+import com.example.training_tracker.ui.screens.exercise_data.ExerciseDataViewModel
+import com.example.training_tracker.ui.screens.exercise_data.ExerciseDetailScreen
+import com.example.training_tracker.ui.screens.exercise_data.ExerciseDetailViewModel
 import com.example.training_tracker.ui.screens.home.HomeViewModel
 import com.example.training_tracker.ui.screens.registered_workouts.TextGray
 import com.example.training_tracker.ui.screens.workout_details.WorkoutDetailsScreen
@@ -172,6 +178,40 @@ fun GymTrackerNavHost() {
                 onTechniqueChange = { exerciseId, setNumber, technique ->
                     workoutViewModel.updateSetTechnique(exerciseId, setNumber, technique)
                 }
+            )
+        }
+
+        // Full Screen: Exercise Data list
+        composable(route = Routes.ExerciseData.name) {
+            val exerciseDataViewModel: ExerciseDataViewModel =
+                viewModel(factory = ExerciseDataViewModel.Factory)
+            val exerciseDataUiState by exerciseDataViewModel.uiState.collectAsState()
+
+            ExerciseDataScreen(
+                uiState = exerciseDataUiState,
+                onNavigateBack = { navController.popBackStack() },
+                onSearchQueryChanged = exerciseDataViewModel::onSearchQueryChanged,
+                onMuscleGroupSelected = exerciseDataViewModel::onMuscleGroupSelected,
+                onExerciseClick = { exerciseName ->
+                    navController.navigate(
+                        "${Routes.ExerciseDetail.name}/${Uri.encode(exerciseName)}"
+                    )
+                }
+            )
+        }
+
+        // Full Screen: Exercise Detail
+        composable(
+            route = "${Routes.ExerciseDetail.name}/{$EXERCISE_NAME_ARG}",
+            arguments = listOf(navArgument(EXERCISE_NAME_ARG) { type = NavType.StringType })
+        ) {
+            val exerciseDetailViewModel: ExerciseDetailViewModel =
+                viewModel(factory = ExerciseDetailViewModel.Factory)
+            val exerciseDetailUiState by exerciseDetailViewModel.uiState.collectAsState()
+
+            ExerciseDetailScreen(
+                uiState = exerciseDetailUiState,
+                onNavigateBack = { navController.popBackStack() }
             )
         }
 
