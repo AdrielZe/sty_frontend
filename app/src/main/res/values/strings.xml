@@ -572,5 +572,7 @@
     <string name="tempo_mm_ss">Tempo (MM:SS)</string>
     <string name="m_n">Mín</string>
     <string name="m_x">Máx</string>
+    <string name="missed_workout_singular">Você não completou o seu treino. Clique aqui para remarcá-lo e não perder a sua sequência.</string>
+    <string name="missed_workout_plural">Você não completou os seus treinos. Clique aqui para remarcá-los e não perder a sua sequência.</string>
 
 </resources>

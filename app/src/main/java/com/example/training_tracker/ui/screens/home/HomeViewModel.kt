@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -34,7 +35,7 @@ class HomeViewModel(
 
     private val FREESTYLE_WORKOUT_ID = "freestyle_workout_id"
 
-    val uiState: StateFlow<HomeUiState> = combine(
+    private val baseState = combine(
         userRepository.getUser(),
         workoutRepository.getWorkoutsByDay(LocalDate.now().dayOfWeek),
         workoutHistoryRepository.getHistoryByDate(LocalDate.now()),
@@ -81,6 +82,10 @@ class HomeViewModel(
             }
         } else 0
 
+        val completedPerDay = thisWeekHistories
+            .groupingBy { it.completionDate.dayOfWeek }
+            .eachCount()
+
         HomeUiState.Success(
             user = user,
             currentDate = getCurrentDate(),
@@ -89,7 +94,34 @@ class HomeViewModel(
             workoutsCompletedThisWeek = thisWeekHistories.size,
             activeFreestyleWorkout = activeFreestyle,
             weeklyCalories = weeklyCalories,
+            completedWorkoutsPerDayOfWeek = completedPerDay,
         ) as HomeUiState
+    }
+
+    val uiState: StateFlow<HomeUiState> = combine(
+        baseState,
+        workoutRepository.workouts
+    ) { state, allWorkouts ->
+        if (state !is HomeUiState.Success) return@combine state
+        val currentWeekMonday = LocalDate.now().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+        val today = LocalDate.now()
+        val perDay = mutableMapOf<DayOfWeek, Int>()
+        val missedByDay = mutableMapOf<DayOfWeek, MutableList<Workout>>()
+        for (workout in allWorkouts.filter { it.id != FREESTYLE_WORKOUT_ID }) {
+            val isRescheduledThisWeek = workout.rescheduledWeekStart == currentWeekMonday && workout.rescheduledToDayOfWeek != null
+            if (isRescheduledThisWeek) {
+                val newDay = workout.rescheduledToDayOfWeek!!
+                perDay[newDay] = (perDay[newDay] ?: 0) + 1
+            } else if (workout.dayOfWeek != null) {
+                val day = workout.dayOfWeek
+                perDay[day] = (perDay[day] ?: 0) + 1
+                val date = currentWeekMonday.plusDays((day.value - 1).toLong())
+                if (date.isBefore(today)) {
+                    missedByDay.getOrPut(day) { mutableListOf() }.add(workout)
+                }
+            }
+        }
+        state.copy(workoutsPerDayOfWeek = perDay, missedWorkoutsByDay = missedByDay)
     }
     .catch { e ->
         emit(HomeUiState.Error(e.message))
@@ -122,6 +154,18 @@ class HomeViewModel(
                 )
             }
             onConfirm()
+        }
+    }
+
+    fun rescheduleWorkout(workout: Workout, newDay: DayOfWeek) {
+        viewModelScope.launch {
+            val currentWeekMonday = LocalDate.now().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+            workoutRepository.updateWorkout(
+                workout.copy(
+                    rescheduledToDayOfWeek = newDay,
+                    rescheduledWeekStart = currentWeekMonday
+                )
+            )
         }
     }
 

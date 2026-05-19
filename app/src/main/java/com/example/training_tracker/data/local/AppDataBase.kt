@@ -24,7 +24,7 @@ import kotlinx.coroutines.launch
 
 @Database(
     entities = [Workout::class, Exercise::class, WorkoutHistory::class, Records::class, User::class],
-    version = 37,
+    version = 38,
 )
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
@@ -66,6 +66,13 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        private val MIGRATION_37_38 = object : Migration(37, 38) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("ALTER TABLE workouts ADD COLUMN rescheduledToDayOfWeek TEXT DEFAULT NULL")
+                database.execSQL("ALTER TABLE workouts ADD COLUMN rescheduledWeekStart TEXT DEFAULT NULL")
+            }
+        }
+
         private val MIGRATION_36_37 = object : Migration(36, 37) {
             override fun migrate(database: SupportSQLiteDatabase) {
                 // Corrige a tabela de exercícios (coluna direta)
@@ -83,7 +90,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "app_database"
                 )
-                    .addMigrations(MIGRATION_32_33, MIGRATION_33_34, MIGRATION_34_35, MIGRATION_35_36, MIGRATION_36_37)
+                    .addMigrations(MIGRATION_32_33, MIGRATION_33_34, MIGRATION_34_35, MIGRATION_35_36, MIGRATION_36_37, MIGRATION_37_38)
                     .fallbackToDestructiveMigration()
                     .build()
                 INSTANCE = instance

@@ -494,4 +494,6 @@
     <string name="save_routine_dialog_day_label">Day of week</string>
     <string name="save_routine_dialog_confirm">Save routine</string>
     <string name="save_routine_dialog_skip">No, thanks</string>
+    <string name="missed_workout_singular">You didn\'t complete your workout. Tap here to reschedule it and keep your streak.</string>
+    <string name="missed_workout_plural">You didn\'t complete your workouts. Tap here to reschedule them and keep your streak.</string>
 </resources>

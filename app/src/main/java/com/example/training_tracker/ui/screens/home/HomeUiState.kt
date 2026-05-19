@@ -2,6 +2,7 @@ package com.example.training_tracker.ui.screens.home
 
 import com.example.training_tracker.data.models.User
 import com.example.training_tracker.data.models.Workout
+import java.time.DayOfWeek
 
 sealed interface HomeUiState {
     data object Loading : HomeUiState
@@ -14,5 +15,8 @@ sealed interface HomeUiState {
         val workoutsCompletedThisWeek: Int = 0,
         val activeFreestyleWorkout: Workout? = null,
         val weeklyCalories: Int = 0,
+        val workoutsPerDayOfWeek: Map<DayOfWeek, Int> = emptyMap(),
+        val completedWorkoutsPerDayOfWeek: Map<DayOfWeek, Int> = emptyMap(),
+        val missedWorkoutsByDay: Map<DayOfWeek, List<Workout>> = emptyMap(),
     ) : HomeUiState
 }

@@ -22,5 +22,7 @@ data class Workout(
     @ColumnInfo(name = "accumulatedTime") val accumulatedTime: Long = 0L,
     @ColumnInfo(name = "historyId") val historyId: String? = null,
     @ColumnInfo(name = "estimatedTime") val estimatedTime: Int = exercises.size * 10,
-    @ColumnInfo(name = "progress") val progress: Float = 0f
+    @ColumnInfo(name = "progress") val progress: Float = 0f,
+    @ColumnInfo(name = "rescheduledToDayOfWeek") val rescheduledToDayOfWeek: DayOfWeek? = null,
+    @ColumnInfo(name = "rescheduledWeekStart") val rescheduledWeekStart: LocalDate? = null,
 )
