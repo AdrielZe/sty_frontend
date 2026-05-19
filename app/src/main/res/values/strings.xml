@@ -608,4 +608,35 @@
     <string name="dados_reps_peso">%1$d reps × %2$s kg</string>
     <string name="dados_dados_insuficientes">Complete mais sessões para ver o gráfico de evolução.</string>
 
+    <string name="dados_eyebrow">DADOS · ANÁLISE</string>
+
+    <!-- Sort segmented -->
+    <string name="dados_sort_recente">Recente</string>
+    <string name="dados_sort_peso">Peso</string>
+    <string name="dados_sort_progresso">Progresso</string>
+    <string name="dados_sort_volume">Volume</string>
+
+    <!-- Spotlight -->
+    <string name="dados_em_destaque">EM DESTAQUE</string>
+    <string name="dados_recorde_pessoal">Recorde pessoal</string>
+    <string name="dados_label_sessoes">sessões</string>
+    <string name="dados_label_volume">volume</string>
+    <string name="dados_hoje_kg">hoje · %1$s kg</string>
+
+    <!-- Cards -->
+    <string name="dados_hoje">hoje</string>
+    <string name="dados_ha_um_dia">há 1 dia</string>
+    <string name="dados_ha_dias">há %1$d dias</string>
+    <string name="dados_ult">Últ.</string>
+
+    <!-- Results head -->
+    <string name="dados_results_count">%1$d exercícios</string>
+    <string name="dados_results_count_single">%1$d exercício</string>
+    <string name="dados_ordenado_por">ordenado por %1$s</string>
+
+    <!-- Empty -->
+    <string name="dados_nenhum_resultado_sub">Tente trocar a busca ou o filtro de grupo muscular.</string>
+    <string name="dados_limpar_filtros">Limpar filtros</string>
+
+
 </resources>

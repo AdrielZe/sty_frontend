@@ -529,4 +529,30 @@
     <string name="dados_series_reps">SETS×REPS</string>
     <string name="dados_reps_peso">%1$d reps × %2$s kg</string>
     <string name="dados_dados_insuficientes">Complete more sessions to see the evolution chart.</string>
+
+    <string name="dados_eyebrow">DATA · INSIGHTS</string>
+
+    <string name="dados_sort_recente">Recent</string>
+    <string name="dados_sort_peso">Weight</string>
+    <string name="dados_sort_progresso">Progress</string>
+    <string name="dados_sort_volume">Volume</string>
+
+    <string name="dados_em_destaque">SPOTLIGHT</string>
+    <string name="dados_recorde_pessoal">Personal record</string>
+    <string name="dados_label_sessoes">sessions</string>
+    <string name="dados_label_volume">volume</string>
+    <string name="dados_hoje_kg">today · %1$s kg</string>
+
+    <string name="dados_hoje">today</string>
+    <string name="dados_ha_um_dia">1 day ago</string>
+    <string name="dados_ha_dias">%1$d days ago</string>
+    <string name="dados_ult">Last</string>
+
+    <string name="dados_results_count">%1$d exercises</string>
+    <string name="dados_results_count_single">%1$d exercise</string>
+    <string name="dados_ordenado_por">sorted by %1$s</string>
+
+    <string name="dados_nenhum_resultado_sub">Try changing your search or muscle filter.</string>
+    <string name="dados_limpar_filtros">Clear filters</string>
+
 </resources>
