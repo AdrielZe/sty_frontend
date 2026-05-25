@@ -44,6 +44,7 @@ import com.example.training_tracker.ui.theme.AppTheme
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 import kotlin.math.abs
+import kotlin.math.roundToInt
 
 private val GainGreen = Color(0xFF4CAF50)
 private val LossRed = Color(0xFFE53935)
@@ -56,6 +57,7 @@ fun ExerciseDetailScreen(
     modifier: Modifier = Modifier
 ) {
     val log = uiState.log
+    val todayHighlight = uiState.todayHighlight
     Scaffold(
         modifier = modifier,
         containerColor = MaterialTheme.colorScheme.background,
@@ -112,6 +114,7 @@ fun ExerciseDetailScreen(
 
             else -> ExerciseDetailContent(
                 log = log,
+                todayHighlight = todayHighlight,
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues)
@@ -123,6 +126,7 @@ fun ExerciseDetailScreen(
 @Composable
 private fun ExerciseDetailContent(
     log: ExerciseLog,
+    todayHighlight: TodayHighlightData?,
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
@@ -130,6 +134,24 @@ private fun ExerciseDetailContent(
         verticalArrangement = Arrangement.spacedBy(20.dp),
         contentPadding = PaddingValues(top = 8.dp, bottom = 40.dp)
     ) {
+        // Hero card: destaque do dia — aparece somente quando este exercício é o destaque
+        item {
+            if (todayHighlight != null && todayHighlight.isTopHighlight) {
+                TodayHighlightCard(
+                    highlight = todayHighlight,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp)
+                )
+            } else {
+                NoHighlightMessage(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp)
+                )
+            }
+        }
+
         item {
             log.muscleGroup?.let { group ->
                 Text(
@@ -209,6 +231,203 @@ private fun ExerciseDetailContent(
         }
     }
 }
+
+// ─── Hero card: destaque do dia ──────────────────────────────────────────────
+
+@Composable
+private fun TodayHighlightCard(
+    highlight: TodayHighlightData,
+    modifier: Modifier = Modifier
+) {
+    val accentColor = AppTheme.accent.light
+    val isFirstTime = highlight.volumeChangePct == null && highlight.peakChangePct == null
+
+    Card(
+        modifier = modifier.border(1.dp, accentColor.copy(alpha = 0.5f), RoundedCornerShape(20.dp)),
+        colors = CardDefaults.cardColors(containerColor = accentColor.copy(alpha = 0.10f)),
+        shape = RoundedCornerShape(20.dp)
+    ) {
+        Column(modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp)) {
+            // Eyebrow
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    Icons.Default.EmojiEvents,
+                    contentDescription = null,
+                    tint = accentColor,
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(
+                    stringResource(R.string.destaque_do_dia),
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        color = accentColor,
+                        fontWeight = FontWeight.Black,
+                        letterSpacing = 2.sp,
+                        fontSize = 10.sp
+                    )
+                )
+            }
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            if (isFirstTime) {
+                // Primeira vez — sem comparação, mostra apenas os valores absolutos
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
+                        Text(
+                            stringResource(R.string.destaque_primeira_vez),
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                fontWeight = FontWeight.Black,
+                                color = accentColor
+                            )
+                        )
+                        Text(
+                            stringResource(R.string.destaque_primeira_vez_sub),
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.45f),
+                                fontSize = 9.sp
+                            )
+                        )
+                    }
+                    Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Text(
+                            "${formatWeight(highlight.todayPeak)} kg",
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                fontWeight = FontWeight.Black,
+                                color = accentColor
+                            )
+                        )
+                        Text(
+                            formatVolume(highlight.todayVolume),
+                            style = MaterialTheme.typography.labelMedium.copy(
+                                fontWeight = FontWeight.Bold,
+                                color = accentColor.copy(alpha = 0.75f)
+                            )
+                        )
+                    }
+                }
+            } else {
+                // Tem histórico — exibe pico e volume com suas variações lado a lado
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    HighlightMetricBlock(
+                        modifier = Modifier.weight(1f),
+                        label = stringResource(R.string.dados_pico),
+                        value = "${formatWeight(highlight.todayPeak)} kg",
+                        changePct = highlight.peakChangePct
+                    )
+                    HighlightMetricBlock(
+                        modifier = Modifier.weight(1f),
+                        label = stringResource(R.string.dados_variacao_volume),
+                        value = formatVolume(highlight.todayVolume),
+                        changePct = highlight.volumeChangePct
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun HighlightMetricBlock(
+    label: String,
+    value: String,
+    changePct: Double?,
+    modifier: Modifier = Modifier
+) {
+    val accentColor = AppTheme.accent.light
+    val pctColor = when {
+        changePct == null -> accentColor
+        changePct >= 0    -> GainGreen
+        else              -> LossRed
+    }
+
+    Column(
+        modifier = modifier
+            .background(
+                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.25f),
+                RoundedCornerShape(14.dp)
+            )
+            .padding(horizontal = 14.dp, vertical = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        Text(
+            label.uppercase(),
+            style = MaterialTheme.typography.labelSmall.copy(
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 1.sp,
+                fontSize = 9.sp
+            )
+        )
+        Text(
+            value,
+            style = MaterialTheme.typography.titleMedium.copy(
+                fontWeight = FontWeight.Black,
+                color = accentColor,
+                fontSize = 18.sp
+            ),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+        if (changePct != null) {
+            val sign = if (changePct >= 0) "+" else ""
+            Text(
+                "$sign${changePct.roundToInt()}%",
+                style = MaterialTheme.typography.labelMedium.copy(
+                    fontWeight = FontWeight.ExtraBold,
+                    color = pctColor,
+                    fontSize = 14.sp
+                )
+            )
+        }
+    }
+}
+
+@Composable
+private fun NoHighlightMessage(modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier
+            .background(
+                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                RoundedCornerShape(16.dp)
+            )
+            .padding(horizontal = 16.dp, vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Icon(
+            Icons.Default.EmojiEvents,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
+            modifier = Modifier.size(20.dp)
+        )
+        Column {
+            Text(
+                stringResource(R.string.sem_destaque_hoje),
+                style = MaterialTheme.typography.labelLarge.copy(
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.45f)
+                )
+            )
+            Text(
+                stringResource(R.string.sem_destaque_descricao),
+                style = MaterialTheme.typography.labelSmall.copy(
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
+                    fontSize = 10.sp
+                )
+            )
+        }
+    }
+}
+
+// ─── Stats grid ──────────────────────────────────────────────────────────────
 
 @Composable
 private fun HeroStatGrid(

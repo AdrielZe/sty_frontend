@@ -54,6 +54,7 @@ import java.util.Locale
 @Composable
 fun UserProfileScreen(
     onBackClick: () -> Unit,
+    onNavigateToAchievements: () -> Unit = {},
     viewModel: UserProfileViewModel = viewModel(factory = UserProfileViewModel.Factory)
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -154,7 +155,8 @@ fun UserProfileScreen(
                         },
                         onEditNameClick = { showEditNameDialog = true },
                         onEditBodyDataClick = { showBodyDataDialog = true },
-                        onAccentThemeChange = { viewModel.updateAccentTheme(it) }
+                        onAccentThemeChange = { viewModel.updateAccentTheme(it) },
+                        onNavigateToAchievements = onNavigateToAchievements
                     )
                     if (showBodyDataDialog) {
                         BodyDataDialog(
@@ -181,7 +183,8 @@ fun ProfileContent(
     onEditPhotoClick: () -> Unit,
     onEditNameClick: () -> Unit,
     onEditBodyDataClick: () -> Unit = {},
-    onAccentThemeChange: (String) -> Unit = {}
+    onAccentThemeChange: (String) -> Unit = {},
+    onNavigateToAchievements: () -> Unit = {}
 ) {
     val headerGradient = Brush.verticalGradient(
         colors = listOf(AppTheme.accent.dark.copy(alpha = 0.85f), AppTheme.accent.light.copy(alpha = 0.4f), Color.Transparent)
@@ -240,6 +243,17 @@ fun ProfileContent(
                         modifier = Modifier.size(18.dp)
                     )
                 }
+                IconButton(
+                    onClick = onNavigateToAchievements,
+                    modifier = Modifier.size(36.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.EmojiEvents,
+                        contentDescription = "Conquistas",
+                        tint = AppTheme.accent.light,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
             }
 
             Text(
@@ -248,7 +262,20 @@ fun ProfileContent(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
-            Spacer(modifier = Modifier.height(28.dp))
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // Medal counts row
+            if (stats.medalCounts.total > 0) {
+                MedalCountsRow(
+                    counts = stats.medalCounts,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp)
+                )
+                Spacer(modifier = Modifier.height(24.dp))
+            } else {
+                Spacer(modifier = Modifier.height(8.dp))
+            }
 
             // Section label
             SectionLabel(
@@ -690,6 +717,74 @@ fun BodyDataCard(
                 )
             }
         }
+    }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ * Medal counts row
+ * ───────────────────────────────────────────────────────────────────────────── */
+
+private val MedalGold   = Color(0xFFFFD56B)
+private val MedalSilver = Color(0xFFD8DDE6)
+private val MedalBronze = Color(0xFFD99A6C)
+
+@Composable
+private fun MedalCountsRow(counts: MedalCounts, modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier
+            .clip(RoundedCornerShape(16.dp))
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+            .padding(vertical = 14.dp),
+        horizontalArrangement = Arrangement.SpaceEvenly,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        MedalCountCell(count = counts.gold,   color = MedalGold,   label = "Ouro")
+        VerticalDivider(
+            modifier = Modifier.height(36.dp),
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.10f)
+        )
+        MedalCountCell(count = counts.silver, color = MedalSilver, label = "Prata")
+        VerticalDivider(
+            modifier = Modifier.height(36.dp),
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.10f)
+        )
+        MedalCountCell(count = counts.bronze, color = MedalBronze, label = "Bronze")
+    }
+}
+
+@Composable
+private fun MedalCountCell(count: Int, color: Color, label: String) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.EmojiEvents,
+                contentDescription = null,
+                tint = color,
+                modifier = Modifier.size(20.dp)
+            )
+            Text(
+                text = "$count",
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontWeight = FontWeight.ExtraBold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            )
+        }
+        Text(
+            text = label.uppercase(),
+            style = MaterialTheme.typography.labelSmall.copy(
+                fontWeight = FontWeight.ExtraBold,
+                color = color,
+                letterSpacing = 1.6.sp,
+                fontSize = 9.5.sp
+            )
+        )
     }
 }
 

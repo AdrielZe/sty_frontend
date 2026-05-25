@@ -470,6 +470,8 @@
     <string name="recordes">Records</string>
     <string name="perfil">Profile</string>
     <string name="historico_min">History</string>
+    <string name="conquistas_min">Achievements</string>
+    <string name="exercicios_min">Exercises</string>
     <string name="nenhuma_atividade_registrada">No activities registered</string>
     <string name="complete_treinos_para_ver_o_seu_hist_rico">Complete workouts to view your history</string>
     <string name="iniciar_treino">START WORKOUT</string>
@@ -531,6 +533,29 @@
     <string name="dados_dados_insuficientes">Complete more sessions to see the evolution chart.</string>
 
     <string name="dados_eyebrow">DATA · INSIGHTS</string>
+
+    <string name="dados_recorde_pessoal_abrev">PR</string>
+    <string name="dados_ver_detalhes">VIEW DETAILS</string>
+    <string name="dados_evolucao_carga_label">LOAD PROGRESSION</string>
+
+    <!-- SpotlightCard: info balloon -->
+    <string name="spotlight_info_cd">Information about peak and volume</string>
+    <string name="spotlight_info_title">Peak vs. Volume</string>
+    <string name="spotlight_info_pico_title">Peak Load</string>
+    <string name="spotlight_info_pico_body">The heaviest weight lifted in a single set. Reflects your maximum strength and is the main indicator of load progression over time.</string>
+    <string name="spotlight_info_volume_title">Total Volume</string>
+    <string name="spotlight_info_volume_body">Sum of weight × reps across all sets in the session. Represents the total stimulus delivered to the muscle — the most important factor for hypertrophy.</string>
+    <string name="spotlight_info_dica">Ideally, both grow together. If peak went up but volume dropped, you got stronger but did less work. If volume rose but peak didn\'t, you gained endurance and muscle density.</string>
+    <string name="spotlight_info_variacao">It\'s completely normal — and even healthy — for one or the other to dip occasionally. Sessions with less volume and heavier loads stimulate the nervous system. Sessions with more volume and moderate load generate more muscle damage. This natural variation is one of the main drivers of long-term hypertrophy.</string>
+
+    <!-- Hero card: today's highlight -->
+    <string name="destaque_do_dia">TODAY\'S HIGHLIGHT</string>
+    <string name="destaque_volume_hoje">Today\'s volume</string>
+    <string name="destaque_aumento_volume">volume increase</string>
+    <string name="destaque_primeira_vez">First time!</string>
+    <string name="destaque_primeira_vez_sub">no previous session to compare</string>
+    <string name="sem_destaque_hoje">No highlight today</string>
+    <string name="sem_destaque_descricao">This exercise wasn\'t performed today or wasn\'t the top highlight of the day.</string>
 
     <string name="dados_sort_recente">Recent</string>
     <string name="dados_sort_peso">Weight</string>

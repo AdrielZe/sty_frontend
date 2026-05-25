@@ -22,6 +22,12 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.training_tracker.ui.screens.home.HomeUiState
 import com.example.training_tracker.ui.screens.home.HomeScreen
 import com.example.training_tracker.ui.screens.home.HomeViewModel
+import android.net.Uri
+import com.example.training_tracker.ui.screens.conquistas.AchievementsScreen
+import com.example.training_tracker.ui.screens.conquistas.AchievementsViewModel
+import com.example.training_tracker.ui.screens.exercise_data.ExerciseDataScreen
+import com.example.training_tracker.ui.screens.exercise_data.ExerciseDataViewModel
+import com.example.training_tracker.ui.screens.exercise_data.EXERCISE_NAME_ARG
 import com.example.training_tracker.ui.screens.records.RecordsScreen
 import com.example.training_tracker.ui.screens.records.RecordsViewModel
 import com.example.training_tracker.ui.screens.registered_workouts.RegisteredWorkoutsScreen
@@ -106,6 +112,33 @@ fun MainTabsScreen(
                 )
             }
 
+            composable(route = Routes.ExerciseData.name) {
+                val viewModel: ExerciseDataViewModel = viewModel(factory = ExerciseDataViewModel.Factory)
+                val uiState by viewModel.uiState.collectAsState()
+                ExerciseDataScreen(
+                    uiState = uiState,
+                    onNavigateBack = { tabsNavController.popBackStack() },
+                    onSearchQueryChanged = viewModel::onSearchQueryChanged,
+                    onMuscleGroupSelected = viewModel::onMuscleGroupSelected,
+                    onExerciseClick = { exerciseName ->
+                        rootNavController.navigate(
+                            "${Routes.ExerciseDetail.name}/${Uri.encode(exerciseName)}"
+                        )
+                    }
+                )
+            }
+
+            composable(route = Routes.Achievements.name) {
+                val viewModel: AchievementsViewModel = viewModel(factory = AchievementsViewModel.Factory)
+                val uiState by viewModel.uiState.collectAsState()
+                AchievementsScreen(
+                    uiState = uiState,
+                    onNavigateBack = { tabsNavController.popBackStack() },
+                    onYearSelected = viewModel::onYearSelected,
+                    onDaySelected = viewModel::onDaySelected
+                )
+            }
+
             composable(route = Routes.RegisteredWorkouts.name) {
                 RegisteredWorkoutsScreen(
                     onNavigateBack = { tabsNavController.popBackStack() },
@@ -168,7 +201,10 @@ fun MainTabsScreen(
 
             composable(route = Routes.Profile.name) {
                 UserProfileScreen(
-                    onBackClick = { tabsNavController.popBackStack() }
+                    onBackClick = { tabsNavController.popBackStack() },
+                    onNavigateToAchievements = {
+                        navigateToTab(Routes.Achievements.name)
+                    }
                 )
             }
         }

@@ -1,6 +1,12 @@
 package com.example.training_tracker.ui.screens.exercise_data
 
 import androidx.annotation.DrawableRes
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -15,17 +21,24 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.FitnessCenter
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Insights
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.TrendingUp
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -87,11 +100,34 @@ fun ExerciseDataScreen(
 
     val sortedExercises = remember(uiState.exercises, sort) { sort.apply(uiState.exercises) }
 
-    // Spotlight: best positive weight-progression exercise with >=2 sessions.
+    // Spotlight: exercício com maior aumento percentual de volume HOJE vs última sessão anterior.
+    // Se nenhum exercício tem sessão anterior hoje, usa o maior volume absoluto entre os feitos hoje.
+    // Se nenhum exercício foi feito hoje, não exibe o spotlight.
     val spotlight: ExerciseLog? = remember(uiState.exercises) {
-        uiState.exercises
-            .filter { (it.weightProgressPct ?: 0.0) > 0.0 && it.sessionCount >= 2 }
-            .maxByOrNull { it.weightProgressPct ?: 0.0 }
+        val today = LocalDate.now()
+
+        data class TodayScore(val log: ExerciseLog, val changePct: Double?, val volume: Double)
+
+        val todayScores = uiState.exercises.mapNotNull { log ->
+            val todaySession = log.sessions.lastOrNull { it.date == today }
+                ?: return@mapNotNull null
+            val prevSession = log.sessions.lastOrNull { it.date < today }
+            val changePct = prevSession?.let { prev ->
+                if (prev.totalVolume > 0.0)
+                    (todaySession.totalVolume - prev.totalVolume) / prev.totalVolume * 100.0
+                else null
+            }
+            TodayScore(log, changePct, todaySession.totalVolume)
+        }
+
+        if (todayScores.isEmpty()) return@remember null
+
+        val withChange = todayScores.filter { it.changePct != null }
+        if (withChange.isNotEmpty()) {
+            withChange.maxByOrNull { it.changePct!! }?.log
+        } else {
+            todayScores.maxByOrNull { it.volume }?.log
+        }
     }
 
     Scaffold(
@@ -261,8 +297,23 @@ fun ExerciseDataScreen(
 @Composable
 private fun SpotlightCard(ex: ExerciseLog) {
     val drawable = ex.muscleGroup?.let { muscleGroupImage(it) }
-    val progress = ex.weightProgressPct?.toInt()
-    val latestWeight = ex.lastSession?.topWeight ?: ex.allTimePR
+    val today = LocalDate.now()
+    val todaySession = ex.sessions.lastOrNull { it.date == today }
+    val prevSession = ex.sessions.lastOrNull { it.date < today }
+    val todayVolume = todaySession?.totalVolume ?: 0.0
+    val latestWeight = todaySession?.topWeight ?: ex.lastSession?.topWeight ?: ex.allTimePR
+    val volumeChangePct: Double? = prevSession?.let { prev ->
+        if (prev.totalVolume > 0.0)
+            (todayVolume - prev.totalVolume) / prev.totalVolume * 100.0
+        else null
+    }
+    val weightChangePct: Double? = prevSession?.let { prev ->
+        if (prev.topWeight > 0.0)
+            (latestWeight - prev.topWeight) / prev.topWeight * 100.0
+        else null
+    }
+    val progress = volumeChangePct?.toInt()
+    var showInfo by remember { mutableStateOf(false) }
 
     Box(
         modifier = Modifier
@@ -303,35 +354,70 @@ private fun SpotlightCard(ex: ExerciseLog) {
             modifier = Modifier.fillMaxWidth().padding(horizontal = 18.dp, vertical = 16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // eyebrow
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            // eyebrow + ícone de info
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(100.dp))
+                            .background(AppTheme.accent.gradient)
+                            .padding(horizontal = 10.dp, vertical = 4.dp)
+                    ) {
+                        Text(
+                            stringResource(R.string.dados_em_destaque),
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                fontWeight = FontWeight.ExtraBold,
+                                color = Color.Black,
+                                letterSpacing = 1.8.sp,
+                                fontSize = 9.5.sp
+                            )
+                        )
+                    }
+                    ex.muscleGroup?.let {
+                        Text(
+                            stringResource(it.resId).uppercase(),
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                                letterSpacing = 1.6.sp,
+                                fontSize = 9.5.sp
+                            )
+                        )
+                    }
+                }
+                // Ícone de info
                 Box(
                     modifier = Modifier
+                        .size(28.dp)
                         .clip(RoundedCornerShape(100.dp))
-                        .background(AppTheme.accent.gradient)
-                        .padding(horizontal = 10.dp, vertical = 4.dp)
+                        .background(
+                            if (showInfo) AppTheme.accent.light.copy(alpha = 0.18f)
+                            else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f)
+                        )
+                        .clickable { showInfo = !showInfo },
+                    contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        stringResource(R.string.dados_em_destaque),
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            fontWeight = FontWeight.ExtraBold,
-                            color = Color.Black,
-                            letterSpacing = 1.8.sp,
-                            fontSize = 9.5.sp
-                        )
+                    Icon(
+                        imageVector = Icons.Default.Info,
+                        contentDescription = stringResource(R.string.spotlight_info_cd),
+                        tint = if (showInfo) AppTheme.accent.light
+                               else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.45f),
+                        modifier = Modifier.size(15.dp)
                     )
                 }
-                ex.muscleGroup?.let {
-                    Text(
-                        stringResource(it.resId).uppercase(),
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-                            letterSpacing = 1.6.sp,
-                            fontSize = 9.5.sp
-                        )
-                    )
-                }
+            }
+
+            // Balão de informação
+            AnimatedVisibility(
+                visible = showInfo,
+                enter = fadeIn(tween(180)) + expandVertically(tween(220), expandFrom = Alignment.Top),
+                exit = shrinkVertically(tween(180), shrinkTowards = Alignment.Top) + fadeOut(tween(150))
+            ) {
+                SpotlightInfoBalloon(onDismiss = { showInfo = false })
             }
 
             // name + progress badge
@@ -353,18 +439,14 @@ private fun SpotlightCard(ex: ExerciseLog) {
                     overflow = TextOverflow.Ellipsis
                 )
                 Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    ProgressBadge(value = progress)
-                    if (progress != null) {
-                        Text(
-                            text = stringResource(R.string.dados_variacao_media_sub).uppercase(),
-                            style = MaterialTheme.typography.labelSmall.copy(
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.40f),
-                                fontWeight = FontWeight.SemiBold,
-                                letterSpacing = 1.2.sp,
-                                fontSize = 8.sp
-                            )
-                        )
-                    }
+                    ProgressBadge(
+                        value = weightChangePct?.toInt(),
+                        label = stringResource(R.string.dados_pico).uppercase()
+                    )
+                    ProgressBadge(
+                        value = progress,
+                        label = stringResource(R.string.dados_variacao_volume).uppercase()
+                    )
                 }
             }
 
@@ -395,7 +477,7 @@ private fun SpotlightCard(ex: ExerciseLog) {
                         )
                     }
                     Text(
-                        stringResource(R.string.dados_recorde_pessoal).uppercase(),
+                        stringResource(R.string.dados_pico).uppercase(),
                         style = MaterialTheme.typography.labelSmall.copy(
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.45f),
@@ -406,7 +488,7 @@ private fun SpotlightCard(ex: ExerciseLog) {
                 }
                 Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     AuxStat("${ex.sessionCount}", stringResource(R.string.dados_label_sessoes))
-                    AuxStat(formatVolume(ex.totalVolumeLifted), stringResource(R.string.dados_label_volume))
+                    AuxStat(formatVolume(todayVolume), stringResource(R.string.dados_label_volume))
                 }
             }
 
@@ -418,25 +500,107 @@ private fun SpotlightCard(ex: ExerciseLog) {
                 data = ex.weightSeriesNewestFirst,
                 modifier = Modifier.fillMaxWidth().height(64.dp)
             )
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text(
-                    text = stringResource(R.string.dados_sessoes_count, ex.sessionCount),
-                    style = MaterialTheme.typography.labelSmall.copy(
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.45f),
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 10.sp
+            // Evolução: peso anterior → peso hoje  |  % de variação de volume
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Antes → Depois: pico e volume
+                Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                    ComparisonRow(
+                        label = stringResource(R.string.dados_pico).lowercase(),
+                        prevValue = prevSession?.let { "${formatWeight(it.topWeight)} kg" },
+                        nowValue = "${formatWeight(latestWeight)} kg"
                     )
-                )
-                Text(
-                    text = stringResource(R.string.dados_hoje_kg, formatWeight(latestWeight)),
-                    style = MaterialTheme.typography.labelSmall.copy(
-                        color = AppTheme.accent.light,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 10.sp
+                    ComparisonRow(
+                        label = stringResource(R.string.dados_variacao_volume).lowercase(),
+                        prevValue = prevSession?.let { formatVolume(it.totalVolume) },
+                        nowValue = formatVolume(todayVolume)
                     )
-                )
+                }
+                // Variações: pico e volume
+                if (volumeChangePct != null || weightChangePct != null) {
+                    Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        weightChangePct?.let { pct ->
+                            val color = if (pct >= 0) Color(0xFF4CAF50) else Color(0xFFE53935)
+                            val sign = if (pct >= 0) "+" else ""
+                            Text(
+                                text = "$sign${pct.toInt()}% ${stringResource(R.string.dados_pico).lowercase()}",
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    color = color,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 10.sp
+                                )
+                            )
+                        }
+                        volumeChangePct?.let { pct ->
+                            val color = if (pct >= 0) Color(0xFF4CAF50) else Color(0xFFE53935)
+                            val sign = if (pct >= 0) "+" else ""
+                            Text(
+                                text = "$sign${pct.toInt()}% ${stringResource(R.string.dados_variacao_volume).lowercase()}",
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    color = color,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 10.sp
+                                )
+                            )
+                        }
+                    }
+                } else {
+                    Text(
+                        text = stringResource(R.string.destaque_primeira_vez),
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            color = AppTheme.accent.light.copy(alpha = 0.7f),
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 10.sp
+                        )
+                    )
+                }
             }
         }
+    }
+}
+
+/** Uma linha de comparação "antes → depois label" usada no rodapé do SpotlightCard. */
+@Composable
+private fun ComparisonRow(label: String, prevValue: String?, nowValue: String) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        if (prevValue != null) {
+            Text(
+                text = prevValue,
+                style = MaterialTheme.typography.labelSmall.copy(
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.45f),
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 10.sp
+                )
+            )
+            Text(
+                text = "→",
+                style = MaterialTheme.typography.labelSmall.copy(
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
+                    fontSize = 10.sp
+                )
+            )
+        }
+        Text(
+            text = nowValue,
+            style = MaterialTheme.typography.labelSmall.copy(
+                color = AppTheme.accent.light,
+                fontWeight = FontWeight.ExtraBold,
+                fontSize = 10.sp
+            )
+        )
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall.copy(
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.35f),
+                fontSize = 9.sp
+            )
+        )
     }
 }
 
@@ -465,11 +629,151 @@ private fun AuxStat(value: String, label: String) {
 }
 
 /* ═════════════════════════════════════════════════════════════════════════════
+ * SPOTLIGHT INFO BALLOON
+ * ═════════════════════════════════════════════════════════════════════════════ */
+
+@Composable
+private fun SpotlightInfoBalloon(onDismiss: () -> Unit) {
+    Card(
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.97f)
+        ),
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(0.5.dp, AppTheme.accent.light.copy(alpha = 0.25f), RoundedCornerShape(18.dp))
+    ) {
+        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+            // Header
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    stringResource(R.string.spotlight_info_title),
+                    style = MaterialTheme.typography.labelLarge.copy(
+                        fontWeight = FontWeight.ExtraBold,
+                        color = AppTheme.accent.light,
+                        letterSpacing = 0.5.sp
+                    )
+                )
+                Box(
+                    modifier = Modifier
+                        .size(24.dp)
+                        .clip(RoundedCornerShape(100.dp))
+                        .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
+                        .clickable { onDismiss() },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        Icons.Default.Close,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                        modifier = Modifier.size(14.dp)
+                    )
+                }
+            }
+
+            HorizontalDivider(color = AppTheme.accent.light.copy(alpha = 0.12f))
+
+            // Pico
+            InfoItem(
+                icon = Icons.Default.FitnessCenter,
+                title = stringResource(R.string.spotlight_info_pico_title),
+                body = stringResource(R.string.spotlight_info_pico_body)
+            )
+
+            // Volume
+            InfoItem(
+                icon = Icons.Default.TrendingUp,
+                title = stringResource(R.string.spotlight_info_volume_title),
+                body = stringResource(R.string.spotlight_info_volume_body)
+            )
+
+            // Dica
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(AppTheme.accent.light.copy(alpha = 0.08f))
+                    .padding(horizontal = 12.dp, vertical = 10.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.Top
+            ) {
+                Text("💡", style = MaterialTheme.typography.labelMedium)
+                Text(
+                    stringResource(R.string.spotlight_info_dica),
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f),
+                        fontSize = 11.sp,
+                        lineHeight = 16.sp
+                    )
+                )
+            }
+
+            // Variação é normal
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f))
+                    .padding(horizontal = 12.dp, vertical = 10.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.Top
+            ) {
+                Text("🔄", style = MaterialTheme.typography.labelMedium)
+                Text(
+                    stringResource(R.string.spotlight_info_variacao),
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f),
+                        fontSize = 11.sp,
+                        lineHeight = 16.sp
+                    )
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun InfoItem(icon: androidx.compose.ui.graphics.vector.ImageVector, title: String, body: String) {
+    Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.Top) {
+        Box(
+            modifier = Modifier
+                .size(32.dp)
+                .clip(RoundedCornerShape(10.dp))
+                .background(AppTheme.accent.light.copy(alpha = 0.12f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(icon, contentDescription = null, tint = AppTheme.accent.light, modifier = Modifier.size(16.dp))
+        }
+        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(
+                title,
+                style = MaterialTheme.typography.labelMedium.copy(
+                    fontWeight = FontWeight.ExtraBold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            )
+            Text(
+                body,
+                style = MaterialTheme.typography.labelSmall.copy(
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                    fontSize = 11.sp,
+                    lineHeight = 16.sp
+                )
+            )
+        }
+    }
+}
+
+/* ═════════════════════════════════════════════════════════════════════════════
  * PROGRESS BADGE
  * ═════════════════════════════════════════════════════════════════════════════ */
 
 @Composable
-private fun ProgressBadge(value: Int?) {
+private fun ProgressBadge(value: Int?, label: String? = null) {
     if (value == null) return
     val (bg, fg, icon) = when {
         value > 0 -> Triple(Color(0xFF4CAF50).copy(alpha = 0.15f), Color(0xFF4CAF50), Icons.Default.ArrowUpward)
@@ -480,24 +784,37 @@ private fun ProgressBadge(value: Int?) {
             Icons.Default.Remove
         )
     }
-    Row(
-        modifier = Modifier
-            .clip(RoundedCornerShape(100.dp))
-            .background(bg)
-            .border(0.5.dp, fg.copy(alpha = 0.30f), RoundedCornerShape(100.dp))
-            .padding(horizontal = 8.dp, vertical = 4.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(2.dp)
-    ) {
-        Icon(icon, contentDescription = null, tint = fg, modifier = Modifier.size(12.dp))
-        Text(
-            text = "${if (value > 0) "+" else ""}$value%",
-            style = MaterialTheme.typography.labelSmall.copy(
-                fontWeight = FontWeight.ExtraBold,
-                color = fg,
-                fontSize = 11.sp
+    Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Row(
+            modifier = Modifier
+                .clip(RoundedCornerShape(100.dp))
+                .background(bg)
+                .border(0.5.dp, fg.copy(alpha = 0.30f), RoundedCornerShape(100.dp))
+                .padding(horizontal = 8.dp, vertical = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(2.dp)
+        ) {
+            Icon(icon, contentDescription = null, tint = fg, modifier = Modifier.size(12.dp))
+            Text(
+                text = "${if (value > 0) "+" else ""}$value%",
+                style = MaterialTheme.typography.labelSmall.copy(
+                    fontWeight = FontWeight.ExtraBold,
+                    color = fg,
+                    fontSize = 11.sp
+                )
             )
-        )
+        }
+        if (label != null) {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelSmall.copy(
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.40f),
+                    fontWeight = FontWeight.SemiBold,
+                    letterSpacing = 1.2.sp,
+                    fontSize = 8.sp
+                )
+            )
+        }
     }
 }
 
@@ -727,7 +1044,7 @@ private fun ExerciseLogCard(log: ExerciseLog, onClick: () -> Unit) {
         ),
         shape = RoundedCornerShape(20.dp)
     ) {
-        Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Column(modifier = Modifier.padding(start = 14.dp, end = 14.dp, top = 14.dp, bottom = 0.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             // Header row
             Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
                 Box(
@@ -806,38 +1123,60 @@ private fun ExerciseLogCard(log: ExerciseLog, onClick: () -> Unit) {
                             .background(AppTheme.accent.gradient)
                             .padding(horizontal = 10.dp, vertical = 5.dp)
                     ) {
-                        Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text(
-                                text = formatWeight(log.allTimePR),
-                                style = MaterialTheme.typography.titleSmall.copy(
-                                    fontWeight = FontWeight.Black,
-                                    color = Color.Black,
-                                    letterSpacing = (-0.2).sp,
-                                    fontSize = 14.sp
-                                )
-                            )
-                            Text(
-                                text = "kg",
+                                text = stringResource(R.string.dados_recorde_pessoal_abrev),
                                 style = MaterialTheme.typography.labelSmall.copy(
                                     fontWeight = FontWeight.ExtraBold,
-                                    color = Color.Black.copy(alpha = 0.7f),
-                                    fontSize = 10.sp
-                                ),
-                                modifier = Modifier.padding(bottom = 1.dp)
+                                    color = Color.Black.copy(alpha = 0.55f),
+                                    letterSpacing = 1.6.sp,
+                                    fontSize = 8.sp
+                                )
                             )
+                            Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+                                Text(
+                                    text = formatWeight(log.allTimePR),
+                                    style = MaterialTheme.typography.titleSmall.copy(
+                                        fontWeight = FontWeight.Black,
+                                        color = Color.Black,
+                                        letterSpacing = (-0.2).sp,
+                                        fontSize = 14.sp
+                                    )
+                                )
+                                Text(
+                                    text = "kg",
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        fontWeight = FontWeight.ExtraBold,
+                                        color = Color.Black.copy(alpha = 0.7f),
+                                        fontSize = 10.sp
+                                    ),
+                                    modifier = Modifier.padding(bottom = 1.dp)
+                                )
+                            }
                         }
                     }
                     ProgressBadge(value = progress)
                 }
             }
 
-            // Full-width sparkline
+            // Full-width sparkline com label
             if (log.sessionCount >= 2) {
-                TrendSparkline(
-                    data = log.weightSeriesNewestFirst,
-                    color = trendColor,
-                    modifier = Modifier.fillMaxWidth().height(36.dp)
-                )
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(
+                        text = stringResource(R.string.dados_evolucao_carga_label),
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.35f),
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = 1.4.sp,
+                            fontSize = 8.sp
+                        )
+                    )
+                    TrendSparkline(
+                        data = log.weightSeriesNewestFirst,
+                        color = trendColor,
+                        modifier = Modifier.fillMaxWidth().height(36.dp)
+                    )
+                }
             }
 
             // Last session pills
@@ -890,6 +1229,35 @@ private fun ExerciseLogCard(log: ExerciseLog, onClick: () -> Unit) {
                         )
                     )
                 }
+            }
+            // Footer — indica que o card é clicável
+            HorizontalDivider(
+                thickness = 0.5.dp,
+                color = AppTheme.accent.light.copy(alpha = 0.10f)
+            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 10.dp),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = stringResource(R.string.dados_ver_detalhes),
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        color = AppTheme.accent.light.copy(alpha = 0.7f),
+                        fontWeight = FontWeight.ExtraBold,
+                        letterSpacing = 1.4.sp,
+                        fontSize = 9.sp
+                    )
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                Icon(
+                    Icons.AutoMirrored.Filled.ArrowForward,
+                    contentDescription = null,
+                    tint = AppTheme.accent.light.copy(alpha = 0.7f),
+                    modifier = Modifier.size(10.dp)
+                )
             }
         }
     }

@@ -520,6 +520,8 @@
     <string name="recordes">Recordes</string>
     <string name="perfil">Perfil</string>
     <string name="historico_min">Histórico</string>
+    <string name="conquistas_min">Conquistas</string>
+    <string name="exercicios_min">Exercícios</string>
     <string name="nenhuma_atividade_registrada">Nenhuma atividade registrada</string>
     <string name="complete_treinos_para_ver_o_seu_hist_rico">Complete treinos para ver o seu histórico</string>
     <string name="iniciar_treino">INICIAR TREINO</string>
@@ -610,6 +612,29 @@
 
     <string name="dados_eyebrow">DADOS · ANÁLISE</string>
 
+    <string name="dados_recorde_pessoal_abrev">PR</string>
+    <string name="dados_ver_detalhes">VER DETALHES</string>
+    <string name="dados_evolucao_carga_label">EVOLUÇÃO DE CARGA</string>
+
+    <!-- SpotlightCard: balão de informação -->
+    <string name="spotlight_info_cd">Informações sobre pico e volume</string>
+    <string name="spotlight_info_title">Pico vs. Volume</string>
+    <string name="spotlight_info_pico_title">Carga Pico</string>
+    <string name="spotlight_info_pico_body">O maior peso levantado numa única série. Reflete sua força máxima e é o principal indicador de progresso de carga ao longo do tempo.</string>
+    <string name="spotlight_info_volume_title">Volume Total</string>
+    <string name="spotlight_info_volume_body">Soma de peso × repetições em todas as séries da sessão. Representa o estímulo total entregue ao músculo — o fator mais importante para hipertrofia.</string>
+    <string name="spotlight_info_dica">Idealmente, ambos crescem juntos. Se o pico subiu mas o volume caiu, você ficou mais forte mas fez menos trabalho. Se o volume subiu mas o pico não, você ganhou resistência e densidade muscular.</string>
+    <string name="spotlight_info_variacao">É completamente normal — e até saudável — que um ou outro caia de vez em quando. Sessões com menos volume e mais carga estimulam o sistema nervoso. Sessões com mais volume e carga moderada geram mais dano muscular. Essa variação natural é um dos principais motores da hipertrofia a longo prazo.</string>
+
+    <!-- Hero card: destaque do dia -->
+    <string name="destaque_do_dia">DESTAQUE DO DIA</string>
+    <string name="destaque_volume_hoje">Volume hoje</string>
+    <string name="destaque_aumento_volume">aumento de volume</string>
+    <string name="destaque_primeira_vez">Primeira vez!</string>
+    <string name="destaque_primeira_vez_sub">sem sessão anterior para comparar</string>
+    <string name="sem_destaque_hoje">Nenhum destaque hoje</string>
+    <string name="sem_destaque_descricao">Este exercício não foi realizado hoje ou não foi o maior destaque do dia.</string>
+
     <!-- Sort segmented -->
     <string name="dados_sort_recente">Recente</string>
     <string name="dados_sort_peso">Peso</string>
@@ -621,7 +646,7 @@
     <string name="dados_recorde_pessoal">Recorde pessoal</string>
     <string name="dados_label_sessoes">sessões</string>
     <string name="dados_label_volume">volume</string>
-    <string name="dados_hoje_kg">hoje · %1$s kg</string>
+    <string name="dados_hoje_kg">hoje · %1$s</string>
 
     <!-- Cards -->
     <string name="dados_hoje">hoje</string>

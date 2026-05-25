@@ -96,6 +96,24 @@ private fun firstToLastProgress(first: Double?, last: Double?): Double? {
     return (last - first) / first * 100.0
 }
 
+/**
+ * Resultado do cálculo de destaque para o exercício da tela de detalhe.
+ *
+ * @param todayVolume   Volume total feito hoje neste exercício.
+ * @param volumeChangePct Variação percentual em relação à última sessão anterior.
+ *                        Null = primeira vez que o exercício foi feito.
+ * @param isTopHighlight  True se este exercício teve o maior aumento percentual (ou maior
+ *                        volume absoluto quando não há histórico anterior) entre todos os
+ *                        exercícios realizados hoje.
+ */
+data class TodayHighlightData(
+    val todayVolume: Double,
+    val volumeChangePct: Double?,
+    val todayPeak: Double,
+    val peakChangePct: Double?,
+    val isTopHighlight: Boolean
+)
+
 object ExerciseDataAggregator {
 
     /**

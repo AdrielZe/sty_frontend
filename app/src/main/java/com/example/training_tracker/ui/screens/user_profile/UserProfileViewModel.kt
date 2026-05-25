@@ -74,6 +74,7 @@ class UserProfileViewModel(
         }
 
         val mostTrainedMuscleGroup = muscleGroupCount.maxByOrNull { it.value }?.key
+        val medalCounts = calculateMedalCounts(histories)
 
         return UserStats(
             mostTrainedMuscleGroup = mostTrainedMuscleGroup,
@@ -81,8 +82,44 @@ class UserProfileViewModel(
             totalWorkouts = histories.size,
             totalSets = totalSets,
             heaviestExerciseName = heaviestExerciseName,
-            heaviestWeight = heaviestWeight
+            heaviestWeight = heaviestWeight,
+            medalCounts = medalCounts
         )
+    }
+
+    /**
+     * Computes all-time best weight per exercise, then tiers each one:
+     * Gold ≥ 100 kg · Silver ≥ 50 kg · Bronze < 50 kg
+     */
+    private fun calculateMedalCounts(
+        histories: List<com.example.training_tracker.data.models.WorkoutHistory>
+    ): MedalCounts {
+        val bestPerExercise = mutableMapOf<String, Double>()
+
+        histories.sortedBy { it.completionDate }.forEach { history ->
+            history.exercises.forEach { exercise ->
+                if (exercise.type != com.example.training_tracker.data.models.ExerciseType.STRENGTH) return@forEach
+                val key = exercise.name.uppercase()
+                val sessionMax = exercise.exerciseSets
+                    .filter { it.isCompleted }
+                    .mapNotNull { it.weight.toDoubleOrNull() }
+                    .filter { it > 0.0 }
+                    .maxOrNull() ?: return@forEach
+                if (sessionMax > (bestPerExercise[key] ?: 0.0)) {
+                    bestPerExercise[key] = sessionMax
+                }
+            }
+        }
+
+        var gold = 0; var silver = 0; var bronze = 0
+        bestPerExercise.values.forEach { best ->
+            when {
+                best >= 100.0 -> gold++
+                best >= 50.0  -> silver++
+                else          -> bronze++
+            }
+        }
+        return MedalCounts(gold = gold, silver = silver, bronze = bronze)
     }
 
     fun updateProfilePicture(uri: String) {

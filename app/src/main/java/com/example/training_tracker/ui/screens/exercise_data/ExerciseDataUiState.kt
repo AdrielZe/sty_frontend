@@ -15,5 +15,7 @@ data class ExerciseDataUiState(
 
 data class ExerciseDetailUiState(
     val isLoading: Boolean = true,
-    val log: ExerciseLog? = null
+    val log: ExerciseLog? = null,
+    /** Null quando o exercício não foi realizado hoje. */
+    val todayHighlight: TodayHighlightData? = null
 )

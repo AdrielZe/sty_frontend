@@ -33,8 +33,6 @@ import android.net.Uri
 import com.example.training_tracker.data.routes.Routes
 import com.example.training_tracker.ui.screens.create_workout.CreateWorkoutScreen
 import com.example.training_tracker.ui.screens.exercise_data.EXERCISE_NAME_ARG
-import com.example.training_tracker.ui.screens.exercise_data.ExerciseDataScreen
-import com.example.training_tracker.ui.screens.exercise_data.ExerciseDataViewModel
 import com.example.training_tracker.ui.screens.exercise_data.ExerciseDetailScreen
 import com.example.training_tracker.ui.screens.exercise_data.ExerciseDetailViewModel
 import com.example.training_tracker.ui.screens.home.HomeViewModel
@@ -45,6 +43,8 @@ import com.example.training_tracker.ui.screens.workout_report.WorkoutReportScree
 import com.example.training_tracker.ui.screens.workout_report.WorkoutReportViewModel
 import com.example.training_tracker.ui.screens.workout_screen.WorkoutScreen
 import com.example.training_tracker.ui.screens.workout_screen.WorkoutViewModel
+import com.example.training_tracker.ui.screens.conquistas.AchievementsScreen
+import com.example.training_tracker.ui.screens.conquistas.AchievementsViewModel
 import com.example.training_tracker.ui.screens.freestyle_workout.FreestyleWorkoutScreen
 import com.example.training_tracker.ui.theme.AppTheme
 import java.time.DayOfWeek
@@ -181,25 +181,6 @@ fun GymTrackerNavHost() {
             )
         }
 
-        // Full Screen: Exercise Data list
-        composable(route = Routes.ExerciseData.name) {
-            val exerciseDataViewModel: ExerciseDataViewModel =
-                viewModel(factory = ExerciseDataViewModel.Factory)
-            val exerciseDataUiState by exerciseDataViewModel.uiState.collectAsState()
-
-            ExerciseDataScreen(
-                uiState = exerciseDataUiState,
-                onNavigateBack = { navController.popBackStack() },
-                onSearchQueryChanged = exerciseDataViewModel::onSearchQueryChanged,
-                onMuscleGroupSelected = exerciseDataViewModel::onMuscleGroupSelected,
-                onExerciseClick = { exerciseName ->
-                    navController.navigate(
-                        "${Routes.ExerciseDetail.name}/${Uri.encode(exerciseName)}"
-                    )
-                }
-            )
-        }
-
         // Full Screen: Exercise Detail
         composable(
             route = "${Routes.ExerciseDetail.name}/{$EXERCISE_NAME_ARG}",
@@ -249,9 +230,9 @@ fun StyBottomNavBar(
     ) {
         val items = listOf(
             Triple(Routes.Home.name, Icons.Default.Home, stringResource(R.string.home)),
-            Triple(Routes.RegisteredWorkouts.name, Icons.Default.FitnessCenter, stringResource(R.string.treinos_min)),
+            Triple(Routes.Achievements.name, Icons.Default.EmojiEvents, stringResource(R.string.conquistas_min)),
             Triple(Routes.WorkoutHistory.name, Icons.Default.History, stringResource(R.string.historico_min)),
-            Triple(Routes.Records.name, Icons.Default.EmojiEvents, stringResource(R.string.recordes)),
+            Triple(Routes.ExerciseData.name, Icons.Default.FitnessCenter, stringResource(R.string.exercicios_min)),
             Triple(Routes.Profile.name, Icons.Default.Person, stringResource(R.string.perfil))
         )
 
