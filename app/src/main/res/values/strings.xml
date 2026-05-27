@@ -662,6 +662,7 @@
     <!-- Empty -->
     <string name="dados_nenhum_resultado_sub">Tente trocar a busca ou o filtro de grupo muscular.</string>
     <string name="dados_limpar_filtros">Limpar filtros</string>
+    <string name="relatorio_compartilhar_titulo">Compartilhar treino</string>
 
 
 </resources>

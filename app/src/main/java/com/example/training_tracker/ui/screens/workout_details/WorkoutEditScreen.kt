@@ -485,6 +485,7 @@ fun ExerciseDetailItem(
     val exerciseType = exercise.type ?: ExerciseType.STRENGTH
     val isStrength = exerciseType == ExerciseType.STRENGTH
     val isCardio = exerciseType == ExerciseType.CARDIO
+    val isStretching = exerciseType == ExerciseType.STRETCHING
     val setCount = exercise.exerciseSets.size
     var showTimePickerForSet by remember { mutableStateOf<Int?>(null) }
 
@@ -684,7 +685,7 @@ fun ExerciseDetailItem(
                             Text("Peso (kg)", style = headerStyle, modifier = Modifier.weight(1.3f), textAlign = TextAlign.Center)
                         } else {
                             Text(
-                                if (isCardio) "Tempo (HH:MM)" else "Tempo (MM:SS)",
+                                if (isCardio) "Tempo (HH:MM)" else "Tempo (seg)",
                                 style = headerStyle, modifier = Modifier.weight(1f), textAlign = TextAlign.Center
                             )
                         }
@@ -768,7 +769,7 @@ fun ExerciseDetailItem(
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Text(
-                                        text = set.targetReps.ifBlank { "00:00" },
+                                        text = set.targetReps.ifBlank { if (isStretching) "0" else "00:00" },
                                         style = MaterialTheme.typography.bodyMedium.copy(textAlign = TextAlign.Center),
                                         color = if (set.targetReps.isBlank())
                                             MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
@@ -791,7 +792,7 @@ fun ExerciseDetailItem(
         CardioTimePickerDialog(
             initialTime = currentTime,
             showHours = isCardio,
-            showSeconds = !isCardio,
+            secondsOnly = isStretching,
             onDismiss = { showTimePickerForSet = null },
             onConfirm = { formatted ->
                 onSetTargetChange(targetSetNum, formatted, "")

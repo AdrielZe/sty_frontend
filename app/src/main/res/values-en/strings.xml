@@ -579,5 +579,6 @@
 
     <string name="dados_nenhum_resultado_sub">Try changing your search or muscle filter.</string>
     <string name="dados_limpar_filtros">Clear filters</string>
+    <string name="relatorio_compartilhar_titulo">Share workout</string>
 
 </resources>

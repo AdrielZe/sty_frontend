@@ -561,7 +561,11 @@ fun ExerciseCardUtils(
                         val isCardio = exercise.type == ExerciseType.CARDIO
                         val isStretching = exercise.type == ExerciseType.STRETCHING
                         val isWeightError = showErrors && if (isCardio) (set.distance ?: "").replace(',', '.').toDoubleOrNull() == null else if (isStretching) false else set.weight.isBlank()
-                        val isRepsError = showErrors && if (isCardio || isStretching) !(set.time ?: "").contains(":") else (set.reps.toIntOrNull() ?: 0) <= 0
+                        val isRepsError = showErrors && when {
+                            isCardio -> !(set.time ?: "").contains(":")
+                            isStretching -> (set.time ?: "").isBlank()
+                            else -> (set.reps.toIntOrNull() ?: 0) <= 0
+                        }
 
                         SetLine(
                             modifier = Modifier.fillMaxWidth(),
@@ -721,21 +725,53 @@ fun CardioTimePickerDialog(
     onDismiss: () -> Unit,
     onConfirm: (String) -> Unit,
     showHours: Boolean = true,
-    showSeconds: Boolean = false  // MM:SS mode for stretching
+    showSeconds: Boolean = false,  // MM:SS mode (unused — kept for compatibility)
+    secondsOnly: Boolean = false   // Alongamento: picker único em segundos
 ) {
-    // Parse based on mode
-    // showHours=true  → "HH:MM"
-    // showSeconds=true → "MM:SS"
-    // else            → "MM" (legacy)
+    if (secondsOnly) {
+        // Modo alongamento: apenas um scroll de segundos (0..599)
+        val initialSec = initialTime.toIntOrNull() ?: 0
+        var selectedSec by remember { mutableStateOf(initialSec) }
+
+        Dialog(onDismissRequest = onDismiss) {
+            Surface(shape = RoundedCornerShape(16.dp), color = MaterialTheme.colorScheme.surface) {
+                Column(
+                    modifier = Modifier.padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text("Tempo", style = Typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Spacer(Modifier.height(20.dp))
+                    TimeScrollPicker(
+                        range = 0..599,
+                        selected = selectedSec,
+                        onSelect = { selectedSec = it },
+                        label = "SEG"
+                    )
+                    Spacer(Modifier.height(20.dp))
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                        TextButton(onClick = onDismiss) {
+                            Text("Cancelar", color = MaterialTheme.colorScheme.secondary)
+                        }
+                        TextButton(onClick = { onConfirm(selectedSec.toString()) }) {
+                            Text("OK", color = AppTheme.accent.light, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+            }
+        }
+        return
+    }
+
+    // Modo cardio: HH:MM
     val parts = initialTime.split(":")
-    val initialA = parts.getOrNull(0)?.toIntOrNull() ?: 0  // hours or minutes
-    val initialB = parts.getOrNull(1)?.toIntOrNull() ?: 0  // minutes or seconds
+    val initialA = parts.getOrNull(0)?.toIntOrNull() ?: 0
+    val initialB = parts.getOrNull(1)?.toIntOrNull() ?: 0
 
     var selectedA by remember { mutableStateOf(initialA) }
     var selectedB by remember { mutableStateOf(initialB) }
 
     val labelA = if (showHours) "HRS" else "MIN"
-    val labelB = if (showSeconds) "SEG" else "MIN"
+    val labelB = "MIN"
     val rangeA = if (showHours) 0..23 else 0..59
     val rangeB = 0..59
 
@@ -1272,8 +1308,7 @@ fun SetLine(
                         onRepsChange(setNumber, time)
                         showTimePicker = false
                     },
-                    showHours = false,
-                    showSeconds = true
+                    secondsOnly = true
                 )
             }
 
@@ -1300,7 +1335,7 @@ fun SetLine(
 
                     Column(modifier = Modifier.weight(3f)) {
                         Text(
-                            stringResource(R.string.tempo_min_stretch),
+                            "TEMPO (SEG)",
                             fontSize = 10.sp,
                             color = if (isErrorReps) Color.Red else TextGray,
                             fontWeight = FontWeight.Bold,
@@ -1327,18 +1362,37 @@ fun SetLine(
                                 .clickable(enabled = !isCompleted) { showTimePicker = true },
                             contentAlignment = Alignment.Center
                         ) {
-                            Text(
-                                text = inputValueReps.ifEmpty { previousReps.ifEmpty { "--" } },
-                                style = MaterialTheme.typography.titleLarge.copy(
-                                    color = if (inputValueReps.isEmpty())
-                                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
-                                    else if (isCompleted) Color.Gray
-                                    else MaterialTheme.colorScheme.onSurface,
-                                    textAlign = TextAlign.Center,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 18.sp
+                            val displayValue = inputValueReps.ifEmpty { previousReps.ifEmpty { "" } }
+                            if (displayValue.isEmpty()) {
+                                Text(
+                                    text = "--",
+                                    style = MaterialTheme.typography.titleLarge.copy(
+                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
+                                        textAlign = TextAlign.Center,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 18.sp
+                                    )
                                 )
-                            )
+                            } else {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(
+                                        text = displayValue,
+                                        style = MaterialTheme.typography.titleLarge.copy(
+                                            color = if (isCompleted) Color.Gray else MaterialTheme.colorScheme.onSurface,
+                                            textAlign = TextAlign.Center,
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 18.sp
+                                        )
+                                    )
+                                    Spacer(Modifier.width(4.dp))
+                                    Text(
+                                        text = "seg",
+                                        color = if (isCompleted) Color.Gray else TextGray,
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            }
                         }
                     }
 

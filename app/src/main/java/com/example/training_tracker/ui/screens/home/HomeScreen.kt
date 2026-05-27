@@ -729,13 +729,18 @@ fun WorkoutCard(modifier: Modifier = Modifier, workout: Workout?, onClick: () ->
             verticalArrangement = Arrangement.Bottom
         ) {
             // chip row
-            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                StyChip(
-                    text = if (isCompleted) stringResource(R.string.completed) else "HOJE",
-                    accent = !isCompleted,
-                    accentBrush = if (isCompleted) GreenGradient else AppTheme.accent.gradient
-                )
-                muscleGroups.take(2).forEach { mg ->
+            LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                userScrollEnabled = true
+            ) {
+                item {
+                    StyChip(
+                        text = if (isCompleted) stringResource(R.string.completed) else "HOJE",
+                        accent = !isCompleted,
+                        accentBrush = if (isCompleted) GreenGradient else AppTheme.accent.gradient
+                    )
+                }
+                items(muscleGroups) { mg ->
                     StyChip(text = stringResource(id = mg.resId).uppercase(Locale.getDefault()))
                 }
             }

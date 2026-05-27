@@ -39,6 +39,7 @@ import com.example.training_tracker.ui.screens.home.HomeViewModel
 import com.example.training_tracker.ui.screens.registered_workouts.TextGray
 import com.example.training_tracker.ui.screens.workout_details.WorkoutDetailsScreen
 import com.example.training_tracker.ui.screens.workout_details.WorkoutEditViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.training_tracker.ui.screens.workout_report.WorkoutReportScreen
 import com.example.training_tracker.ui.screens.workout_report.WorkoutReportViewModel
 import com.example.training_tracker.ui.screens.workout_screen.WorkoutScreen
@@ -204,14 +205,13 @@ fun GymTrackerNavHost() {
                 navArgument("fromWorkout") { type = NavType.BoolType; defaultValue = false }
             )
         ) { backStackEntry ->
-            val fromWorkout = backStackEntry.arguments?.getBoolean("fromWorkout") ?: false
             val workoutReportViewModel: WorkoutReportViewModel =
                 viewModel(factory = WorkoutReportViewModel.Factory)
+            val workoutReportUiState by workoutReportViewModel.uiState.collectAsStateWithLifecycle()
 
             WorkoutReportScreen(
-                workoutReportScreenViewModel = workoutReportViewModel,
-                onNavigateBack = { navController.popBackStack() },
-                fromWorkout = fromWorkout,
+                uiState = workoutReportUiState,
+                onClose = { navController.popBackStack() },
             )
         }
     }

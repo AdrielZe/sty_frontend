@@ -483,39 +483,42 @@ private fun ChampionCard(ch: Champion) {
                         modifier = Modifier.padding(bottom = 12.dp)
                     )
                 }
-                Row(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(100.dp))
-                        .background(Gold1.copy(alpha = 0.16f))
-                        .border(1.dp, Gold1.copy(alpha = 0.30f), RoundedCornerShape(100.dp))
-                        .padding(horizontal = 10.dp, vertical = 6.dp)
-                        .padding(bottom = 0.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(3.dp)
+                Column(
+                    horizontalAlignment = Alignment.End,
+                    verticalArrangement = Arrangement.spacedBy(3.dp)
                 ) {
-                    Icon(
-                        Icons.Default.North,
-                        contentDescription = null,
-                        tint = Gold1,
-                        modifier = Modifier.size(11.dp)
-                    )
-                    Text(
-                        text = "+${nf(ch.deltaKg)} kg",
-                        style = MaterialTheme.typography.labelMedium.copy(
-                            color = Gold1,
-                            fontWeight = FontWeight.ExtraBold,
-                            fontSize = 12.sp,
-                            letterSpacing = (-0.1).sp
+                    Row(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(100.dp))
+                            .background(Gold1.copy(alpha = 0.16f))
+                            .border(1.dp, Gold1.copy(alpha = 0.30f), RoundedCornerShape(100.dp))
+                            .padding(horizontal = 10.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(3.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.North,
+                            contentDescription = null,
+                            tint = Gold1,
+                            modifier = Modifier.size(11.dp)
                         )
-                    )
+                        Text(
+                            text = "+${nf(ch.deltaKg)} kg",
+                            style = MaterialTheme.typography.labelMedium.copy(
+                                color = Gold1,
+                                fontWeight = FontWeight.ExtraBold,
+                                fontSize = 12.sp,
+                                letterSpacing = (-0.1).sp
+                            )
+                        )
+                    }
                     Text(
-                        text = "de ${nf(ch.previousWeightKg)}",
+                        text = "de ${nf(ch.previousWeightKg)} kg",
                         style = MaterialTheme.typography.labelSmall.copy(
-                            color = Color.White.copy(alpha = 0.55f),
+                            color = Color.White.copy(alpha = 0.50f),
                             fontWeight = FontWeight.Medium,
                             fontSize = 10.sp
-                        ),
-                        modifier = Modifier.padding(start = 4.dp)
+                        )
                     )
                 }
             }
@@ -1031,32 +1034,52 @@ private fun MedalsLegend() {
 
 @Composable
 private fun LegendDot(color: Color, label: String, sub: String) {
-    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
         Box(modifier = Modifier.size(8.dp).clip(CircleShape).background(color))
-        Text(
-            label.uppercase(),
-            style = MaterialTheme.typography.labelSmall.copy(
-                fontWeight = FontWeight.ExtraBold,
-                color = color,
-                letterSpacing = 1.4.sp,
-                fontSize = 9.5.sp
+        Column(verticalArrangement = Arrangement.spacedBy(1.dp)) {
+            Text(
+                label.uppercase(),
+                style = MaterialTheme.typography.labelSmall.copy(
+                    fontWeight = FontWeight.ExtraBold,
+                    color = color,
+                    letterSpacing = 1.4.sp,
+                    fontSize = 9.5.sp
+                )
             )
-        )
-        Text(
-            sub,
-            style = MaterialTheme.typography.labelSmall.copy(
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 9.sp
+            Text(
+                sub,
+                style = MaterialTheme.typography.labelSmall.copy(
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 9.sp
+                )
             )
-        )
+        }
     }
 }
 
 @Composable
 private fun MedalsGrid(medals: List<Medal>, modifier: Modifier = Modifier) {
-    // Use a column of rows so this nests inside a parent LazyColumn without
-    // double-LazyVerticalGrid quirks.
+    if (medals.isEmpty()) {
+        Box(
+            modifier = modifier
+                .fillMaxWidth()
+                .padding(vertical = 24.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "Você ainda não tem nenhuma medalha.\nVolte aqui depois de realizar seus treinos.",
+                style = MaterialTheme.typography.bodySmall.copy(
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.45f),
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 13.sp,
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                )
+            )
+        }
+        return
+    }
+
     Column(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(18.dp)

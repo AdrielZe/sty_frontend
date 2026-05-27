@@ -62,6 +62,12 @@ class WorkoutReportViewModel(
             )
         } else null
 
+        val sessionPRs: Map<String, Double> = workout?.records
+            ?.exercisesRecordMap
+            ?.mapValues { (_, list) -> list.firstOrNull() ?: 0.0 }
+            ?.filter { (_, weight) -> weight > 0.0 }
+            ?: emptyMap()
+
         WorkoutReportUiState(
             workoutName = workout?.name ?: "",
             workoutDifficulty = workout?.difficulty,
@@ -74,7 +80,8 @@ class WorkoutReportViewModel(
             totalMinutes = durationMinutes,
             exercises = workout?.exercises ?: emptyList(),
             records = workout?.records,
-            caloriesBurned = calories
+            caloriesBurned = calories,
+            sessionPRs = sessionPRs,
         )
     }.stateIn(
         scope = viewModelScope,

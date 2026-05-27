@@ -31,7 +31,6 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Insights
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.TrendingUp
-import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.getValue
@@ -109,9 +108,11 @@ fun ExerciseDataScreen(
         data class TodayScore(val log: ExerciseLog, val changePct: Double?, val volume: Double)
 
         val todayScores = uiState.exercises.mapNotNull { log ->
-            val todaySession = log.sessions.lastOrNull { it.date == today }
-                ?: return@mapNotNull null
+            val todaySessions = log.sessions.filter { it.date == today }
+            val todaySession = todaySessions.lastOrNull() ?: return@mapNotNull null
+            // Compara com o dia anterior; se não houver, compara com sessão anterior do mesmo dia.
             val prevSession = log.sessions.lastOrNull { it.date < today }
+                ?: if (todaySessions.size > 1) todaySessions.dropLast(1).last() else null
             val changePct = prevSession?.let { prev ->
                 if (prev.totalVolume > 0.0)
                     (todaySession.totalVolume - prev.totalVolume) / prev.totalVolume * 100.0
@@ -134,7 +135,7 @@ fun ExerciseDataScreen(
         modifier = modifier,
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
-            TopAppBar(
+            MediumTopAppBar(
                 title = {
                     Column {
                         Text(
@@ -165,15 +166,6 @@ fun ExerciseDataScreen(
                         )
                     }
                 },
-                actions = {
-                    IconButton(onClick = { /* future: filter sheet */ }) {
-                        Icon(
-                            Icons.Default.Tune,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-                        )
-                    }
-                },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
             )
         }
@@ -196,7 +188,7 @@ fun ExerciseDataScreen(
             spotlight?.let { ex ->
                 item {
                     Box(modifier = Modifier.padding(horizontal = 16.dp)) {
-                        SpotlightCard(ex)
+                        SpotlightCard(ex, onDetailsClick = { onExerciseClick(ex.name) })
                     }
                 }
             }
@@ -295,11 +287,14 @@ fun ExerciseDataScreen(
  * ═════════════════════════════════════════════════════════════════════════════ */
 
 @Composable
-private fun SpotlightCard(ex: ExerciseLog) {
+private fun SpotlightCard(ex: ExerciseLog, onDetailsClick: () -> Unit = {}) {
     val drawable = ex.muscleGroup?.let { muscleGroupImage(it) }
     val today = LocalDate.now()
-    val todaySession = ex.sessions.lastOrNull { it.date == today }
+    val todaySessions = ex.sessions.filter { it.date == today }
+    val todaySession = todaySessions.lastOrNull()
+    // Compara com o dia anterior; se não houver, compara com sessão anterior do mesmo dia.
     val prevSession = ex.sessions.lastOrNull { it.date < today }
+        ?: if (todaySessions.size > 1) todaySessions.dropLast(1).last() else null
     val todayVolume = todaySession?.totalVolume ?: 0.0
     val latestWeight = todaySession?.topWeight ?: ex.lastSession?.topWeight ?: ex.allTimePR
     val volumeChangePct: Double? = prevSession?.let { prev ->
@@ -555,6 +550,38 @@ private fun SpotlightCard(ex: ExerciseLog) {
                             fontWeight = FontWeight.Bold,
                             fontSize = 10.sp
                         )
+                    )
+                }
+            }
+
+            // Botão "Ver detalhes"
+            Box(
+                modifier = Modifier.fillMaxWidth(),
+                contentAlignment = Alignment.CenterEnd
+            ) {
+                Row(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(100.dp))
+                        .clickable(onClick = onDetailsClick)
+                        .background(AppTheme.accent.light.copy(alpha = 0.12f))
+                        .padding(horizontal = 14.dp, vertical = 7.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Text(
+                        text = stringResource(R.string.dados_ver_detalhes),
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            fontWeight = FontWeight.ExtraBold,
+                            color = AppTheme.accent.light,
+                            letterSpacing = 1.2.sp,
+                            fontSize = 10.sp
+                        )
+                    )
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                        contentDescription = null,
+                        tint = AppTheme.accent.light,
+                        modifier = Modifier.size(13.dp)
                     )
                 }
             }
@@ -1074,10 +1101,15 @@ private fun ExerciseLogCard(log: ExerciseLog, onClick: () -> Unit) {
                             fontSize = 15.sp
                         ),
                         maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.horizontalScroll(rememberScrollState())
                     )
                     Spacer(modifier = Modifier.height(4.dp))
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Row(
+                        modifier = Modifier.horizontalScroll(rememberScrollState()),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
                         log.muscleGroup?.let {
                             Text(
                                 text = stringResource(it.resId).uppercase(),
@@ -1086,7 +1118,8 @@ private fun ExerciseLogCard(log: ExerciseLog, onClick: () -> Unit) {
                                     color = AppTheme.accent.light,
                                     letterSpacing = 1.6.sp,
                                     fontSize = 9.sp
-                                )
+                                ),
+                                maxLines = 1
                             )
                             Dot()
                         }
@@ -1098,7 +1131,8 @@ private fun ExerciseLogCard(log: ExerciseLog, onClick: () -> Unit) {
                             style = MaterialTheme.typography.labelSmall.copy(
                                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f),
                                 fontSize = 11.sp
-                            )
+                            ),
+                            maxLines = 1
                         )
                         daysAgo?.let {
                             Dot()
@@ -1111,7 +1145,8 @@ private fun ExerciseLogCard(log: ExerciseLog, onClick: () -> Unit) {
                                 style = MaterialTheme.typography.labelSmall.copy(
                                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f),
                                     fontSize = 11.sp
-                                )
+                                ),
+                                maxLines = 1
                             )
                         }
                     }

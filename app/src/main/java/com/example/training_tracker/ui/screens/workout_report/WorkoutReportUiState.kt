@@ -42,4 +42,6 @@ data class WorkoutReportUiState(
     val records: Records ?= null,
     val exercises: List<Exercise> = emptyList(),
     val caloriesBurned: Int? = null,
+    /** Novos recordes de peso batidos neste treino: nome do exercício → peso máximo (kg) */
+    val sessionPRs: Map<String, Double> = emptyMap(),
 )

@@ -32,9 +32,11 @@ class ExerciseDetailViewModel(
             data class DayScore(val name: String, val changePct: Double?, val volume: Double, val peak: Double)
 
             val todayScores: List<DayScore> = allLogs.mapNotNull { exLog ->
-                val todaySession = exLog.sessions.lastOrNull { it.date == today }
-                    ?: return@mapNotNull null
+                val todaySessions = exLog.sessions.filter { it.date == today }
+                val todaySession = todaySessions.lastOrNull() ?: return@mapNotNull null
+                // Compara com o dia anterior; se não houver, compara com sessão anterior do mesmo dia.
                 val prevSession = exLog.sessions.lastOrNull { it.date < today }
+                    ?: if (todaySessions.size > 1) todaySessions.dropLast(1).last() else null
                 val changePct = prevSession?.let { prev ->
                     if (prev.totalVolume > 0.0)
                         (todaySession.totalVolume - prev.totalVolume) / prev.totalVolume * 100.0
@@ -58,8 +60,9 @@ class ExerciseDetailViewModel(
 
             val thisScore = todayScores.find { it.name.equals(exerciseName, ignoreCase = true) }
             val todayHighlight = thisScore?.let { score ->
-                val todaySession = log?.sessions?.lastOrNull { it.date == today }
-                val prevSession  = log?.sessions?.lastOrNull { it.date < today }
+                val logTodaySessions = log?.sessions?.filter { it.date == today } ?: emptyList()
+                val prevSession = log?.sessions?.lastOrNull { it.date < today }
+                    ?: if (logTodaySessions.size > 1) logTodaySessions.dropLast(1).last() else null
                 val peakChangePct = prevSession?.let { prev ->
                     if (prev.topWeight > 0.0)
                         (score.peak - prev.topWeight) / prev.topWeight * 100.0

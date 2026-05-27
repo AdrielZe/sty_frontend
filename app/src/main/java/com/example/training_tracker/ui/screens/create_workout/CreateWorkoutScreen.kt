@@ -551,46 +551,41 @@ fun ExerciseItem(
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis
                     )
-                    Row(
+                    val serieLabel = stringResource(R.string.serie)
+                    val seriesLabel = stringResource(R.string.series)
+                    val muscleBadgeText = exercise.muscleGroup?.let { stringResource(it.resId).uppercase() }
+                    val firstSetTarget = exercise.exerciseSets.firstOrNull { it.targetReps.isNotBlank() }?.targetReps ?: ""
+                    val summaryText = when (exercise.type) {
+                        ExerciseType.STRENGTH -> if (firstSetTarget.isNotBlank()) "$setCount × $firstSetTarget reps"
+                            else "$setCount ${if (setCount == 1) serieLabel else seriesLabel}"
+                        else -> if (firstSetTarget.isNotBlank()) "$setCount × $firstSetTarget"
+                            else "$setCount ${if (setCount == 1) serieLabel else seriesLabel}"
+                    }
+
+                    LazyRow(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        userScrollEnabled = true
                     ) {
                         when (exercise.type) {
                             ExerciseType.STRENGTH -> {
-                                exercise.muscleGroup?.let { muscle ->
-                                    ExerciseBadge(
-                                        text = stringResource(muscle.resId).uppercase(),
-                                        backgroundColor = AppTheme.accent.light
-                                    )
+                                if (muscleBadgeText != null) {
+                                    item {
+                                        ExerciseBadge(
+                                            text = muscleBadgeText,
+                                            backgroundColor = AppTheme.accent.light
+                                        )
+                                    }
                                 }
-                                // Sets summary chip — tappable to expand
-                                val firstTarget = exercise.exerciseSets
-                                    .firstOrNull { it.targetReps.isNotBlank() }?.targetReps ?: ""
-                                val summaryText = if (firstTarget.isNotBlank())
-                                    "$setCount × $firstTarget reps"
-                                else
-                                    "$setCount ${if (setCount == 1) stringResource(R.string.serie) else stringResource(R.string.series)}"
-                                SetsSummaryChip(summaryText, isExpanded, onToggleExpand)
+                                item { SetsSummaryChip(summaryText, isExpanded, onToggleExpand) }
                             }
                             ExerciseType.CARDIO -> {
-                                ExerciseBadge(text = "CARDIO", backgroundColor = Color(0xFFFF9800))
-                                val firstTime = exercise.exerciseSets
-                                    .firstOrNull { it.targetReps.isNotBlank() }?.targetReps ?: ""
-                                val summaryText = if (firstTime.isNotBlank())
-                                    "$setCount × $firstTime"
-                                else
-                                    "$setCount ${if (setCount == 1) stringResource(R.string.serie) else stringResource(R.string.series)}"
-                                SetsSummaryChip(summaryText, isExpanded, onToggleExpand)
+                                item { ExerciseBadge(text = "CARDIO", backgroundColor = Color(0xFFFF9800)) }
+                                item { SetsSummaryChip(summaryText, isExpanded, onToggleExpand) }
                             }
                             ExerciseType.STRETCHING -> {
-                                ExerciseBadge(text = "ALONGAMENTO", backgroundColor = Color(0xFF4CAF50))
-                                val firstTime = exercise.exerciseSets
-                                    .firstOrNull { it.targetReps.isNotBlank() }?.targetReps ?: ""
-                                val summaryText = if (firstTime.isNotBlank())
-                                    "$setCount × $firstTime"
-                                else
-                                    "$setCount ${if (setCount == 1) stringResource(R.string.serie) else stringResource(R.string.series)}"
-                                SetsSummaryChip(summaryText, isExpanded, onToggleExpand)
+                                item { ExerciseBadge(text = "ALONGAMENTO", backgroundColor = Color(0xFF4CAF50)) }
+                                item { SetsSummaryChip(summaryText, isExpanded, onToggleExpand) }
                             }
                         }
                     }
@@ -673,7 +668,7 @@ fun ExerciseItem(
                             } else if (isCardio) {
                                 Text(stringResource(R.string.tempo_hh_mm), style = headerLabelStyle, modifier = Modifier.weight(1f), textAlign = TextAlign.Center)
                             }  else if (isStretching) {
-                                Text(stringResource(R.string.tempo_mm_ss), style = headerLabelStyle, modifier = Modifier.weight(1f), textAlign = TextAlign.Center)
+                                Text("TEMPO (SEG)", style = headerLabelStyle, modifier = Modifier.weight(1f), textAlign = TextAlign.Center)
                             }
                         }
 
@@ -767,7 +762,7 @@ fun ExerciseItem(
                                         contentAlignment = Alignment.Center
                                     ) {
                                         Text(
-                                            text = set.targetReps.ifBlank { if (isCardio) "00:00" else "00:00" },
+                                            text = set.targetReps.ifBlank { if (isStretching) "0" else "00:00" },
                                             style = MaterialTheme.typography.bodyMedium.copy(textAlign = TextAlign.Center),
                                             color = if (set.targetReps.isBlank())
                                                 MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
@@ -790,7 +785,7 @@ fun ExerciseItem(
         CardioTimePickerDialog(
             initialTime = currentTime,
             showHours = isCardio,
-            showSeconds = !isCardio,
+            secondsOnly = isStretching,
             onDismiss = { showTimePickerForSet = null },
             onConfirm = { formatted ->
                 onSetTargetChange(targetSetNum, formatted, "")
