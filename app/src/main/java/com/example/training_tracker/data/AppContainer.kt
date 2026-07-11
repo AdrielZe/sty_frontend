@@ -6,6 +6,7 @@ import com.example.training_tracker.data.models.Exercise
 import com.example.training_tracker.data.models.ExerciseType
 import com.example.training_tracker.data.models.MuscleGroups
 import com.example.training_tracker.data.remote.RetrofitClient
+import com.example.training_tracker.data.remote.user.UserApi
 import com.example.training_tracker.domain.repository.ExerciseRepository
 import com.example.training_tracker.domain.repository.RecordsRepository
 import com.example.training_tracker.domain.repository.UserRepository
@@ -29,6 +30,7 @@ interface AppContainer {
     val recordsRepository: RecordsRepository
     val exerciseClassifier: ExerciseClassifier
     val workoutHistoryRepository: WorkoutHistoryRepository
+    val userApi: UserApi
 }
 
 class DefaultAppContainer(
@@ -42,10 +44,12 @@ class DefaultAppContainer(
 
     val exerciseApi = RetrofitClient.exerciseApi
 
+    override val userApi = RetrofitClient.userApi
+
     // O 'by lazy' garante que o UserRepository só será instanciado
     // na primeira vez que for chamado, e depois a mesma instância será reutilizada.
     override val userRepository: UserRepository by lazy {
-        UserRepositoryImpl(database.userDao())
+        UserRepositoryImpl(database.userDao(), userApi)
     }
 
     override val exerciseRepository: ExerciseRepository by lazy {

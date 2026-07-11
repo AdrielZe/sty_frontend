@@ -49,6 +49,7 @@ import com.example.training_tracker.R
 import java.io.File
 import java.io.FileOutputStream
 import java.util.Locale
+import java.util.UUID
 
 @Suppress("DEPRECATION")
 @Composable
@@ -156,7 +157,8 @@ fun UserProfileScreen(
                         onEditNameClick = { showEditNameDialog = true },
                         onEditBodyDataClick = { showBodyDataDialog = true },
                         onAccentThemeChange = { viewModel.updateAccentTheme(it) },
-                        onNavigateToAchievements = onNavigateToAchievements
+                        onNavigateToAchievements = onNavigateToAchievements,
+                        viewModel = viewModel
                     )
                     if (showBodyDataDialog) {
                         BodyDataDialog(
@@ -184,7 +186,8 @@ fun ProfileContent(
     onEditNameClick: () -> Unit,
     onEditBodyDataClick: () -> Unit = {},
     onAccentThemeChange: (String) -> Unit = {},
-    onNavigateToAchievements: () -> Unit = {}
+    onNavigateToAchievements: () -> Unit = {},
+    viewModel: UserProfileViewModel
 ) {
     val headerGradient = Brush.verticalGradient(
         colors = listOf(AppTheme.accent.dark.copy(alpha = 0.85f), AppTheme.accent.light.copy(alpha = 0.4f), Color.Transparent)
@@ -214,7 +217,7 @@ fun ProfileContent(
                         .align(Alignment.BottomCenter),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    AvatarWithEdit(user = user, onEditPhotoClick = onEditPhotoClick)
+                    AvatarWithEdit(user = user, onEditPhotoClick = onEditPhotoClick, viewModel = viewModel)
                 }
             }
 
@@ -428,7 +431,7 @@ private fun AccentThemePicker(
 }
 
 @Composable
-private fun AvatarWithEdit(user: User, onEditPhotoClick: () -> Unit) {
+private fun AvatarWithEdit(user: User, onEditPhotoClick: () -> Unit, viewModel: UserProfileViewModel) {
     val avatarSize = 112.dp
     val badgeSize = 32.dp
 
@@ -462,9 +465,13 @@ private fun AvatarWithEdit(user: User, onEditPhotoClick: () -> Unit) {
                     error = painterResource(id = R.drawable.gym)
                 )
             } else {
+                LaunchedEffect(user.id) {
+                    viewModel.fetchProfilePictureFromDb(UUID.fromString(user.id))
+                }
+
                 Image(
                     painter = painterResource(id = R.drawable.gym),
-                    contentDescription = stringResource(R.string.foto_de_perfil_padr_o),
+                    contentDescription = stringResource(R.string.foto_de_perfil),
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop
                 )

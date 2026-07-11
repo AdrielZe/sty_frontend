@@ -1,5 +1,6 @@
 package com.example.training_tracker.ui.screens.user_profile
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
 import androidx.lifecycle.viewModelScope
@@ -7,19 +8,35 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.training_tracker.GymTrackerApplication
 import com.example.training_tracker.data.models.MuscleGroups
+import com.example.training_tracker.data.remote.RetrofitClient.userApi
+import com.example.training_tracker.data.remote.user.UserApi
 import com.example.training_tracker.domain.repository.UserRepository
 import com.example.training_tracker.domain.repository.WorkoutHistoryRepository
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import java.util.UUID
 
 class UserProfileViewModel(
     private val userRepository: UserRepository,
-    private val workoutHistoryRepository: WorkoutHistoryRepository
+    private val workoutHistoryRepository: WorkoutHistoryRepository,
+    private val userApi: UserApi
 ) : ViewModel() {
+
+//    init {
+//        // Tenta buscar a imagem assim que o ViewModel é iniciado
+//        viewModelScope.launch {
+//            val user = userRepository.getUser().first()
+//            println("USER ID IS ${user?.id}")// Pega o usuário atual
+//            if (user != null) {
+//                fetchProfilePictureFromDb(UUID.fromString(user.id)) // Busca a imagem no servidor
+//            }
+//        }
+//    }
 
     val uiState: StateFlow<UserProfileUiState> = combine(
         userRepository.getUser(),
@@ -128,6 +145,14 @@ class UserProfileViewModel(
         }
     }
 
+    fun fetchProfilePictureFromDb(userId: UUID) {
+        viewModelScope.launch {
+            println("user id in fetch: $userId")
+           val url = userRepository.fetchProfilePictureFromDb(userId)
+            userRepository.updateProfilePicture(url)
+        }
+    }
+
     fun updateUserName(newName: String) {
         viewModelScope.launch {
             userRepository.updateUserName(newName)
@@ -146,15 +171,30 @@ class UserProfileViewModel(
         }
     }
 
+    fun fetchProfilePictureFromBackend(userId: UUID) {
+        viewModelScope.launch {
+            try {
+                val imageUrl = userApi.getUserProfilePicture(userId)
+
+
+                updateProfilePicture(imageUrl.url)
+            } catch (e: Exception) {
+                Log.e("UserProfileViewModel", "Erro ao buscar imagem do servidor", e)
+            }
+        }
+    }
+
     companion object {
         val Factory = viewModelFactory {
             initializer {
                 val application = (this[APPLICATION_KEY] as GymTrackerApplication)
                 val userRepository = application.container.userRepository
                 val workoutHistoryRepository = application.container.workoutHistoryRepository
+                val userApi = application.container.userApi
                 UserProfileViewModel(
                     userRepository = userRepository,
-                    workoutHistoryRepository = workoutHistoryRepository
+                    workoutHistoryRepository = workoutHistoryRepository,
+                   userApi = userApi
                 )
             }
         }

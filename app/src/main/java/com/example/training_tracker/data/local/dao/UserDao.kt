@@ -10,12 +10,11 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface UserDao {
-    @Query("SELECT * FROM users WHERE id = 'default_user' LIMIT 1")
     fun getUser(): Flow<User?>
 
     @Upsert
     suspend fun upsertUser(user: User)
 
-    @Query("UPDATE users SET weeklyGoal = :goal WHERE id = 'default_user'")
-    suspend fun updateWeeklyGoal(goal: Int)
+    @Query("UPDATE users SET weeklyGoal = :goal WHERE id = :userId")
+    suspend fun updateWeeklyGoal(userId: String, goal: Int)
 }
