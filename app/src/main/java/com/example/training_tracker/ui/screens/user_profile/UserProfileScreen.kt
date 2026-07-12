@@ -434,6 +434,7 @@ private fun AccentThemePicker(
 private fun AvatarWithEdit(user: User, onEditPhotoClick: () -> Unit, viewModel: UserProfileViewModel) {
     val avatarSize = 112.dp
     val badgeSize = 32.dp
+    
 
     Box(
         modifier = Modifier.size(avatarSize + badgeSize / 2),

@@ -23,6 +23,8 @@ import com.example.training_tracker.ui.screens.home.HomeUiState
 import com.example.training_tracker.ui.screens.home.HomeScreen
 import com.example.training_tracker.ui.screens.home.HomeViewModel
 import android.net.Uri
+import com.example.training_tracker.session_manager.MainViewModel
+import com.example.training_tracker.session_manager.SessionManager
 import com.example.training_tracker.ui.screens.conquistas.AchievementsScreen
 import com.example.training_tracker.ui.screens.conquistas.AchievementsViewModel
 import com.example.training_tracker.ui.screens.exercise_data.ExerciseDataScreen
@@ -34,17 +36,20 @@ import com.example.training_tracker.ui.screens.registered_workouts.RegisteredWor
 import com.example.training_tracker.ui.screens.user_profile.UserProfileScreen
 import com.example.training_tracker.ui.screens.workout_history.WorkoutHistoryScreen
 import com.example.training_tracker.ui.screens.workout_history.WorkoutHistoryViewModel
+import kotlinx.coroutines.launch
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun MainTabsScreen(
     rootNavController: androidx.navigation.NavController,
-    homeViewModel: HomeViewModel
+    homeViewModel: HomeViewModel,
+    mainViewModel: MainViewModel
 ) {
     // Este é o NavController FILHO, exclusivo para as abas
     val tabsNavController = rememberNavController()
     val navBackStackEntry by tabsNavController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route ?: Routes.Home.name
+    val coroutineScope = rememberCoroutineScope()
     val navigateToTab = { routeName: String ->
         tabsNavController.navigate(routeName) {
             popUpTo(tabsNavController.graph.findStartDestination().route ?: Routes.Home.name) {
@@ -94,6 +99,7 @@ fun MainTabsScreen(
                             }
                         }
                     },
+                    mainViewModel = mainViewModel,
                     onNavigateToCreateWorkout = {
                         rootNavController.navigate(Routes.CreateWorkout.name)
                     },
@@ -111,6 +117,11 @@ fun MainTabsScreen(
                     },
                     onClickGoToLogin = {
                         rootNavController.navigate(Routes.Login.name)
+                    },
+                    onLogoutClick = {
+                        coroutineScope.launch {
+                            mainViewModel.logout()
+                        }
                     }
                 )
             }
@@ -145,11 +156,10 @@ fun MainTabsScreen(
             composable(route = Routes.RegisteredWorkouts.name) {
                 RegisteredWorkoutsScreen(
                     onNavigateBack = { tabsNavController.popBackStack() },
-                    // Clicar no treino abre tela cheia, então usa o ROOT
                     onWorkoutClick = { workoutId ->
                         rootNavController.navigate("${Routes.WorkoutDetails.name}/$workoutId/false")
                     },
-                    // Criar treino abre tela cheia, então usa o ROOT
+                    // criar treino abre tela cheia, então usar o ROOT
                     onCreateWorkoutClick = { dayOfWeek ->
                         if (dayOfWeek != null) {
                             rootNavController.navigate("${Routes.CreateWorkout.name}?dayOfWeek=${dayOfWeek.name}")

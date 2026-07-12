@@ -34,6 +34,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.Check
@@ -51,6 +52,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -61,6 +63,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -95,6 +98,7 @@ import com.example.training_tracker.R
 import com.example.training_tracker.data.models.MuscleGroups
 import com.example.training_tracker.data.models.User
 import com.example.training_tracker.data.models.Workout
+import com.example.training_tracker.session_manager.MainViewModel
 import com.example.training_tracker.ui.theme.AppTheme
 import com.example.training_tracker.ui.theme.GreenGradient
 import com.example.training_tracker.ui.theme.Typography
@@ -142,11 +146,13 @@ private object Sty {
 fun HomeScreen(
     modifier: Modifier = Modifier,
     onClickWorkoutCard: (String?) -> Unit,
+    mainViewModel: MainViewModel,
     onNavigateToCreateWorkout: () -> Unit,
     onNavigateToRegisteredWorkouts: () -> Unit,
     onNavigateToWorkoutsHistory: () -> Unit,
     onClickBrowseWorkouts: () -> Unit,
     onClickGoToLogin: () -> Unit,
+    onLogoutClick: () -> Unit,
     onNavigateToFreestyleWorkout: () -> Unit = {},
     homeUiState: HomeUiState,
     homeViewModel: HomeViewModel = viewModel(factory = HomeViewModel.Factory)
@@ -163,6 +169,8 @@ fun HomeScreen(
             onClickGoToLogin = onClickGoToLogin,
             homeUiState = homeUiState,
             homeViewModel = homeViewModel,
+            mainViewModel = mainViewModel,
+            onLogoutClick = onLogoutClick
         )
     }
 }
@@ -209,11 +217,15 @@ fun HomeContent(
     onNavigateToFreestyleWorkout: () -> Unit,
     homeUiState: HomeUiState.Success,
     homeViewModel: HomeViewModel,
-    onClickGoToLogin: () -> Unit
+    onClickGoToLogin: () -> Unit,
+    onLogoutClick: () -> Unit,
+    mainViewModel: MainViewModel
 ) {
     var isProfileExpanded by remember { mutableStateOf(false) }
     var showGoalDialog by remember { mutableStateOf(false) }
     var showFreestyleNameDialog by remember { mutableStateOf(false) }
+
+    val isUserLoggedIn by mainViewModel.isLoggedIn.collectAsState()
 
     println("INITALIZED WITH USER ID: ${homeUiState.user?.id}")
 
@@ -225,7 +237,9 @@ fun HomeContent(
         topBar = {
             CustomTopBar(
                 onProfileClick = { isProfileExpanded = true },
-                user = homeUiState.user
+                user = homeUiState.user,
+                isUserLoggedIn = isUserLoggedIn,
+                onLogoutClick = onLogoutClick
             )
         },
         floatingActionButton = {
@@ -258,7 +272,8 @@ fun HomeContent(
             GreetingBlock(
                 name = homeUiState.user?.name ?: stringResource(R.string.home_default_user_name),
                 dateLine = homeUiState.currentDate,
-                onLoginClick = onClickGoToLogin
+                onLoginClick = onClickGoToLogin,
+                isUserLoggedIn = isUserLoggedIn
             )
 
             // === Week strip ==========================================================
@@ -403,6 +418,8 @@ fun HomeContent(
 @Composable
 fun CustomTopBar(
     onProfileClick: () -> Unit,
+    onLogoutClick: () -> Unit, // Nova ação
+    isUserLoggedIn: Boolean,   // Novo estado
     user: User?
 ) {
     Row(
@@ -418,33 +435,50 @@ fun CustomTopBar(
             layout = com.example.training_tracker.ui.components.StyLogoLayout.VERTICAL
         )
 
-        Box(
-            modifier = Modifier
-                .size(38.dp)
-                .clip(CircleShape)
-                .background(AppTheme.accent.gradient)
-                .border(BorderStroke(1.dp, Color.White.copy(alpha = 0.18f)), CircleShape)
-                .clickable { onProfileClick() },
-            contentAlignment = Alignment.Center
+        // Agrupamos o botão de logout e a foto para que fiquem juntos na direita
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            if (!user?.profilePicture.isNullOrEmpty()) {
-                AsyncImage(
-                    model = ImageRequest.Builder(LocalContext.current)
-                        .data(user?.profilePicture)
-                        .size(Size.ORIGINAL)
-                        .build(),
-                    contentDescription = stringResource(id = R.string.content_description_profile),
-                    modifier = Modifier.fillMaxSize().clip(CircleShape),
-                    contentScale = ContentScale.Crop
-                )
-            } else {
-                Text(
-                    text = (user?.name?.firstOrNull()?.uppercase() ?: "A"),
-                    color = Sty.OnAccent,
-                    fontFamily = com.example.training_tracker.ui.theme.Montserrat,
-                    fontWeight = FontWeight.Black,
-                    fontSize = 15.sp
-                )
+
+            if (isUserLoggedIn) {
+                IconButton(onClick = onLogoutClick) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.Logout,
+                        contentDescription = "Sair da conta",
+                        tint = Color.Black
+                    )
+                }
+            }
+
+            Box(
+                modifier = Modifier
+                    .size(38.dp)
+                    .clip(CircleShape)
+                    .background(AppTheme.accent.gradient)
+                    .border(BorderStroke(1.dp, Color.White.copy(alpha = 0.18f)), CircleShape)
+                    .clickable { onProfileClick() },
+                contentAlignment = Alignment.Center
+            ) {
+                if (!user?.profilePicture.isNullOrEmpty()) {
+                    AsyncImage(
+                        model = ImageRequest.Builder(LocalContext.current)
+                            .data(user?.profilePicture)
+                            .size(Size.ORIGINAL)
+                            .build(),
+                        contentDescription = stringResource(id = R.string.content_description_profile),
+                        modifier = Modifier.fillMaxSize().clip(CircleShape),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    Text(
+                        text = (user?.name?.firstOrNull()?.uppercase() ?: "A"),
+                        color = Sty.OnAccent,
+                        fontFamily = com.example.training_tracker.ui.theme.Montserrat,
+                        fontWeight = FontWeight.Black,
+                        fontSize = 15.sp
+                    )
+                }
             }
         }
     }
@@ -454,7 +488,7 @@ fun CustomTopBar(
 // === Greeting                                                              ===
 // =============================================================================
 @Composable
-private fun GreetingBlock(name: String, dateLine: String?, onLoginClick: () -> Unit) {
+private fun GreetingBlock(name: String, dateLine: String?, onLoginClick: () -> Unit, isUserLoggedIn: Boolean) {
     Column(modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp)) {
         if (!dateLine.isNullOrBlank()) {
             Text(
@@ -483,24 +517,26 @@ private fun GreetingBlock(name: String, dateLine: String?, onLoginClick: () -> U
             overflow = TextOverflow.Ellipsis
         )
 
-        Text(
-            text = buildAnnotatedString {
-                append("Já tem conta?")
-                withStyle(SpanStyle(color = AppTheme.accent.light)) { append("Faça login!") }
-                append(".")
-            },
-            modifier = Modifier
-                .padding(top = 4.dp)
-                .clickable { onLoginClick() },
-            color = Sty.TextMain,
-            fontFamily = com.example.training_tracker.ui.theme.Montserrat,
-            fontWeight = FontWeight.Black,
-            fontSize = 30.sp,
-            letterSpacing = (-0.5).sp,
-            lineHeight = 33.sp,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-        )
+        if (!isUserLoggedIn) {
+            Text(
+                text = buildAnnotatedString {
+                    append("Já tem conta?")
+                    withStyle(SpanStyle(color = AppTheme.accent.light)) { append("Faça login!") }
+                    append(".")
+                },
+                modifier = Modifier
+                    .padding(top = 4.dp)
+                    .clickable { onLoginClick() },
+                color = Sty.TextMain,
+                fontFamily = com.example.training_tracker.ui.theme.Montserrat,
+                fontWeight = FontWeight.Black,
+                fontSize = 30.sp,
+                letterSpacing = (-0.5).sp,
+                lineHeight = 33.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
     }
 }
 

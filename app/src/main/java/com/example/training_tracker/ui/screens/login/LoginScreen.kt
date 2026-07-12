@@ -19,7 +19,6 @@ fun LoginScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    // Observa o sucesso do login para disparar a navegação
     LaunchedEffect(uiState.isLoginSuccessful) {
         if (uiState.isLoginSuccessful) {
             onNavigateToHome()
@@ -41,7 +40,7 @@ fun LoginScreen(
         )
 
         OutlinedTextField(
-            value = uiState.usuario,
+            value = uiState.user,
             onValueChange = viewModel::onUsuarioChanged,
             label = { Text("Usuário") },
             keyboardOptions = KeyboardOptions(
@@ -55,7 +54,7 @@ fun LoginScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         OutlinedTextField(
-            value = uiState.senha,
+            value = uiState.password,
             onValueChange = viewModel::onSenhaChanged,
             label = { Text("Senha") },
             visualTransformation = PasswordVisualTransformation(),

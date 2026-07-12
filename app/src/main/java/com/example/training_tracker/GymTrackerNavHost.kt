@@ -40,6 +40,7 @@ import com.example.training_tracker.ui.screens.registered_workouts.TextGray
 import com.example.training_tracker.ui.screens.workout_details.WorkoutDetailsScreen
 import com.example.training_tracker.ui.screens.workout_details.WorkoutEditViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.training_tracker.session_manager.MainViewModel
 import com.example.training_tracker.ui.screens.workout_report.WorkoutReportScreen
 import com.example.training_tracker.ui.screens.workout_report.WorkoutReportViewModel
 import com.example.training_tracker.ui.screens.workout_screen.WorkoutScreen
@@ -54,7 +55,9 @@ import java.time.DayOfWeek
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun GymTrackerNavHost() {
+fun GymTrackerNavHost(
+    mainViewModel: MainViewModel
+) {
     val navController = rememberNavController()
     val homeViewModel: HomeViewModel = viewModel(factory = HomeViewModel.Factory)
 
@@ -82,7 +85,7 @@ fun GymTrackerNavHost() {
 
         // Rota de Login
         composable(route = "LOGIN") {
-            val loginViewModel: LoginViewModel = viewModel()
+            val loginViewModel: LoginViewModel = viewModel(factory = LoginViewModel.Factory)
             LoginScreen(
                 viewModel = loginViewModel,
                 onNavigateToHome = {
@@ -97,7 +100,8 @@ fun GymTrackerNavHost() {
         composable(route = "MAIN_TABS") {
             MainTabsScreen(
                 rootNavController = navController,
-                homeViewModel = homeViewModel
+                homeViewModel = homeViewModel,
+                mainViewModel = mainViewModel
             )
         }
 

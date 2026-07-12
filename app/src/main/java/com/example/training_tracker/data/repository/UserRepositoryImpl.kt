@@ -82,4 +82,23 @@ class UserRepositoryImpl(
             userDao.upsertUser(currentUser.copy(accentThemeName = themeName))
         }
     }
+
+    override suspend fun updateUserId(oldLocalId: String, newId: String) {
+        val currentUser = userDao.getUser().first()
+        if (currentUser != null) {
+            userDao.updateUserId(oldLocalId, newId)
+        }
+    }
+
+    override suspend fun deleteAllUsers() {
+        userDao.deleteAllUsers()
+    }
+
+    override suspend fun updateProfilePictureRemote(newPicture: String, id: String) {
+        val currentUser = userDao.getUser().first()
+        if (currentUser != null) {
+           // userApi.getUserProfilePicture()
+            userDao.updateProfilePicture(newPicture, id)
+        }
+    }
 }

@@ -27,6 +27,7 @@ import com.example.training_tracker.ui.screens.welcome.WelcomeScreen
 import com.example.training_tracker.ui.components.StyLogo
 import com.example.training_tracker.ui.components.StyLogoLayout
 import androidx.compose.runtime.CompositionLocalProvider
+import com.example.training_tracker.session_manager.MainViewModel
 import com.example.training_tracker.ui.theme.AccentThemes
 import com.example.training_tracker.ui.theme.AppTheme
 import com.example.training_tracker.ui.theme.LocalAccentTheme
@@ -34,7 +35,8 @@ import com.example.training_tracker.ui.theme.LocalAccentTheme
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun GymTrackerApp(
-    homeViewModel: HomeViewModel = viewModel(factory = HomeViewModel.Factory)
+    homeViewModel: HomeViewModel = viewModel(factory = HomeViewModel.Factory),
+    mainViewModel: MainViewModel
 ) {
     val uiState by homeViewModel.uiState.collectAsState()
 
@@ -59,7 +61,7 @@ fun GymTrackerApp(
                         // O Flow de uiState deve atualizar automaticamente
                     })
                 } else {
-                    GymTrackerNavHost()
+                    GymTrackerNavHost(mainViewModel = mainViewModel)
                 }
             }
             is HomeUiState.Error -> {

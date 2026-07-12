@@ -12,6 +12,7 @@ import com.example.training_tracker.data.remote.RetrofitClient.userApi
 import com.example.training_tracker.data.remote.user.UserApi
 import com.example.training_tracker.domain.repository.UserRepository
 import com.example.training_tracker.domain.repository.WorkoutHistoryRepository
+import com.example.training_tracker.session_manager.SessionManager
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
@@ -24,19 +25,21 @@ import java.util.UUID
 class UserProfileViewModel(
     private val userRepository: UserRepository,
     private val workoutHistoryRepository: WorkoutHistoryRepository,
-    private val userApi: UserApi
+    private val userApi: UserApi,
+    private val sessionManager: SessionManager
 ) : ViewModel() {
 
-//    init {
-//        // Tenta buscar a imagem assim que o ViewModel é iniciado
-//        viewModelScope.launch {
-//            val user = userRepository.getUser().first()
-//            println("USER ID IS ${user?.id}")// Pega o usuário atual
-//            if (user != null) {
-//                fetchProfilePictureFromDb(UUID.fromString(user.id)) // Busca a imagem no servidor
-//            }
-//        }
-//    }
+    init {
+        viewModelScope.launch {
+            sessionManager.userIdFlow.collect { userId ->
+                if (userId != null) {
+                    println("O ID do usuário logado é: $userId")
+                    // Chama a API ou Banco de Dados para buscar os treinos desse UUID específico!
+                }
+            }
+        }
+    }
+
 
     val uiState: StateFlow<UserProfileUiState> = combine(
         userRepository.getUser(),
@@ -195,10 +198,12 @@ class UserProfileViewModel(
                 val userRepository = application.container.userRepository
                 val workoutHistoryRepository = application.container.workoutHistoryRepository
                 val userApi = application.container.userApi
+                val sessionManager = application.container.sessionManager
                 UserProfileViewModel(
                     userRepository = userRepository,
                     workoutHistoryRepository = workoutHistoryRepository,
-                   userApi = userApi
+                    userApi = userApi,
+                    sessionManager = sessionManager
                 )
             }
         }
