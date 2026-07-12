@@ -53,6 +53,8 @@ class LoginViewModel(
 
                 userRepository.updateUserId(user.id, returnedUuid.toString())
 
+                userRepository.fetchProfilePictureFromDb(response.id)
+
 
 
                 val userAtualizado = userRepository.getUser().first()
