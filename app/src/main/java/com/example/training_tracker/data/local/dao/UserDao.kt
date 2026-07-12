@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface UserDao {
+    @Query("SELECT * FROM users LIMIT 1")
     fun getUser(): Flow<User?>
 
     @Upsert

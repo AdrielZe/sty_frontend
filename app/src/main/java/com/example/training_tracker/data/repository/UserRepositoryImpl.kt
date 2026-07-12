@@ -7,6 +7,8 @@ import com.example.training_tracker.domain.repository.UserRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import okhttp3.internal.userAgent
+import retrofit2.HttpException
+import java.io.IOException
 import java.util.UUID
 
 class UserRepositoryImpl(
@@ -36,22 +38,30 @@ class UserRepositoryImpl(
         }
     }
 
-    override suspend fun fetchProfilePictureFromDb(userId: UUID): String {
-        val response = userApi.getUserProfilePicture(userId)
+    override suspend fun fetchProfilePictureFromDb(userId: UUID): String? {
+        return try {
+            val response = userApi.getUserProfilePicture(userId)
+            val imageUrl = response.url
 
-        val imageUrl = response.url
+            val currentUser = userDao.getUser().first()
+            if (currentUser != null) {
+                userDao.upsertUser(currentUser.copy(profilePicture = imageUrl))
+            }
 
-        println("RESPONSE $response")
-        println("URL $imageUrl")
-
-        val currentUser = userDao.getUser().first()
-        if (currentUser != null) {
-            userDao.upsertUser(currentUser.copy(profilePicture = imageUrl))
+            imageUrl
+        } catch (e: HttpException) {
+            if (e.code() == 404) {
+                null
+            } else {
+                e.printStackTrace()
+                null
+            }
+        } catch (e: IOException) {
+            // Sem internet ou erro de conexão
+            e.printStackTrace()
+            null
         }
-
-        return imageUrl
     }
-
     override suspend fun updateUserName(newName: String) {
         val currentUser = userDao.getUser().first()
         if (currentUser != null) {

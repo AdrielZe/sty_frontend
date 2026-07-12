@@ -13,6 +13,7 @@ enum class ExerciseType {
 @Entity(tableName = "exercises")
 data class Exercise (
     @PrimaryKey @ColumnInfo(name = "id") val id: String = java.util.UUID.randomUUID().toString(),
+    @ColumnInfo(name = "userId") val userId: String? = null,
     @ColumnInfo(name = "name") val name: String,
     @ColumnInfo(name = "type") val type: ExerciseType = ExerciseType.STRENGTH, // Adicionado --> MIGRAÇÃO DB
     @ColumnInfo(name = "time") val time: String ?= null, // Adicionado --> MIGRAÇÃO DB

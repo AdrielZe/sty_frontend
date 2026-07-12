@@ -109,6 +109,9 @@ fun MainTabsScreen(
                     onNavigateToFreestyleWorkout = {
                         rootNavController.navigate(Routes.FreestyleWorkout.name)
                     },
+                    onClickGoToLogin = {
+                        rootNavController.navigate(Routes.Login.name)
+                    }
                 )
             }
 

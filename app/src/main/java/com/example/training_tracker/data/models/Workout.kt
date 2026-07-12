@@ -10,6 +10,7 @@ import java.time.LocalTime
 @Entity(tableName = "workouts")
 data class Workout(
     @PrimaryKey @ColumnInfo(name = "id") val id: String = java.util.UUID.randomUUID().toString(),
+    @ColumnInfo(name = "userId") val userId: String? = null,
     @ColumnInfo(name = "name") val name: String,
     @ColumnInfo(name = "exercises") val exercises: List<Exercise> = emptyList(),
     @ColumnInfo(name = "isCompleted") val isCompleted: Boolean = false,

@@ -15,7 +15,6 @@ class WelcomeViewModel(private val userRepository: UserRepository) : ViewModel()
     fun saveUser(name: String, onComplete: () -> Unit) {
         viewModelScope.launch {
             val user = User(
-                id = "dda5e707-d5fc-4b3c-b1c1-f8e2522d93c1",
                 name = name,
                 nameDisplay = name
             )

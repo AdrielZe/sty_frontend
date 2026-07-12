@@ -47,6 +47,8 @@ import com.example.training_tracker.ui.screens.workout_screen.WorkoutViewModel
 import com.example.training_tracker.ui.screens.conquistas.AchievementsScreen
 import com.example.training_tracker.ui.screens.conquistas.AchievementsViewModel
 import com.example.training_tracker.ui.screens.freestyle_workout.FreestyleWorkoutScreen
+import com.example.training_tracker.ui.screens.login.LoginScreen
+import com.example.training_tracker.ui.screens.login.LoginViewModel
 import com.example.training_tracker.ui.theme.AppTheme
 import java.time.DayOfWeek
 
@@ -77,6 +79,20 @@ fun GymTrackerNavHost() {
             fadeOut(animationSpec = tween(400))
         }
     ) {
+
+        // Rota de Login
+        composable(route = "LOGIN") {
+            val loginViewModel: LoginViewModel = viewModel()
+            LoginScreen(
+                viewModel = loginViewModel,
+                onNavigateToHome = {
+                    navController.navigate("MAIN_TABS") {
+                        popUpTo("LOGIN") { inclusive = true }
+                    }
+                }
+            )
+        }
+
         // Main Tabs (Home, Workouts, History, Records)
         composable(route = "MAIN_TABS") {
             MainTabsScreen(

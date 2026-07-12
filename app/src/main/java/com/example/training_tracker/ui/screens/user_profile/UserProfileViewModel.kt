@@ -148,8 +148,12 @@ class UserProfileViewModel(
     fun fetchProfilePictureFromDb(userId: UUID) {
         viewModelScope.launch {
             println("user id in fetch: $userId")
-           val url = userRepository.fetchProfilePictureFromDb(userId)
-            userRepository.updateProfilePicture(url)
+            val url = userRepository.fetchProfilePictureFromDb(userId)
+            if (url != null) {
+                userRepository.updateProfilePicture(url)
+            } else {
+                println("Não há foto cadastrada para esse usuário")
+            }
         }
     }
 

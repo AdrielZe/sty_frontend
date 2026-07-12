@@ -10,6 +10,7 @@ import java.time.LocalTime
 @Entity(tableName = "workoutHistories")
 data class WorkoutHistory(
     @PrimaryKey @ColumnInfo(name = "id") val id: String = java.util.UUID.randomUUID().toString(),
+    @ColumnInfo(name = "userId") val userId: String? = null,
     @ColumnInfo(name = "name") val name: String,
     @ColumnInfo(name = "completionDate") val completionDate: LocalDate,
     @ColumnInfo(name = "completionTime") val completionTime: LocalTime? = null,

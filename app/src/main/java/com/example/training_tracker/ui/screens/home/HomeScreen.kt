@@ -146,6 +146,7 @@ fun HomeScreen(
     onNavigateToRegisteredWorkouts: () -> Unit,
     onNavigateToWorkoutsHistory: () -> Unit,
     onClickBrowseWorkouts: () -> Unit,
+    onClickGoToLogin: () -> Unit,
     onNavigateToFreestyleWorkout: () -> Unit = {},
     homeUiState: HomeUiState,
     homeViewModel: HomeViewModel = viewModel(factory = HomeViewModel.Factory)
@@ -159,6 +160,7 @@ fun HomeScreen(
             onNavigateToCreateWorkout = onNavigateToCreateWorkout,
             onClickBrowseWorkouts = onClickBrowseWorkouts,
             onNavigateToFreestyleWorkout = onNavigateToFreestyleWorkout,
+            onClickGoToLogin = onClickGoToLogin,
             homeUiState = homeUiState,
             homeViewModel = homeViewModel,
         )
@@ -206,11 +208,15 @@ fun HomeContent(
     onClickBrowseWorkouts: () -> Unit,
     onNavigateToFreestyleWorkout: () -> Unit,
     homeUiState: HomeUiState.Success,
-    homeViewModel: HomeViewModel
+    homeViewModel: HomeViewModel,
+    onClickGoToLogin: () -> Unit
 ) {
     var isProfileExpanded by remember { mutableStateOf(false) }
     var showGoalDialog by remember { mutableStateOf(false) }
     var showFreestyleNameDialog by remember { mutableStateOf(false) }
+
+    println("INITALIZED WITH USER ID: ${homeUiState.user?.id}")
+
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -251,7 +257,8 @@ fun HomeContent(
             // === Greeting ============================================================
             GreetingBlock(
                 name = homeUiState.user?.name ?: stringResource(R.string.home_default_user_name),
-                dateLine = homeUiState.currentDate
+                dateLine = homeUiState.currentDate,
+                onLoginClick = onClickGoToLogin
             )
 
             // === Week strip ==========================================================
@@ -447,7 +454,7 @@ fun CustomTopBar(
 // === Greeting                                                              ===
 // =============================================================================
 @Composable
-private fun GreetingBlock(name: String, dateLine: String?) {
+private fun GreetingBlock(name: String, dateLine: String?, onLoginClick: () -> Unit) {
     Column(modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp)) {
         if (!dateLine.isNullOrBlank()) {
             Text(
@@ -466,6 +473,25 @@ private fun GreetingBlock(name: String, dateLine: String?) {
                 withStyle(SpanStyle(color = AppTheme.accent.light)) { append(name) }
                 append(".")
             },
+            color = Sty.TextMain,
+            fontFamily = com.example.training_tracker.ui.theme.Montserrat,
+            fontWeight = FontWeight.Black,
+            fontSize = 30.sp,
+            letterSpacing = (-0.5).sp,
+            lineHeight = 33.sp,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+
+        Text(
+            text = buildAnnotatedString {
+                append("Já tem conta?")
+                withStyle(SpanStyle(color = AppTheme.accent.light)) { append("Faça login!") }
+                append(".")
+            },
+            modifier = Modifier
+                .padding(top = 4.dp)
+                .clickable { onLoginClick() },
             color = Sty.TextMain,
             fontFamily = com.example.training_tracker.ui.theme.Montserrat,
             fontWeight = FontWeight.Black,
