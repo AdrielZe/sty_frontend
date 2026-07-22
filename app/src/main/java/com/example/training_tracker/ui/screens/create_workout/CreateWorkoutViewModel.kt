@@ -16,6 +16,7 @@ import com.example.training_tracker.data.models.Workout
 import com.example.training_tracker.domain.repository.ExerciseRepository
 import com.example.training_tracker.domain.repository.WorkoutRepository
 import com.example.training_tracker.domain.classifiers.ExerciseClassifier
+import com.example.training_tracker.session_manager.SessionManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -31,7 +32,8 @@ import java.time.DayOfWeek
 class CreateWorkoutViewModel(
     private val workoutRepository: WorkoutRepository,
     private val exerciseRepository: ExerciseRepository,
-    private val classifier: ExerciseClassifier
+    private val classifier: ExerciseClassifier,
+    private val sessionManager: SessionManager
 ) : ViewModel() {
 
     private val _draftState = MutableStateFlow(CreateWorkoutUiState())
@@ -285,7 +287,7 @@ class CreateWorkoutViewModel(
             )
             viewModelScope.launch {
                 try {
-                    workoutRepository.addWorkout(newWorkout)
+                    workoutRepository.addWorkout(workout = newWorkout, userId = sessionManager.getUserId() ?: throw IllegalStateException("Usuário não está logado."))
                 } catch (e: Exception) {
                     e.printStackTrace()
                     android.util.Log.e("TREINO", "ERRO O TREINO: ", e)
@@ -305,7 +307,8 @@ class CreateWorkoutViewModel(
                 val workoutRepository = application.container.workoutRepository
                 val exerciseRepository = application.container.exerciseRepository
                 val classifier = application.container.exerciseClassifier
-                CreateWorkoutViewModel(workoutRepository = workoutRepository, exerciseRepository = exerciseRepository, classifier= classifier)
+                val sessionManager = application.container.sessionManager
+                CreateWorkoutViewModel(workoutRepository = workoutRepository, exerciseRepository = exerciseRepository, sessionManager = sessionManager, classifier= classifier)
             }
         }
     }

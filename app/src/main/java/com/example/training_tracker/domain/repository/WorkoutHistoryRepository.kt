@@ -10,5 +10,6 @@ interface WorkoutHistoryRepository {
     suspend fun addWorkoutHistory(workoutHistory: WorkoutHistory)
     suspend fun updateWorkoutHistory(workoutHistory: WorkoutHistory)
     suspend fun deleteWorkoutHistory(workoutHistory: WorkoutHistory)
+    suspend fun deleteAll()
     fun getHistoryByDate(date: LocalDate): Flow<List<WorkoutHistory>>
 }

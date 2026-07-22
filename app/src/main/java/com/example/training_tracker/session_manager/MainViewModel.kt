@@ -7,13 +7,18 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.CreationExtras
 import com.example.training_tracker.GymTrackerApplication
 import com.example.training_tracker.domain.repository.UserRepository
+import com.example.training_tracker.domain.repository.WorkoutHistoryRepository
+import com.example.training_tracker.domain.repository.WorkoutRepository
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 
 class MainViewModel(
     private val sessionManager: SessionManager,
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val workoutRepository: WorkoutRepository,
+    private val historyRepository: WorkoutHistoryRepository
+    // adicionar mais(workout, exercises, etc)
 ) : ViewModel() {
 
     val isLoggedIn: StateFlow<Boolean> = sessionManager.isLoggedIn
@@ -26,6 +31,8 @@ class MainViewModel(
     suspend fun logout() {
         sessionManager.clearSession()
         userRepository.deleteAllUsers()
+        workoutRepository.deleteAllWorkouts()
+        historyRepository.deleteAll()
     }
 
     companion object {
@@ -39,8 +46,10 @@ class MainViewModel(
 
                 val sessionManager = application.container.sessionManager
                 val userRepository = application.container.userRepository
+                val workoutRepository = application.container.workoutRepository
+                val historyRepository = application.container.workoutHistoryRepository
 
-                return MainViewModel(sessionManager, userRepository) as T
+                return MainViewModel(sessionManager, userRepository, workoutRepository, historyRepository) as T
             }
         }
     }

@@ -6,13 +6,15 @@ import com.example.training_tracker.data.models.ExerciseType
 object CalorieCalculator {
 
     fun calculate(
-        exercises: List<Exercise>,
+        exercises: List<Exercise> = emptyList(),
         durationMs: Long,
         weightKg: Float,
         ageYears: Int? = null,
         gender: String? = null
     ): Int {
-        if (exercises.isEmpty() || durationMs <= 0 || weightKg <= 0f) return 0
+        val safeExercises = exercises ?: emptyList()
+
+        if (safeExercises.isEmpty() || durationMs <= 0 || weightKg <= 0f) return 0
 
         val durationMinutes = durationMs / 60_000.0
         val ageFactor = if ((ageYears ?: 0) > 50) 0.9 else 1.0

@@ -10,7 +10,7 @@ sealed interface HomeUiState {
     data class Success(
         val user: User? = null,
         val currentDate: String? = null,
-        val todayWorkouts: List<Workout> = emptyList(),
+        val todayWorkouts: List<Workout>? = emptyList(),
         val totalWorkoutsCompleted: Int = 0,
         val workoutsCompletedThisWeek: Int = 0,
         val activeFreestyleWorkout: Workout? = null,

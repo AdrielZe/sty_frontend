@@ -3,6 +3,7 @@ package com.example.training_tracker.data.remote
 import com.example.training_tracker.data.remote.auth.AuthApi
 import com.example.training_tracker.data.remote.exercise.ExerciseApi
 import com.example.training_tracker.data.remote.user.UserApi
+import com.example.training_tracker.data.remote.workout.WorkoutApi
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -37,6 +38,10 @@ object RetrofitClient {
 
     val authApi: AuthApi by lazy {
         retrofit.create(AuthApi::class.java)
+    }
+
+    val workoutApi: WorkoutApi by lazy {
+        retrofit.create(WorkoutApi::class.java)
     }
 
 }

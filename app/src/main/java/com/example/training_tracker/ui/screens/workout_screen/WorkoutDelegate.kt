@@ -10,12 +10,14 @@ import com.example.training_tracker.data.models.WorkoutHistory
 import com.example.training_tracker.domain.repository.RecordsRepository
 import com.example.training_tracker.domain.repository.WorkoutHistoryRepository
 import com.example.training_tracker.domain.repository.WorkoutRepository
+import com.example.training_tracker.session_manager.SessionManager
 import com.example.training_tracker.ui.screens.workout_report.WorkoutDifficulty
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import java.time.LocalDate
 import java.time.LocalTime
+import java.util.UUID
 
 interface WorkoutDelegate {
     fun calculateProgress(workout: Workout): Float
@@ -49,7 +51,8 @@ interface WorkoutDelegate {
         workoutHistoryRepository: WorkoutHistoryRepository,
         onWorkoutFinished: (Workout) -> Unit,
         onNavigateToReport: (String) -> Unit,
-        resetWorkout: suspend (historyId: String) -> Unit
+        resetWorkout: suspend (historyId: String) -> Unit,
+        sessionManager: SessionManager
     )
 }
 
@@ -386,7 +389,8 @@ class WorkoutDelegateImpl(
         workoutHistoryRepository: WorkoutHistoryRepository,
         onWorkoutFinished: (Workout) -> Unit,
         onNavigateToReport: (String) -> Unit,
-        resetWorkout: suspend (String) -> Unit
+        resetWorkout: suspend (String) -> Unit,
+        sessionManager: SessionManager
     ) {
         val completedExercises = workout.exercises.map { exercise ->
             val completedSets = exercise.exerciseSets.map { set ->
@@ -416,11 +420,12 @@ class WorkoutDelegateImpl(
         )
 
         val newHistoryEntry = generateHistoryEntry(
-            workout,
-            completionDate,
-            completionTime,
-            completedExercises,
-            duration
+            workout = workout,
+            completionDate = completionDate,
+            completionTime = completionTime,
+            completedExercises = completedExercises,
+            duration = duration,
+            userId = sessionManager.getUserId()
         )
         val historyId = newHistoryEntry.id
 
@@ -451,8 +456,9 @@ class WorkoutDelegateImpl(
         workout: Workout,
         completionDate: LocalDate,
         completionTime: LocalTime,
-        completedExercises: List<Exercise>,
-        duration: Long
+        completedExercises: List<Exercise> = emptyList(),
+        duration: Long,
+        userId: UUID?
     ): WorkoutHistory {
         val workoutId =
             if (workout.id == "freestyle_workout_id") "freestyle_workout_id" else workout.id
@@ -464,7 +470,8 @@ class WorkoutDelegateImpl(
             exercises = completedExercises,
             workoutId = workoutId,
             difficulty = WorkoutDifficulty.MEDIUM,
-            durationMillis = duration
+            durationMillis = duration,
+            userId = userId.toString()
         )
     }
 }

@@ -290,7 +290,7 @@ fun HomeContent(
                 onActionClick = onClickBrowseWorkouts
             )
 
-            if (homeUiState.todayWorkouts.isNotEmpty()) {
+            if (homeUiState.todayWorkouts?.isNotEmpty() == true) {
                 homeUiState.todayWorkouts.forEach { workout ->
                     WorkoutCard(
                         workout = workout,

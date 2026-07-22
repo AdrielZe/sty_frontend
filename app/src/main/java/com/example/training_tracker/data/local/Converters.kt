@@ -68,16 +68,21 @@ class Converters {
     }
 
     @TypeConverter
-    fun fromExerciseList(value: List<Exercise>): String = gson.toJson(value)
+    fun fromExerciseList(value: List<Exercise>?): String = gson.toJson(value ?: emptyList<Exercise>())
 
     @TypeConverter
-    fun toExerciseList(value: String): List<Exercise> {
+    fun toExerciseList(value: String?): List<Exercise> {
+        // 1. Proteção contra string nula do Room
+        if (value.isNullOrBlank()) return emptyList()
+
         val listType = object : com.google.gson.reflect.TypeToken<List<Exercise>>() {}.type
         val exercises: List<Exercise> = gson.fromJson(value, listType) ?: return emptyList()
+
         return exercises.map {
             it.copy(
                 type = it.type ?: ExerciseType.STRENGTH,
-                exerciseSets = it.exerciseSets.map { set -> sanitizeExerciseSet(set) }
+                // 2. A CORREÇÃO DE OURO: Proteção contra Gson injetando null na lista
+                exerciseSets = it.exerciseSets?.map { set -> sanitizeExerciseSet(set) } ?: emptyList()
             )
         }
     }
@@ -128,10 +133,13 @@ class Converters {
     }
 
     @TypeConverter
-    fun fromExerciseSet(value: List<ExerciseSet>): String = gson.toJson(value)
+    fun fromExerciseSet(value: List<ExerciseSet>?): String = gson.toJson(value ?: emptyList<ExerciseSet>())
 
     @TypeConverter
-    fun toExerciseSet(value: String): List<ExerciseSet> {
+    fun toExerciseSet(value: String?): List<ExerciseSet> {
+        // Proteção contra string nula do Room
+        if (value.isNullOrBlank()) return emptyList()
+
         val listType = object: com.google.gson.reflect.TypeToken<List<ExerciseSet>>() {}.type
         val sets: List<ExerciseSet> = gson.fromJson(value, listType) ?: return emptyList()
         return sets.map { sanitizeExerciseSet(it) }

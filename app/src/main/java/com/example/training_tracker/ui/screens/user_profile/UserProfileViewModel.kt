@@ -148,21 +148,10 @@ class UserProfileViewModel(
         }
     }
 
-    fun fetchProfilePictureFromDb(userId: UUID) {
-        viewModelScope.launch {
-            println("user id in fetch: $userId")
-            val url = userRepository.fetchProfilePictureFromDb(userId)
-            if (url != null) {
-                userRepository.updateProfilePicture(url)
-            } else {
-                println("Não há foto cadastrada para esse usuário")
-            }
-        }
-    }
 
     fun updateUserName(newName: String) {
         viewModelScope.launch {
-            userRepository.updateUserName(newName)
+            userRepository.updateLocalUsername(newName)
         }
     }
 
@@ -178,18 +167,6 @@ class UserProfileViewModel(
         }
     }
 
-    fun fetchProfilePictureFromBackend(userId: UUID) {
-        viewModelScope.launch {
-            try {
-                val imageUrl = userApi.getUserProfilePicture(userId)
-
-
-                updateProfilePicture(imageUrl.url)
-            } catch (e: Exception) {
-                Log.e("UserProfileViewModel", "Erro ao buscar imagem do servidor", e)
-            }
-        }
-    }
 
     companion object {
         val Factory = viewModelFactory {

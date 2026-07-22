@@ -18,6 +18,7 @@ class WorkoutHistoryImpl(
     override fun getHistoryByDate(date: LocalDate): Flow<List<WorkoutHistory>> {
         return workoutHistoryDao.getHistoryByDate(date)
     }
+
     override suspend fun addWorkoutHistory(workoutHistory: WorkoutHistory) {
         workoutHistoryDao.insert(workoutHistory)
     }
@@ -28,5 +29,9 @@ class WorkoutHistoryImpl(
 
     override suspend fun updateWorkoutHistory(workoutHistory: WorkoutHistory) {
         workoutHistoryDao.update(workoutHistory)
+    }
+
+    override suspend fun deleteAll() {
+        workoutHistoryDao.deleteAll()
     }
 }

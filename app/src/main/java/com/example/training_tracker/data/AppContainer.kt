@@ -7,8 +7,10 @@ import com.example.training_tracker.data.models.Exercise
 import com.example.training_tracker.data.models.ExerciseType
 import com.example.training_tracker.data.models.MuscleGroups
 import com.example.training_tracker.data.remote.RetrofitClient
+import com.example.training_tracker.data.remote.SyncConfiguration
 import com.example.training_tracker.data.remote.auth.AuthApi
 import com.example.training_tracker.data.remote.user.UserApi
+import com.example.training_tracker.data.remote.workout.WorkoutApi
 import com.example.training_tracker.domain.repository.ExerciseRepository
 import com.example.training_tracker.domain.repository.RecordsRepository
 import com.example.training_tracker.domain.repository.UserRepository
@@ -36,6 +38,8 @@ interface AppContainer {
     val sessionManager: SessionManager
     val userApi: UserApi
     val authApi: AuthApi
+    val workoutApi: WorkoutApi
+    val syncConfiguration: SyncConfiguration
 }
 
 class DefaultAppContainer(
@@ -53,10 +57,20 @@ class DefaultAppContainer(
 
     override val authApi = RetrofitClient.authApi
 
+    override val workoutApi = RetrofitClient.workoutApi
+
     // O 'by lazy' garante que o UserRepository só será instanciado
     // na primeira vez que for chamado, e depois a mesma instância será reutilizada.
     override val userRepository: UserRepository by lazy {
         UserRepositoryImpl(database.userDao(), userApi)
+    }
+
+    override val syncConfiguration: SyncConfiguration by lazy {
+        SyncConfiguration(
+            userRepository = userRepository,
+            authApi = authApi,
+            userApi = userApi
+        )
     }
 
     override val sessionManager: SessionManager by lazy {
@@ -68,7 +82,7 @@ class DefaultAppContainer(
     }
 
     override val workoutRepository: WorkoutRepository by lazy {
-        WorkoutRepositoryImpl(database.workoutDao())
+        WorkoutRepositoryImpl(database.workoutDao(), workoutApi)
     }
 
     override val recordsRepository: RecordsRepository by lazy {

@@ -12,11 +12,15 @@ import com.example.training_tracker.domain.repository.UserRepository
 import com.example.training_tracker.ui.utils.CalorieCalculator
 import com.example.training_tracker.domain.repository.WorkoutHistoryRepository
 import com.example.training_tracker.domain.repository.WorkoutRepository
+import com.example.training_tracker.session_manager.SessionManager
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -30,23 +34,33 @@ private const val TAG = "HomeViewModel"
 class HomeViewModel(
     private val userRepository: UserRepository,
     private val workoutRepository: WorkoutRepository,
-    private val workoutHistoryRepository: WorkoutHistoryRepository
+    private val workoutHistoryRepository: WorkoutHistoryRepository,
+    private val sessionManager: SessionManager
 ) : ViewModel() {
 
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private val todayWorkoutsFlow = sessionManager.userIdFlow.flatMapLatest { userId ->
+        println("EXECUTADO! USER ID: ${userId}")
+        if (userId != null) {
+            workoutRepository.getWorkoutsByDay(LocalDate.now().dayOfWeek, userId)
+        } else {
+            flowOf(null)
+        }
+    }
     private val FREESTYLE_WORKOUT_ID = "freestyle_workout_id"
 
     private val baseState = combine(
         userRepository.getUser(),
-        workoutRepository.getWorkoutsByDay(LocalDate.now().dayOfWeek),
+        todayWorkoutsFlow,
         workoutHistoryRepository.getHistoryByDate(LocalDate.now()),
         workoutHistoryRepository.workoutHistories,
         workoutRepository.getWorkoutById(FREESTYLE_WORKOUT_ID)
     ) { user, workouts, todayHistory, workoutHistories, freestyleWorkout ->
         // Mapeia os treinos do template para ver se foram feitos hoje
-        val workoutsWithStatus = workouts.map { workout ->
+        val workoutsWithStatus = workouts?.map { workout ->
             val isCompletedToday = todayHistory.any { history -> history.workoutId == workout.id }
             workout.copy(isCompleted = isCompletedToday)
-        }.toMutableList()
+        }?.toMutableList()
 
         // Adiciona o Freestyle Workout se ele estiver em andamento (isOnGoing == true)
         val activeFreestyle = if (freestyleWorkout != null && freestyleWorkout.isOnGoing) {
@@ -56,7 +70,7 @@ class HomeViewModel(
         }
 
         if (activeFreestyle != null) {
-            workoutsWithStatus.add(activeFreestyle)
+            workoutsWithStatus?.add(activeFreestyle)
         }
 
         // Calcula treinos feitos na semana atual (Segunda a Domingo)
@@ -176,8 +190,9 @@ class HomeViewModel(
                 val userRepository = application.container.userRepository
                 val workoutRepository = application.container.workoutRepository
                 val workoutHistoryRepository = application.container.workoutHistoryRepository
+                val sessionManger = application.container.sessionManager
 
-                HomeViewModel(userRepository = userRepository, workoutRepository = workoutRepository, workoutHistoryRepository = workoutHistoryRepository)
+                HomeViewModel(userRepository = userRepository, workoutRepository = workoutRepository, workoutHistoryRepository = workoutHistoryRepository, sessionManager = sessionManger)
             }
         }
     }

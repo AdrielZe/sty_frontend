@@ -30,4 +30,7 @@ interface UserDao {
     @Query("UPDATE users SET profilePicture = :newProfilePicture WHERE id= :userId")
     suspend fun updateProfilePicture(newProfilePicture: String, userId: String)
 
+    @Query("UPDATE users SET name = :username WHERE id= :userId")
+    suspend fun updateUsername(username: String, userId: String)
+
 }

@@ -14,6 +14,7 @@ import com.example.training_tracker.data.models.Workout
 import com.example.training_tracker.domain.repository.RecordsRepository
 import com.example.training_tracker.domain.repository.WorkoutHistoryRepository
 import com.example.training_tracker.domain.repository.WorkoutRepository
+import com.example.training_tracker.session_manager.SessionManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
@@ -26,7 +27,8 @@ class WorkoutViewModel(
     private val workoutRepository: WorkoutRepository,
     private val workoutHistoryRepository: WorkoutHistoryRepository,
     private val recordsRepository: RecordsRepository,
-    private val delegate: WorkoutDelegate
+    private val delegate: WorkoutDelegate,
+    private val sessionManager: SessionManager
 ) : ViewModel(), WorkoutDelegate by delegate {
     private val workoutId: String = checkNotNull(savedStateHandle["workoutId"])
     private val _finishedWorkoutSession = MutableStateFlow<Workout?>(null)
@@ -144,7 +146,8 @@ class WorkoutViewModel(
                         progress = 0f
                     )
                     workoutRepository.updateWorkout(resetWorkout)
-                }
+                },
+                sessionManager = sessionManager
             )
         }
     }
@@ -156,6 +159,7 @@ class WorkoutViewModel(
                 val workoutRepository = application.container.workoutRepository
                 val workoutHistoryRepository = application.container.workoutHistoryRepository
                 val recordsRepository = application.container.recordsRepository
+                val sessionManager = application.container.sessionManager
 
                 val savedStateHandle = createSavedStateHandle()
                 val delegate = WorkoutDelegateImpl(workoutRepository, recordsRepository)
@@ -165,7 +169,8 @@ class WorkoutViewModel(
                     workoutRepository = workoutRepository,
                     workoutHistoryRepository = workoutHistoryRepository,
                     recordsRepository = recordsRepository,
-                    delegate = delegate
+                    delegate = delegate,
+                    sessionManager = sessionManager
                 )
             }
         }

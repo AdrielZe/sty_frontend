@@ -6,6 +6,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
+import androidx.room.Upsert
 import com.example.training_tracker.data.models.Workout
 import kotlinx.coroutines.flow.Flow
 
@@ -25,6 +26,12 @@ interface WorkoutDao{
 
     @Delete
     suspend fun delete(workout: Workout)
+
+    @Query("DELETE FROM workouts")
+    suspend fun deleteAllWorkouts()
+
+    @Upsert
+    suspend fun insertOrUpdateAll(workouts: List<Workout>)
 
     @Query("DELETE FROM workouts")
     suspend fun deleteAll()

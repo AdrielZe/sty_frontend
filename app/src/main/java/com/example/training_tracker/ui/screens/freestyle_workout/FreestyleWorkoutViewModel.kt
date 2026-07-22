@@ -16,6 +16,7 @@ import com.example.training_tracker.domain.repository.ExerciseRepository
 import com.example.training_tracker.domain.repository.WorkoutHistoryRepository
 import com.example.training_tracker.domain.repository.WorkoutRepository
 import com.example.training_tracker.domain.classifiers.ExerciseClassifier
+import com.example.training_tracker.session_manager.SessionManager
 import com.example.training_tracker.ui.screens.workout_screen.WorkoutDelegate
 import com.example.training_tracker.ui.screens.workout_screen.WorkoutDelegateImpl
 import kotlinx.coroutines.Dispatchers
@@ -34,7 +35,8 @@ class FreestyleWorkoutViewModel(
     private val workoutHistoryRepository: WorkoutHistoryRepository,
     private val workoutRepository: WorkoutRepository,
     private val classifier: ExerciseClassifier,
-    private val delegate: WorkoutDelegate
+    private val delegate: WorkoutDelegate,
+    private val sessionManager: SessionManager
 ) : ViewModel(), WorkoutDelegate by delegate {
 
     private val FREESTYLE_WORKOUT_ID = "freestyle_workout_id"
@@ -322,7 +324,8 @@ class FreestyleWorkoutViewModel(
                             progress = 0f
                         )
                     )
-                }
+                },
+                sessionManager = sessionManager
             )
         }
     }
@@ -361,13 +364,15 @@ class FreestyleWorkoutViewModel(
                 val application = (this[APPLICATION_KEY] as GymTrackerApplication)
                 val workoutRepository = application.container.workoutRepository
                 val recordsRepository = application.container.recordsRepository
+                val sessionManager = application.container.sessionManager
                 
                 FreestyleWorkoutViewModel(
                     exerciseRepository = application.container.exerciseRepository,
                     workoutHistoryRepository = application.container.workoutHistoryRepository,
                     workoutRepository = workoutRepository,
                     classifier = application.container.exerciseClassifier,
-                    delegate = WorkoutDelegateImpl(workoutRepository, recordsRepository)
+                    delegate = WorkoutDelegateImpl(workoutRepository, recordsRepository),
+                    sessionManager = sessionManager
                 )
             }
         }

@@ -1,8 +1,10 @@
 package com.example.training_tracker.data.repository
 
+import android.util.Log
 import com.example.training_tracker.data.local.dao.UserDao
 import com.example.training_tracker.data.models.User
 import com.example.training_tracker.data.remote.user.UserApi
+import com.example.training_tracker.data.remote.user.UserProfileResponse
 import com.example.training_tracker.domain.repository.UserRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -62,7 +64,21 @@ class UserRepositoryImpl(
             null
         }
     }
-    override suspend fun updateUserName(newName: String) {
+
+    override suspend fun fetchUserProfileFromRemote(userId: UUID) {
+       try {
+           val profile: UserProfileResponse = userApi.getUserProfile(userId)
+
+           updateProfilePicture(profile.picture)
+           updateLocalUsername(profile.username)
+        } catch (e: Exception) {
+
+            Log.e("ERROR", "AN ERROR HAS OCCURED")
+            null
+        }
+    }
+
+    override suspend fun updateLocalUsername(newName: String) {
         val currentUser = userDao.getUser().first()
         if (currentUser != null) {
             userDao.upsertUser(currentUser.copy(name = newName))
@@ -94,11 +110,12 @@ class UserRepositoryImpl(
         userDao.deleteAllUsers()
     }
 
-    override suspend fun updateProfilePictureRemote(newPicture: String, id: String) {
+    override suspend fun updateLocalProfilePicture(newPicture: String) {
         val currentUser = userDao.getUser().first()
         if (currentUser != null) {
            // userApi.getUserProfilePicture()
-            userDao.updateProfilePicture(newPicture, id)
+            userDao.updateProfilePicture(newPicture, currentUser.id)
         }
     }
+
 }

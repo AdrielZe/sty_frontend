@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.*
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.first
 import java.util.UUID
 
 // Mantém do lado de fora: garante que o arquivo físico seja um Singleton
@@ -16,6 +17,10 @@ class SessionManager(private val context: Context) {
     companion object {
         private val IS_LOGGED_IN = booleanPreferencesKey("is_logged_in")
         private val USER_ID = stringPreferencesKey("user_id")
+    }
+
+    suspend fun getUserId(): UUID? {
+        return userIdFlow.first()
     }
 
     val isLoggedIn: Flow<Boolean> = context.dataStore.data.map { preferences ->

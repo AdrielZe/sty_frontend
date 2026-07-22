@@ -6,8 +6,9 @@ import retrofit2.http.Path
 import java.util.UUID
 
 interface UserApi {
-
-    @GET("/user/picture/{id}")
+    @GET("/user/{id}/picture")
     suspend fun getUserProfilePicture(@Path("id") userId: UUID) : PictureResponse
 
+    @GET("/user/{id}/profile")
+    suspend fun getUserProfile(@Path("id") userId: UUID): UserProfileResponse
 }

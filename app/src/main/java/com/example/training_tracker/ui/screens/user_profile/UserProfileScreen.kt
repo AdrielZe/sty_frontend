@@ -466,9 +466,9 @@ private fun AvatarWithEdit(user: User, onEditPhotoClick: () -> Unit, viewModel: 
                     error = painterResource(id = R.drawable.gym)
                 )
             } else {
-                LaunchedEffect(user.id) {
-                    viewModel.fetchProfilePictureFromDb(UUID.fromString(user.id))
-                }
+//                LaunchedEffect(user.id) {
+//                    viewModel.fetchProfilePictureFromDb(UUID.fromString(user.id))
+//                }
 
                 Image(
                     painter = painterResource(id = R.drawable.gym),

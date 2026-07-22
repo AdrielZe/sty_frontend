@@ -3,13 +3,15 @@ package com.example.training_tracker.domain.repository
 import com.example.training_tracker.data.models.Workout
 import kotlinx.coroutines.flow.Flow
 import java.time.DayOfWeek
+import java.util.UUID
 
 interface WorkoutRepository{
     val workouts : Flow<List<Workout>>
-    suspend fun addWorkout(workout: Workout)
+    suspend fun addWorkout(workout: Workout, userId : UUID? = null)
     suspend fun updateWorkout(workout: Workout)
     suspend fun deleteWorkout(workout: Workout)
+    suspend fun deleteAllWorkouts()
     fun getWorkoutById(id: String) : Flow<Workout?>
-    fun getWorkoutsByDay(day: DayOfWeek): Flow<List<Workout>>
+    fun getWorkoutsByDay(day: DayOfWeek, userId: UUID?): Flow<List<Workout>>
     fun getTodayWorkout(day: DayOfWeek): Flow<Workout?>
 }
