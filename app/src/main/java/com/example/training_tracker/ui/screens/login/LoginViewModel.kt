@@ -8,7 +8,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import retrofit2.HttpException
 import com.example.training_tracker.GymTrackerApplication
-import com.example.training_tracker.data.remote.SyncConfiguration
+import com.example.training_tracker.data.remote.sync.SyncConfiguration
 import com.example.training_tracker.data.remote.auth.AuthApi
 import com.example.training_tracker.data.remote.auth.LoginRequest
 import com.example.training_tracker.domain.repository.UserRepository

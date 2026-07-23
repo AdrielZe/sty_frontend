@@ -50,6 +50,8 @@ import com.example.training_tracker.ui.screens.conquistas.AchievementsViewModel
 import com.example.training_tracker.ui.screens.freestyle_workout.FreestyleWorkoutScreen
 import com.example.training_tracker.ui.screens.login.LoginScreen
 import com.example.training_tracker.ui.screens.login.LoginViewModel
+import com.example.training_tracker.ui.screens.register_screen.RegisterScreen
+import com.example.training_tracker.ui.screens.register_screen.RegisterViewModel
 import com.example.training_tracker.ui.theme.AppTheme
 import java.time.DayOfWeek
 
@@ -91,6 +93,18 @@ fun GymTrackerNavHost(
                 onNavigateToHome = {
                     navController.navigate("MAIN_TABS") {
                         popUpTo("LOGIN") { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        composable(route = Routes.Register.name) {
+            val viewModel: RegisterViewModel = viewModel(factory = RegisterViewModel.Factory)
+            RegisterScreen(
+                viewModel = viewModel,
+                onNavigateToHome = {
+                    navController.navigate("MAIN_TABS") {
+                        popUpTo("MAIN_TABS") { inclusive = true }
                     }
                 }
             )

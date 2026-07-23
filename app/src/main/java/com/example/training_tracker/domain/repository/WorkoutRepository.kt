@@ -9,9 +9,11 @@ interface WorkoutRepository{
     val workouts : Flow<List<Workout>>
     suspend fun addWorkout(workout: Workout, userId : UUID? = null)
     suspend fun updateWorkout(workout: Workout)
+    suspend fun updateWorkoutsWithCount(workouts: List<Workout>): Int
     suspend fun deleteWorkout(workout: Workout)
     suspend fun deleteAllWorkouts()
     fun getWorkoutById(id: String) : Flow<Workout?>
     fun getWorkoutsByDay(day: DayOfWeek, userId: UUID?): Flow<List<Workout>>
     fun getTodayWorkout(day: DayOfWeek): Flow<Workout?>
+    suspend fun getAllNotSyncedWorkouts(): List<Workout>
 }

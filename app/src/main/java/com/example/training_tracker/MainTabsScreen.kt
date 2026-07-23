@@ -32,6 +32,8 @@ import com.example.training_tracker.ui.screens.exercise_data.ExerciseDataViewMod
 import com.example.training_tracker.ui.screens.exercise_data.EXERCISE_NAME_ARG
 import com.example.training_tracker.ui.screens.records.RecordsScreen
 import com.example.training_tracker.ui.screens.records.RecordsViewModel
+import com.example.training_tracker.ui.screens.register_screen.RegisterScreen
+import com.example.training_tracker.ui.screens.register_screen.RegisterViewModel
 import com.example.training_tracker.ui.screens.registered_workouts.RegisteredWorkoutsScreen
 import com.example.training_tracker.ui.screens.user_profile.UserProfileScreen
 import com.example.training_tracker.ui.screens.workout_history.WorkoutHistoryScreen
@@ -122,6 +124,9 @@ fun MainTabsScreen(
                         coroutineScope.launch {
                             mainViewModel.logout()
                         }
+                    },
+                    onRegisterClick = {
+                        rootNavController.navigate(Routes.Register.name)
                     }
                 )
             }

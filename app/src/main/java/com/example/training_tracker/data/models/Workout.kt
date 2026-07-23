@@ -26,4 +26,5 @@ data class Workout(
     @ColumnInfo(name = "progress") val progress: Float = 0f,
     @ColumnInfo(name = "rescheduledToDayOfWeek") val rescheduledToDayOfWeek: DayOfWeek? = null,
     @ColumnInfo(name = "rescheduledWeekStart") val rescheduledWeekStart: LocalDate? = null,
+    @ColumnInfo(name = "isSynced") val isSynced: Boolean = false
 )

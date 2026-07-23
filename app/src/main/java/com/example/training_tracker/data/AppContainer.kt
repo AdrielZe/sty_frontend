@@ -7,7 +7,7 @@ import com.example.training_tracker.data.models.Exercise
 import com.example.training_tracker.data.models.ExerciseType
 import com.example.training_tracker.data.models.MuscleGroups
 import com.example.training_tracker.data.remote.RetrofitClient
-import com.example.training_tracker.data.remote.SyncConfiguration
+import com.example.training_tracker.data.remote.sync.SyncConfiguration
 import com.example.training_tracker.data.remote.auth.AuthApi
 import com.example.training_tracker.data.remote.user.UserApi
 import com.example.training_tracker.data.remote.workout.WorkoutApi
@@ -69,7 +69,9 @@ class DefaultAppContainer(
         SyncConfiguration(
             userRepository = userRepository,
             authApi = authApi,
-            userApi = userApi
+            userApi = userApi,
+            workoutRepository = workoutRepository,
+            workoutApi = workoutApi
         )
     }
 
@@ -82,7 +84,7 @@ class DefaultAppContainer(
     }
 
     override val workoutRepository: WorkoutRepository by lazy {
-        WorkoutRepositoryImpl(database.workoutDao(), workoutApi)
+        WorkoutRepositoryImpl(database.workoutDao(), workoutApi, context)
     }
 
     override val recordsRepository: RecordsRepository by lazy {

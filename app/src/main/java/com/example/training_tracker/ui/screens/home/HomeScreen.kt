@@ -153,6 +153,7 @@ fun HomeScreen(
     onClickBrowseWorkouts: () -> Unit,
     onClickGoToLogin: () -> Unit,
     onLogoutClick: () -> Unit,
+    onRegisterClick: () -> Unit,
     onNavigateToFreestyleWorkout: () -> Unit = {},
     homeUiState: HomeUiState,
     homeViewModel: HomeViewModel = viewModel(factory = HomeViewModel.Factory)
@@ -170,7 +171,8 @@ fun HomeScreen(
             homeUiState = homeUiState,
             homeViewModel = homeViewModel,
             mainViewModel = mainViewModel,
-            onLogoutClick = onLogoutClick
+            onLogoutClick = onLogoutClick,
+            onClickGoToRegister = onRegisterClick
         )
     }
 }
@@ -218,6 +220,7 @@ fun HomeContent(
     homeUiState: HomeUiState.Success,
     homeViewModel: HomeViewModel,
     onClickGoToLogin: () -> Unit,
+    onClickGoToRegister: () -> Unit,
     onLogoutClick: () -> Unit,
     mainViewModel: MainViewModel
 ) {
@@ -273,7 +276,8 @@ fun HomeContent(
                 name = homeUiState.user?.name ?: stringResource(R.string.home_default_user_name),
                 dateLine = homeUiState.currentDate,
                 onLoginClick = onClickGoToLogin,
-                isUserLoggedIn = isUserLoggedIn
+                isUserLoggedIn = isUserLoggedIn,
+                onRegisterClick = onClickGoToRegister
             )
 
             // === Week strip ==========================================================
@@ -488,7 +492,13 @@ fun CustomTopBar(
 // === Greeting                                                              ===
 // =============================================================================
 @Composable
-private fun GreetingBlock(name: String, dateLine: String?, onLoginClick: () -> Unit, isUserLoggedIn: Boolean) {
+private fun GreetingBlock(
+    name: String,
+    dateLine: String?,
+    onLoginClick: () -> Unit,
+    onRegisterClick: () -> Unit,
+    isUserLoggedIn: Boolean
+) {
     Column(modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp)) {
         if (!dateLine.isNullOrBlank()) {
             Text(
@@ -528,6 +538,25 @@ private fun GreetingBlock(name: String, dateLine: String?, onLoginClick: () -> U
                     .padding(top = 4.dp)
                     .clickable { onLoginClick() },
                 color = Sty.TextMain,
+                fontFamily = com.example.training_tracker.ui.theme.Montserrat,
+                fontWeight = FontWeight.Black,
+                fontSize = 30.sp,
+                letterSpacing = (-0.5).sp,
+                lineHeight = 33.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+
+            Text(
+                text = buildAnnotatedString {
+                    append("Não tem conta? ")
+                    withStyle(SpanStyle(color = AppTheme.accent.light)) { append("Registre-se") }
+                    append(".")
+                },
+                modifier = Modifier
+                    .padding(top = 4.dp)
+                    .clickable { onRegisterClick() },
+                color = Sty.OnAccent,
                 fontFamily = com.example.training_tracker.ui.theme.Montserrat,
                 fontWeight = FontWeight.Black,
                 fontSize = 30.sp,

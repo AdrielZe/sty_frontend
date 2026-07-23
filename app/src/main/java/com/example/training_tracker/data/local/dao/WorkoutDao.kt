@@ -24,6 +24,9 @@ interface WorkoutDao{
     @Update
     suspend fun update(workout: Workout)
 
+    @Update
+    suspend fun updateWorkoutsWithCount(workouts: List<Workout>) : Int
+
     @Delete
     suspend fun delete(workout: Workout)
 
@@ -35,5 +38,8 @@ interface WorkoutDao{
 
     @Query("DELETE FROM workouts")
     suspend fun deleteAll()
+
+    @Query("SELECT * FROM workouts WHERE isSynced = 0")
+    suspend fun getAllNotSyncedWorkouts(): List<Workout>
 
 }
