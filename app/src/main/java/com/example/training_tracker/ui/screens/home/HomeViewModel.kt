@@ -156,6 +156,7 @@ class HomeViewModel(
                     Workout(
                         id = FREESTYLE_WORKOUT_ID,
                         name = name,
+                        userId = sessionManager.userIdFlow.first().toString(),
                         isOnGoing = true,
                         startTime = System.currentTimeMillis()
                     )

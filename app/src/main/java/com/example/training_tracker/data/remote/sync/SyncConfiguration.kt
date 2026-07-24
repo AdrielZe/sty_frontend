@@ -22,10 +22,8 @@ data class SyncConfiguration(
     private val authApi: AuthApi,
     private val userApi: UserApi,
 ) {
-    suspend operator fun invoke(oldId: String, newId: String) {
-      //  val user = userRepository.getUser().first()
-        userRepository.updateUserId(oldId, newId)
-        userRepository.fetchUserProfileFromRemote(UUID.fromString(newId))
+    suspend operator fun invoke(userId: String) {
+        userRepository.fetchUserProfileFromRemote(UUID.fromString(userId))
     }
 
     suspend fun syncPendingWorkouts() {
@@ -33,6 +31,8 @@ data class SyncConfiguration(
 
         if (workoutsToSync.isNotEmpty()) {
             val workoutsRequest = workoutsToSync.map { workout ->
+                println("user id workout is: ${workout.userId}")
+
                 WorkoutRequest(
                     workoutId = UUID.fromString(workout.id),
                     userId = UUID.fromString(workout.userId),

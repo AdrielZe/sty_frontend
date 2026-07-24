@@ -34,6 +34,13 @@ class SessionManager(private val context: Context) {
         }
     }
 
+    suspend fun saveUnloggedSession(userId: UUID) {
+        context.dataStore.edit { preferences ->
+            preferences[IS_LOGGED_IN] = false
+            preferences[USER_ID] = userId.toString()
+        }
+    }
+
     val userIdFlow: Flow<UUID?> = context.dataStore.data.map { preferences ->
         val idString = preferences[USER_ID]
         if (idString != null) {

@@ -23,6 +23,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -279,15 +280,17 @@ class CreateWorkoutViewModel(
 
     fun saveWorkout() {
         if (_draftState.value.canSave) {
-            val currentState = _draftState.value
-            val newWorkout = Workout(
-                name = currentState.workoutName,
-                exercises = currentState.exercises,
-                dayOfWeek = currentState.selectedDay
-            )
             viewModelScope.launch {
+                val currentState = _draftState.value
+                val newWorkout = Workout(
+                    name = currentState.workoutName,
+                    userId = sessionManager.userIdFlow.first().toString(),
+                    exercises = currentState.exercises,
+                    dayOfWeek = currentState.selectedDay
+                )
+
                 try {
-                    workoutRepository.addWorkout(workout = newWorkout, userId = sessionManager.getUserId() ?: throw IllegalStateException("Usuário não está logado."))
+                    workoutRepository.addWorkout(workout = newWorkout)
                 } catch (e: Exception) {
                     e.printStackTrace()
                     android.util.Log.e("TREINO", "ERRO O TREINO: ", e)

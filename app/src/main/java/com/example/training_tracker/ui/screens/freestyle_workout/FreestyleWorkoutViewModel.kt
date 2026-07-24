@@ -119,8 +119,8 @@ class FreestyleWorkoutViewModel(
                         id = FREESTYLE_WORKOUT_ID,
                         name = "Freestyle Workout",
                         isOnGoing = false,
-                        startTime = System.currentTimeMillis()
-                    )
+                        startTime = System.currentTimeMillis(),
+                        )
                 )
             }
         }
@@ -344,9 +344,10 @@ class FreestyleWorkoutViewModel(
                 Workout(
                     name = name,
                     exercises = cleanExercises,
+                    userId = sessionManager.userIdFlow.first().toString(),
                     dayOfWeek = dayOfWeek,
                     isOnGoing = false
-                )
+                ),
             )
             dismissSaveRoutineDialog()
         }

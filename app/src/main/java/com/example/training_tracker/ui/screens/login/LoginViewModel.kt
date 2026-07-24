@@ -43,22 +43,18 @@ class LoginViewModel(
 
     fun onLoginClick() {
         val currentState = _uiState.value
-
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
 
             try {
-                val user = userRepository.getUser().first()!!;
                 val response = authApi.login(LoginRequest(currentState.user, currentState.password))
 
-                val returnedUuid = response.id
 
-                sessionManager.saveSession(userId = returnedUuid)
-                syncConfiguration(oldId = user.id, newId = returnedUuid.toString())
+                sessionManager.saveSession(userId = response.id)
+                syncConfiguration(response.id.toString())
 
 
                 _uiState.update { it.copy(isLoading = false, isLoginSuccessful = true) }
-
             } catch (e: Exception) {
                 val resolvedErrorMessage = when (e) {
                     is HttpException -> {

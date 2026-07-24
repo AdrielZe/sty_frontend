@@ -84,7 +84,7 @@ class DefaultAppContainer(
     }
 
     override val workoutRepository: WorkoutRepository by lazy {
-        WorkoutRepositoryImpl(database.workoutDao(), workoutApi, context)
+        WorkoutRepositoryImpl(database.workoutDao(), workoutApi, context, sessionManager)
     }
 
     override val recordsRepository: RecordsRepository by lazy {

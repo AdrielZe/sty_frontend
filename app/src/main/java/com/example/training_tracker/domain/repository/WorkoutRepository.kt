@@ -7,7 +7,7 @@ import java.util.UUID
 
 interface WorkoutRepository{
     val workouts : Flow<List<Workout>>
-    suspend fun addWorkout(workout: Workout, userId : UUID? = null)
+    suspend fun addWorkout(workout: Workout)
     suspend fun updateWorkout(workout: Workout)
     suspend fun updateWorkoutsWithCount(workouts: List<Workout>): Int
     suspend fun deleteWorkout(workout: Workout)

@@ -102,9 +102,9 @@ fun GymTrackerNavHost(
             val viewModel: RegisterViewModel = viewModel(factory = RegisterViewModel.Factory)
             RegisterScreen(
                 viewModel = viewModel,
-                onNavigateToHome = {
-                    navController.navigate("MAIN_TABS") {
-                        popUpTo("MAIN_TABS") { inclusive = true }
+                onNavigateToLogin = {
+                    navController.navigate("LOGIN") {
+                        popUpTo(Routes.Register.name) { inclusive = true }
                     }
                 }
             )

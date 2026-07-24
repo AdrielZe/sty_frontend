@@ -13,11 +13,13 @@ import com.example.training_tracker.data.models.Workout
 import com.example.training_tracker.data.models.WorkoutHistory
 import com.example.training_tracker.domain.repository.WorkoutHistoryRepository
 import com.example.training_tracker.domain.repository.WorkoutRepository
+import com.example.training_tracker.session_manager.SessionManager
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -28,6 +30,7 @@ import java.time.LocalDate
 class WorkoutHistoryViewModel(
     private val workoutHistoryRepository: WorkoutHistoryRepository,
     private val workoutRepository: WorkoutRepository,
+    private val sessionManager: SessionManager,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -124,14 +127,17 @@ class WorkoutHistoryViewModel(
         _currentPage.value = page
     }
 
-    fun duplicateFromHistory(history: WorkoutHistory, targetDay: DayOfWeek) {
-        val newWorkout = Workout(
-            id = java.util.UUID.randomUUID().toString(),
-            name = history.name,
-            exercises = history.exercises,
-            dayOfWeek = targetDay
-        )
-        viewModelScope.launch {
+  fun duplicateFromHistory(history: WorkoutHistory, targetDay: DayOfWeek) {
+
+      viewModelScope.launch {
+          val newWorkout = Workout(
+                id = java.util.UUID.randomUUID().toString(),
+                userId = sessionManager.userIdFlow.first().toString(),
+                name = history.name,
+                exercises = history.exercises,
+                dayOfWeek = targetDay
+            )
+
             try {
                 workoutRepository.addWorkout(newWorkout)
             } catch (e: Exception) {
@@ -148,10 +154,12 @@ class WorkoutHistoryViewModel(
                 val application = (this[APPLICATION_KEY] as GymTrackerApplication)
                 val workoutHistoryRepository = application.container.workoutHistoryRepository
                 val workoutRepository = application.container.workoutRepository
+                val sessionManager = application.container.sessionManager
                 WorkoutHistoryViewModel(
                     workoutHistoryRepository = workoutHistoryRepository,
                     workoutRepository = workoutRepository,
-                    savedStateHandle = createSavedStateHandle()
+                    savedStateHandle = createSavedStateHandle(),
+                    sessionManager = sessionManager
                 )
             }
         }

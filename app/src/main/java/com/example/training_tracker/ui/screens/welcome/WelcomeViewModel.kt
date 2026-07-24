@@ -9,9 +9,14 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
 import com.example.training_tracker.GymTrackerApplication
+import com.example.training_tracker.session_manager.SessionManager
+import kotlinx.coroutines.flow.first
 import java.util.UUID
 
-class WelcomeViewModel(private val userRepository: UserRepository) : ViewModel() {
+class WelcomeViewModel(
+    private val userRepository: UserRepository,
+    private val sessionManager: SessionManager
+) : ViewModel() {
     fun saveUser(name: String, onComplete: () -> Unit) {
         viewModelScope.launch {
             val user = User(
@@ -19,15 +24,17 @@ class WelcomeViewModel(private val userRepository: UserRepository) : ViewModel()
                 nameDisplay = name
             )
             userRepository.insertUser(user)
+            sessionManager.saveUnloggedSession(UUID.fromString(userRepository.getUser().first()?.id))
             onComplete()
         }
+
     }
 
     companion object {
         val Factory = viewModelFactory {
             initializer {
                 val application = (this[APPLICATION_KEY] as GymTrackerApplication)
-                WelcomeViewModel(application.container.userRepository)
+                WelcomeViewModel(application.container.userRepository, application.container.sessionManager)
             }
         }
     }

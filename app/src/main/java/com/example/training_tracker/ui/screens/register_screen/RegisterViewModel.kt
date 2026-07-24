@@ -8,9 +8,10 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import retrofit2.HttpException
 import com.example.training_tracker.GymTrackerApplication
 import com.example.training_tracker.data.remote.auth.AuthApi
-import com.example.training_tracker.data.remote.auth.RegisterRequest // Assumindo que você crie esse modelo
+import com.example.training_tracker.data.remote.auth.RegisterRequest
+import com.example.training_tracker.data.remote.sync.SyncConfiguration
 import com.example.training_tracker.domain.repository.UserRepository
-import com.example.training_tracker.session_manager.SessionManager
+import com.example.training_tracker.domain.repository.WorkoutRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -21,9 +22,10 @@ import java.io.IOException
 import java.util.UUID
 
 class RegisterViewModel(
-    private val sessionManager: SessionManager,
     private val authApi: AuthApi,
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val workoutRepository: WorkoutRepository,
+    private val syncConfiguration: SyncConfiguration
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(RegisterUiState())
@@ -51,8 +53,7 @@ class RegisterViewModel(
             try {
                 val localUser = userRepository.getUser().first()!!
 
-                println("DEBUG EMAIL AND PASSWORD: ${currentState.email}, ${currentState.password}")
-                val response = authApi.register(
+                authApi.register(
                     RegisterRequest(
                         id = UUID.fromString(localUser.id),
                         name = localUser.name,
@@ -61,13 +62,11 @@ class RegisterViewModel(
                     )
                 )
 
-                val returnedUuid = response.userId
-
-                sessionManager.saveSession(userId = UUID.fromString(returnedUuid))
+                syncConfiguration.syncPendingWorkouts()
 
                 _uiState.update { it.copy(isLoading = false, isRegisterSuccessful = true) }
 
-            }catch (e: Exception) {
+            } catch (e: Exception) {
                 val resolvedErrorMessage = when (e) {
                     is HttpException -> {
                         val errorBody = e.response()?.errorBody()?.string()
@@ -102,7 +101,6 @@ class RegisterViewModel(
         }
     }
 
-    // chamado após a navegação para resetar o evento de sucesso
     fun onRegisterHandled() {
         _uiState.update { it.copy(isRegisterSuccessful = false) }
     }
@@ -112,9 +110,10 @@ class RegisterViewModel(
             initializer {
                 val application = (this[APPLICATION_KEY] as GymTrackerApplication)
                 RegisterViewModel(
-                    sessionManager = application.container.sessionManager,
                     authApi = application.container.authApi,
-                    userRepository = application.container.userRepository
+                    userRepository = application.container.userRepository,
+                    workoutRepository = application.container.workoutRepository,
+                    syncConfiguration = application.container.syncConfiguration
                 )
             }
         }

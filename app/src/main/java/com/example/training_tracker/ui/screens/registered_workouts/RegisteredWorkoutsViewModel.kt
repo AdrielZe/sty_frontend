@@ -8,9 +8,11 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.training_tracker.GymTrackerApplication
 import com.example.training_tracker.data.models.Workout
 import com.example.training_tracker.domain.repository.WorkoutRepository
+import com.example.training_tracker.session_manager.SessionManager
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
@@ -18,7 +20,8 @@ import kotlinx.coroutines.launch
 import java.time.DayOfWeek
 
 class RegisteredWorkoutsViewModel(
-    private val workoutRepository: WorkoutRepository
+    private val workoutRepository: WorkoutRepository,
+    private val sessionManager: SessionManager
 ) : ViewModel() {
 
     val uiState: StateFlow<RegisteredWorkoutsUiState> = workoutRepository.workouts
@@ -33,7 +36,6 @@ class RegisteredWorkoutsViewModel(
         )
 
     private val _uiEvent = Channel<String>()
-    val uiEvent = _uiEvent.receiveAsFlow()
 
     fun moveWorkout(workout: Workout, newDay: DayOfWeek) {
         val updatedWorkout = workout.copy(dayOfWeek = newDay)
@@ -47,20 +49,22 @@ class RegisteredWorkoutsViewModel(
     }
 
     fun duplicateWorkout(workout: Workout, targetDay: DayOfWeek) {
-        val copy = workout.copy(
-            id = java.util.UUID.randomUUID().toString(),
-            dayOfWeek = targetDay,
-            isCompleted = false,
-            isOnGoing = false,
-            isPaused = false,
-            completionDate = null,
-            completionTime = null,
-            startTime = null,
-            accumulatedTime = 0L,
-            historyId = null,
-            progress = 0f
-        )
         viewModelScope.launch {
+            val copy = workout.copy(
+                id = java.util.UUID.randomUUID().toString(),
+                userId = sessionManager.userIdFlow.first().toString(),
+                dayOfWeek = targetDay,
+                isCompleted = false,
+                isOnGoing = false,
+                isPaused = false,
+                completionDate = null,
+                completionTime = null,
+                startTime = null,
+                accumulatedTime = 0L,
+                historyId = null,
+                progress = 0f
+            )
+
             try {
                 workoutRepository.addWorkout(copy)
             } catch (e: Exception) {
@@ -85,7 +89,8 @@ class RegisteredWorkoutsViewModel(
                 val application =
                     (this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as GymTrackerApplication)
                 val workoutRepository = application.container.workoutRepository
-                RegisteredWorkoutsViewModel(workoutRepository = workoutRepository)
+                val sessionManager = application.container.sessionManager
+                RegisteredWorkoutsViewModel(workoutRepository = workoutRepository, sessionManager = sessionManager)
             }
         }
     }
