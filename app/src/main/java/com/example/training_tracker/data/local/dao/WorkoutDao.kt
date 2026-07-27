@@ -9,6 +9,7 @@ import androidx.room.Update
 import androidx.room.Upsert
 import com.example.training_tracker.data.models.Workout
 import kotlinx.coroutines.flow.Flow
+import java.util.UUID
 
 @Dao
 interface WorkoutDao{
@@ -27,8 +28,8 @@ interface WorkoutDao{
     @Update
     suspend fun updateWorkoutsWithCount(workouts: List<Workout>) : Int
 
-    @Delete
-    suspend fun delete(workout: Workout)
+    @Query("DELETE FROM workouts WHERE id = :id")
+    suspend fun deleteById(id: String)
 
     @Query("DELETE FROM workouts")
     suspend fun deleteAllWorkouts()

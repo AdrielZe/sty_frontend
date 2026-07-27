@@ -7,18 +7,22 @@ import androidx.work.ExistingWorkPolicy
 import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
+import com.example.training_tracker.data.local.dao.WorkoutDao
+import com.example.training_tracker.data.local.dao.WorkoutToDeleteDao
 import com.example.training_tracker.data.remote.auth.AuthApi
 import com.example.training_tracker.data.remote.user.UserApi
 import com.example.training_tracker.data.remote.workout.WorkoutApi
 import com.example.training_tracker.data.remote.workout.WorkoutRequest
 import com.example.training_tracker.domain.repository.UserRepository
 import com.example.training_tracker.domain.repository.WorkoutRepository
+import okhttp3.internal.notify
 import java.util.UUID
 
 data class SyncConfiguration(
     private val userRepository: UserRepository,
     private val workoutRepository: WorkoutRepository,
     private val workoutApi: WorkoutApi,
+    private val workoutToDeleteDao: WorkoutToDeleteDao,
     private val authApi: AuthApi,
     private val userApi: UserApi,
 ) {
@@ -31,8 +35,6 @@ data class SyncConfiguration(
 
         if (workoutsToSync.isNotEmpty()) {
             val workoutsRequest = workoutsToSync.map { workout ->
-                println("user id workout is: ${workout.userId}")
-
                 WorkoutRequest(
                     workoutId = UUID.fromString(workout.id),
                     userId = UUID.fromString(workout.userId),
@@ -51,6 +53,19 @@ data class SyncConfiguration(
                 Log.e("Workout Sync:", "Failed to sync workouts:", e)
             }
         }
+    }
 
+    suspend fun syncDeletedWorkouts() {
+        val workoutsToDelete = workoutRepository.getPendingWorkoutsToDelete();
+
+        workoutsToDelete.forEach { workout ->
+            try {
+                workoutApi.deleteWorkout(UUID.fromString(workout.workoutId))
+                workoutToDeleteDao.delete(workout.workoutId)
+                Log.d("Sync Deleted workouts:", "Successfully synced and deleted workout ${workout.workoutId}")
+            } catch (e: Exception) {
+                Log.e("Sync Deleted workouts:", "Error syncing", e)
+            }
+        }
     }
 }

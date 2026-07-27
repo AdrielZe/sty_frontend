@@ -1,7 +1,9 @@
 package com.example.training_tracker.data.remote.workout;
 
 
+import androidx.room.Delete
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.POST;
 import retrofit2.http.Path
@@ -21,4 +23,6 @@ interface WorkoutApi {
         @Path("dayOfWeek") dayOfWeek: DayOfWeek
     ) : List<WorkoutResponse>
 
+    @DELETE("/workout/{id}")
+    suspend fun deleteWorkout(@Path("id") id: UUID)
 }

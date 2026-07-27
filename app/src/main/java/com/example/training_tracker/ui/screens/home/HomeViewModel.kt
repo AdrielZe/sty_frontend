@@ -47,7 +47,7 @@ class HomeViewModel(
             flowOf(null)
         }
     }
-    private val FREESTYLE_WORKOUT_ID = "freestyle_workout_id"
+    private val FREESTYLE_WORKOUT_ID = "7ef1b4cc-38b1-465a-88b6-b67ac7c1d42e"
 
     private val baseState = combine(
         userRepository.getUser(),
@@ -149,16 +149,21 @@ class HomeViewModel(
     fun startFreestyleWorkout(name: String, onConfirm: () -> Unit) {
         viewModelScope.launch {
             val existing = workoutRepository.getWorkoutById(FREESTYLE_WORKOUT_ID).first()
+
             if (existing != null) {
                 workoutRepository.updateWorkout(existing.copy(name = name, isOnGoing = true, startTime = System.currentTimeMillis()))
             } else {
+                println("DEBUG FREESTYLE WORKOUT: $existing")
+
                 workoutRepository.addWorkout(
                     Workout(
                         id = FREESTYLE_WORKOUT_ID,
                         name = name,
+                        dayOfWeek = LocalDate.now().dayOfWeek,
                         userId = sessionManager.userIdFlow.first().toString(),
                         isOnGoing = true,
-                        startTime = System.currentTimeMillis()
+                        startTime = System.currentTimeMillis(),
+                        exercises = emptyList()
                     )
                 )
             }
@@ -171,7 +176,7 @@ class HomeViewModel(
             try {
                 val existing = workoutRepository.getWorkoutById(FREESTYLE_WORKOUT_ID).first()
                 existing?.let {
-                    workoutRepository.deleteWorkout(existing)
+                    workoutRepository.deleteWorkoutById(existing.id)
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "Erro ao remover treino", e)

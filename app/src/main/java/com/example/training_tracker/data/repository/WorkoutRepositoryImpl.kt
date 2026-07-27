@@ -9,7 +9,9 @@ import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import com.example.training_tracker.data.local.dao.WorkoutDao
+import com.example.training_tracker.data.local.dao.WorkoutToDeleteDao
 import com.example.training_tracker.data.models.Workout
+import com.example.training_tracker.data.models.WorkoutToDelete
 import com.example.training_tracker.data.remote.sync.SyncDataWorker
 import com.example.training_tracker.data.remote.workout.WorkoutApi
 import com.example.training_tracker.data.remote.workout.WorkoutRequest
@@ -27,6 +29,7 @@ class WorkoutRepositoryImpl(
     private val workoutDao: WorkoutDao,
     private val workoutApi: WorkoutApi,
     private val context: Context,
+    private val workoutToDeleteDao: WorkoutToDeleteDao,
     private val sessionManager: SessionManager
 ): WorkoutRepository {
     override val workouts = workoutDao.getAllWorkouts()
@@ -36,7 +39,6 @@ class WorkoutRepositoryImpl(
         workoutDao.insert(workout)
 
         if (isLoggedIn) {
-            scheduleSync(context)
             try {
                 val request = WorkoutRequest(
                     workoutId = UUID.fromString(workout.id),
@@ -63,11 +65,39 @@ class WorkoutRepositoryImpl(
     }
 
     override suspend fun updateWorkout(workout: Workout) {
-        workoutDao.update(workout)
+        val isLoggedIn = sessionManager.isLoggedIn.first()
+        workoutDao.update(workout.copy(isSynced = false))
+
+        if (isLoggedIn) {
+            try {
+                workoutApi.createWorkout(WorkoutRequest(
+                    workoutId = UUID.fromString(workout.id),
+                    userId = UUID.fromString(workout.userId),
+                    workoutName = workout.name,
+                    dayOfWeek = workout.dayOfWeek!!,
+                    exercises = workout.exercises
+                ))
+                workoutDao.update(workout.copy(isSynced = true))
+            } catch (e: Exception) {
+                Log.e("Update workout:", "Error updating workout: ", e)
+                scheduleSync(context)
+            }
+        }
     }
 
-    override suspend fun deleteWorkout(workout: Workout) {
-        workoutDao.delete(workout)
+    override suspend fun deleteWorkoutById(workoutId: String) {
+        workoutToDeleteDao.insert(WorkoutToDelete(workoutId))
+        workoutDao.deleteById(workoutId)
+
+        if (sessionManager.isLoggedIn.first()) {
+            try {
+                workoutApi.deleteWorkout(UUID.fromString(workoutId))
+                workoutToDeleteDao.delete(workoutId)
+            } catch (e: Exception) {
+                Log.e("Delete workouts", "Error deleting workouts in remote DB", e)
+                scheduleSync(context)
+            }
+        }
     }
 
     override fun getWorkoutById(id: String) : Flow<Workout?> {
@@ -118,6 +148,10 @@ class WorkoutRepositoryImpl(
         return workoutDao.updateWorkoutsWithCount(workouts)
     }
 
+    override suspend fun getPendingWorkoutsToDelete(): List<WorkoutToDelete> {
+        return workoutToDeleteDao.getAllPendingDeletes();
+    }
+
     private fun scheduleSync(context: Context) {
         val constraints = Constraints.Builder()
             .setRequiredNetworkType(NetworkType.CONNECTED)
@@ -128,8 +162,8 @@ class WorkoutRepositoryImpl(
             .build()
 
         WorkManager.getInstance(context).enqueueUniqueWork(
-            "SyncPendingWorkouts", // Um nome único para essa tarefa
-            ExistingWorkPolicy.REPLACE, // Se já tiver um sync na fila esperando internet, substitui por esse novo
+            "SyncPendingWorkouts",
+            ExistingWorkPolicy.REPLACE, // se já tiver um sync na fila esperando, substitui por esse novo
             syncWorkRequest
         )
     }

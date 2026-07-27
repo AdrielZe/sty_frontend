@@ -76,7 +76,7 @@ class RegisteredWorkoutsViewModel(
     fun deleteWorkout(workout: Workout) {
         viewModelScope.launch {
             try {
-                workoutRepository.deleteWorkout(workout)
+                workoutRepository.deleteWorkoutById(workout.id)
             } catch(e: Exception){
                 _uiEvent.send("Erro ao deletar: ${e.message}")
             }

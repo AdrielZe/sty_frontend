@@ -3,6 +3,7 @@ package com.example.training_tracker.data
 import android.app.Application
 import android.content.Context
 import com.example.training_tracker.data.local.AppDatabase
+import com.example.training_tracker.data.local.dao.WorkoutToDeleteDao
 import com.example.training_tracker.data.models.Exercise
 import com.example.training_tracker.data.models.ExerciseType
 import com.example.training_tracker.data.models.MuscleGroups
@@ -39,6 +40,7 @@ interface AppContainer {
     val userApi: UserApi
     val authApi: AuthApi
     val workoutApi: WorkoutApi
+    val workoutToDeleteDao: WorkoutToDeleteDao
     val syncConfiguration: SyncConfiguration
 }
 
@@ -59,10 +61,12 @@ class DefaultAppContainer(
 
     override val workoutApi = RetrofitClient.workoutApi
 
-    // O 'by lazy' garante que o UserRepository só será instanciado
-    // na primeira vez que for chamado, e depois a mesma instância será reutilizada.
     override val userRepository: UserRepository by lazy {
         UserRepositoryImpl(database.userDao(), userApi)
+    }
+
+    override val workoutToDeleteDao: WorkoutToDeleteDao by lazy {
+        database.workoutToDeleteDao()
     }
 
     override val syncConfiguration: SyncConfiguration by lazy {
@@ -71,7 +75,8 @@ class DefaultAppContainer(
             authApi = authApi,
             userApi = userApi,
             workoutRepository = workoutRepository,
-            workoutApi = workoutApi
+            workoutApi = workoutApi,
+            workoutToDeleteDao = workoutToDeleteDao
         )
     }
 
@@ -84,7 +89,7 @@ class DefaultAppContainer(
     }
 
     override val workoutRepository: WorkoutRepository by lazy {
-        WorkoutRepositoryImpl(database.workoutDao(), workoutApi, context, sessionManager)
+        WorkoutRepositoryImpl(database.workoutDao(), workoutApi, context, workoutToDeleteDao, sessionManager)
     }
 
     override val recordsRepository: RecordsRepository by lazy {

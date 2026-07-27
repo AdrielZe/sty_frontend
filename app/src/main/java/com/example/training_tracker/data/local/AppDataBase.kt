@@ -13,18 +13,20 @@ import com.example.training_tracker.data.local.dao.RecordsDao
 import com.example.training_tracker.data.local.dao.UserDao
 import com.example.training_tracker.data.local.dao.WorkoutDao
 import com.example.training_tracker.data.local.dao.WorkoutHistoryDao
+import com.example.training_tracker.data.local.dao.WorkoutToDeleteDao
 import com.example.training_tracker.data.models.Exercise
 import com.example.training_tracker.data.models.Records
 import com.example.training_tracker.data.models.User
 import com.example.training_tracker.data.models.Workout
 import com.example.training_tracker.data.models.WorkoutHistory
+import com.example.training_tracker.data.models.WorkoutToDelete
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 @Database(
-    entities = [Workout::class, Exercise::class, WorkoutHistory::class, Records::class, User::class],
-    version = 40,
+    entities = [Workout::class, Exercise::class, WorkoutHistory::class, Records::class, User::class, WorkoutToDelete::class],
+    version = 41,
 )
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
@@ -33,6 +35,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun workoutHistoryDao(): WorkoutHistoryDao
     abstract fun recordsDao() : RecordsDao
     abstract fun userDao(): UserDao
+    abstract fun workoutToDeleteDao(): WorkoutToDeleteDao
 
     companion object {
         @Volatile
@@ -98,6 +101,12 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        private val MIGRATION_40_41 = object : Migration(40, 41) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("CREATE TABLE IF NOT EXISTS `workouts_to_delete` (`workoutId` TEXT NOT NULL, PRIMARY KEY(`workoutId`))")
+            }
+        }
+
         fun getDatabase(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -105,7 +114,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "app_database"
                 )
-                    .addMigrations(MIGRATION_32_33, MIGRATION_33_34, MIGRATION_34_35, MIGRATION_35_36, MIGRATION_36_37, MIGRATION_37_38, MIGRATION_38_39, MIGRATION_39_40)
+                    .addMigrations(MIGRATION_32_33, MIGRATION_33_34, MIGRATION_34_35, MIGRATION_35_36, MIGRATION_36_37, MIGRATION_37_38, MIGRATION_38_39, MIGRATION_39_40, MIGRATION_40_41)
                     .build()
                 INSTANCE = instance
                 instance

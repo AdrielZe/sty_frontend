@@ -21,6 +21,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import java.time.LocalDate
 
 class WorkoutViewModel(
     savedStateHandle: SavedStateHandle,
@@ -45,10 +46,24 @@ class WorkoutViewModel(
         _finishedWorkoutSession
     ) { dbWorkout, histories, finishedWorkout ->
         if (finishedWorkout != null) {
-            WorkoutUiState(workout = finishedWorkout)
-        } else if (dbWorkout != null) {
-            val enrichedWorkout = enrichWorkoutWithHistory(dbWorkout, histories)
-            WorkoutUiState(workout = enrichedWorkout)
+            return@combine WorkoutUiState(workout = finishedWorkout)
+        }
+
+        if (dbWorkout != null) {
+            val today = LocalDate.now()
+
+            val hasCompletedToday = histories.any { history ->
+                history.workoutId == dbWorkout.id && history.completionDate == today
+            }
+
+            if (hasCompletedToday) {
+                val todayHistory = histories.first { it.completionDate == today }
+                return@combine WorkoutUiState(workout = dbWorkout.copy(isCompleted = true))
+            }
+            // 2. Se não completou hoje, é uma NOVA SESSÃO!
+            val freshWorkoutForToday = enrichWorkoutWithHistory(dbWorkout, histories)
+
+            WorkoutUiState(workout = freshWorkoutForToday)
         } else {
             WorkoutUiState(workout = null)
         }
