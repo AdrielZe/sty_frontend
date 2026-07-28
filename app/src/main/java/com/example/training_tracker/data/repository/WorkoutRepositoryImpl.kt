@@ -103,25 +103,61 @@ class WorkoutRepositoryImpl(
     override fun getWorkoutById(id: String) : Flow<Workout?> {
         return workouts.map { list ->
             list.find { it.id == id }
+        }.onStart {
+            val existingLocal = workouts.map { list -> list.find { it.id == id } }.first()
+
+            // enquanto já existe uma sessão local em andamento (ex: freestyle workout com
+            // exercícios sendo adicionados nesse instante), o local é a fonte da verdade,
+            // buscar o remoto aqui sobrescreveria edições que ainda não foram sincronizadas.
+            if (existingLocal != null && existingLocal.isOnGoing) return@onStart
+
+            if (sessionManager.isLoggedIn.first()) {
+                try {
+                    val workoutResponse = workoutApi.getWorkoutById(UUID.fromString(id))
+
+                    val workout = Workout(
+                            id = workoutResponse.workoutId.toString(),
+                            name = workoutResponse.workoutName,
+                            exercises = workoutResponse.exercises,
+                            dayOfWeek = workoutResponse.dayOfWeek,
+                            userId = workoutResponse.userId.toString(),
+                            // O backend não guarda estado de sessão (isOnGoing/startTime); um
+                            // freestyle workout só existe no remoto enquanto está em andamento,
+                            // já que ao ser concluído os dados vão para o histórico.
+                            isOnGoing = id == workoutResponse.userId.toString()
+                    )
+
+                    println("WORKOUT LOADED $workout")
+
+                    workoutDao.insertOrUpdate(workout)
+                } catch (e: Exception) {
+                    Log.e("Get workout by id:", "Workout was not found", e)
+                }
+
+            }
         }
     }
 
-    override fun getWorkoutsByDay(day: DayOfWeek, userId: UUID?): Flow<List<Workout>> {
+    override fun getWorkoutsByDay(day: DayOfWeek, userId: UUID): Flow<List<Workout>> {
         return workouts.map { list ->
             list.filter { it.dayOfWeek == day }
         }.onStart {
-            if (userId != null) {
+            if (sessionManager.isLoggedIn.first()) {
                 try {
                     val workoutResponse = workoutApi.getWorkoutByDay(userId, day)
-                    val workouts = workoutResponse.map { response ->
-                        Workout(
-                            id = response.workoutId.toString(),
-                            userId = response.userId.toString(),
-                            name = response.workoutName,
-                            dayOfWeek = response.dayOfWeek,
-                            exercises = response.exercises
-                        )
-                    }
+                    val workouts = workoutResponse
+                        // O freestyle workout é sincronizado exclusivamente via getWorkoutById,
+                        // que reconstrói isOnGoing corretamente; não sobrescrever aqui.
+                        .filter { it.workoutId.toString() != it.userId.toString() }
+                        .map { response ->
+                            Workout(
+                                id = response.workoutId.toString(),
+                                userId = response.userId.toString(),
+                                name = response.workoutName,
+                                dayOfWeek = response.dayOfWeek,
+                                exercises = response.exercises
+                            )
+                        }
                     workoutDao.insertOrUpdateAll(workouts)
                 } catch (e: Exception) {
                     Log.e("Workout repo", "Unable to fetch workouts from API", e)

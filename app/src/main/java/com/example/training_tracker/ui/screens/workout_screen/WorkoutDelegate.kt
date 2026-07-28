@@ -21,31 +21,32 @@ import java.util.UUID
 
 interface WorkoutDelegate {
     fun calculateProgress(workout: Workout): Float
-    suspend fun togglePauseWorkout(workout: Workout)
-    suspend fun addNewSetLine(workout: Workout, exerciseId: String)
-    suspend fun removeSetLine(workout: Workout, exerciseId: String, setNumber: Int)
-    suspend fun completeSet(workout: Workout, exerciseId: String, setNumber: Int)
-    suspend fun updateExercise(
+
+    // 👇 Agora retornam Workout em vez de Unit (e tirei o suspend pois são síncronas)
+    fun togglePauseWorkout(workout: Workout): Workout
+    fun addNewSetLine(workout: Workout, exerciseId: String): Workout
+    fun removeSetLine(workout: Workout, exerciseId: String, setNumber: Int): Workout
+    fun completeSet(workout: Workout, exerciseId: String, setNumber: Int): Workout
+    fun updateExercise(
         workout: Workout,
         exerciseId: String,
         setNumber: Int,
         newReps: String? = null,
         newWeight: String? = null
-    )
-
-    suspend fun completeExercise(workout: Workout, exerciseId: String)
-    suspend fun reopenExercise(workout: Workout, exerciseId: String)
-    suspend fun updateExerciseRecords(workout: Workout): Pair<MutableMap<String, MutableList<Double>>, MutableMap<String, MutableList<Double>>>
-    suspend fun updateVolumeRecord(workout: Workout): MutableList<Double>?
-    suspend fun updateSetTechnique(
+    ): Workout
+    fun completeExercise(workout: Workout, exerciseId: String): Workout
+    fun reopenExercise(workout: Workout, exerciseId: String): Workout
+    fun updateSetTechnique(
         workout: Workout,
         exerciseId: String,
         setNumber: Int,
         technique: Technique
-    )
+    ): Workout
 
+    // Essas aqui continuam suspend porque lidam com o Records/History Repository
+    suspend fun updateExerciseRecords(workout: Workout): Pair<MutableMap<String, MutableList<Double>>, MutableMap<String, MutableList<Double>>>
+    suspend fun updateVolumeRecord(workout: Workout): MutableList<Double>?
     fun enrichWorkoutWithHistory(workout: Workout, histories: List<WorkoutHistory>): Workout
-
     suspend fun completeWorkout(
         workout: Workout,
         workoutHistoryRepository: WorkoutHistoryRepository,
@@ -68,9 +69,9 @@ class WorkoutDelegateImpl(
         return completedExercises.toFloat() / totalExercises
     }
 
-    override suspend fun togglePauseWorkout(workout: Workout) {
+    override fun togglePauseWorkout(workout: Workout): Workout {
         val now = System.currentTimeMillis()
-        val updatedWorkout = if (workout.isPaused) {
+        return if (workout.isPaused) {
             workout.copy(isPaused = false, startTime = now)
         } else {
             val elapsedSinceStart = if (workout.startTime != null) now - workout.startTime else 0L
@@ -80,35 +81,26 @@ class WorkoutDelegateImpl(
                 startTime = null
             )
         }
-        workoutRepository.updateWorkout(updatedWorkout)
     }
 
-    override suspend fun updateSetTechnique(
+    override fun updateSetTechnique(
         workout: Workout,
         exerciseId: String,
         setNumber: Int,
         technique: Technique
-    ) {
+    ): Workout {
         val updatedExercises = workout.exercises.map { exercise ->
             if (exercise.id == exerciseId) {
                 val updatedSets = exercise.exerciseSets.map { set ->
-                    if (set.set == setNumber) {
-                        set.copy(technique = technique)
-                    } else {
-                        set
-                    }
+                    if (set.set == setNumber) set.copy(technique = technique) else set
                 }
                 exercise.copy(exerciseSets = updatedSets)
-            } else {
-                exercise
-            }
+            } else exercise
         }
-
-        val updatedWorkout = workout.copy(exercises = updatedExercises)
-        workoutRepository.updateWorkout(updatedWorkout)
+        return workout.copy(exercises = updatedExercises)
     }
 
-    override suspend fun addNewSetLine(workout: Workout, exerciseId: String) {
+    override fun addNewSetLine(workout: Workout, exerciseId: String): Workout {
         val updatedExercises = workout.exercises.map { exercise ->
             if (exercise.id == exerciseId) {
                 val maxSetNumber = exercise.exerciseSets.maxOfOrNull { it.set } ?: 0
@@ -116,57 +108,39 @@ class WorkoutDelegateImpl(
             } else exercise
         }
         val updatedWorkout = workout.copy(exercises = updatedExercises)
-        workoutRepository.updateWorkout(
-            updatedWorkout.copy(
-                progress = calculateProgress(
-                    updatedWorkout
-                )
-            )
-        )
+        return updatedWorkout.copy(progress = calculateProgress(updatedWorkout))
     }
 
-    override suspend fun removeSetLine(workout: Workout, exerciseId: String, setNumber: Int) {
+    override fun removeSetLine(workout: Workout, exerciseId: String, setNumber: Int): Workout {
         val updatedExercises = workout.exercises.map { exercise ->
             if (exercise.id == exerciseId) {
                 exercise.copy(exerciseSets = exercise.exerciseSets.filter { it.set != setNumber })
             } else exercise
         }
         val updatedWorkout = workout.copy(exercises = updatedExercises)
-        workoutRepository.updateWorkout(
-            updatedWorkout.copy(
-                progress = calculateProgress(
-                    updatedWorkout
-                )
-            )
-        )
+        return updatedWorkout.copy(progress = calculateProgress(updatedWorkout))
     }
 
-    override suspend fun completeSet(workout: Workout, exerciseId: String, setNumber: Int) {
+    override fun completeSet(workout: Workout, exerciseId: String, setNumber: Int): Workout {
         val updatedExercises = workout.exercises.map { exercise ->
             if (exercise.id == exerciseId) {
                 val updatedSets = exercise.exerciseSets.map { set ->
-                    if (set.set == setNumber) set.copy(isCompleted = true) else set
+                    if (set.set == setNumber) set.copy(isCompleted = !set.isCompleted) else set // (Opcional: !set.isCompleted permite desmarcar)
                 }
                 exercise.copy(exerciseSets = updatedSets)
             } else exercise
         }
         val updatedWorkout = workout.copy(exercises = updatedExercises)
-        workoutRepository.updateWorkout(
-            updatedWorkout.copy(
-                progress = calculateProgress(
-                    updatedWorkout
-                )
-            )
-        )
+        return updatedWorkout.copy(progress = calculateProgress(updatedWorkout))
     }
 
-    override suspend fun updateExercise(
+    override fun updateExercise(
         workout: Workout,
         exerciseId: String,
         setNumber: Int,
         newReps: String?,
-        newWeight: String?,
-    ) {
+        newWeight: String?
+    ): Workout {
         val updatedExercises = workout.exercises.map { exercise ->
             if (exercise.id == exerciseId) {
                 val updatedSets = exercise.exerciseSets.map { set ->
@@ -181,10 +155,10 @@ class WorkoutDelegateImpl(
                 exercise.copy(exerciseSets = updatedSets)
             } else exercise
         }
-        workoutRepository.updateWorkout(workout.copy(exercises = updatedExercises))
+        return workout.copy(exercises = updatedExercises)
     }
 
-    override suspend fun completeExercise(workout: Workout, exerciseId: String) {
+    override fun completeExercise(workout: Workout, exerciseId: String): Workout {
         val updatedExercises = workout.exercises.map { exercise ->
             if (exercise.id == exerciseId) {
                 exercise.copy(
@@ -193,16 +167,10 @@ class WorkoutDelegateImpl(
             } else exercise
         }
         val updatedWorkout = workout.copy(exercises = updatedExercises)
-        workoutRepository.updateWorkout(
-            updatedWorkout.copy(
-                progress = calculateProgress(
-                    updatedWorkout
-                )
-            )
-        )
+        return updatedWorkout.copy(progress = calculateProgress(updatedWorkout))
     }
 
-    override suspend fun reopenExercise(workout: Workout, exerciseId: String) {
+    override fun reopenExercise(workout: Workout, exerciseId: String): Workout {
         val updatedExercises = workout.exercises.map { exercise ->
             if (exercise.id == exerciseId) {
                 exercise.copy(
@@ -211,13 +179,7 @@ class WorkoutDelegateImpl(
             } else exercise
         }
         val updatedWorkout = workout.copy(exercises = updatedExercises)
-        workoutRepository.updateWorkout(
-            updatedWorkout.copy(
-                progress = calculateProgress(
-                    updatedWorkout
-                )
-            )
-        )
+        return updatedWorkout.copy(progress = calculateProgress(updatedWorkout))
     }
 
     private fun String?.parseToDouble(): Double {
@@ -460,10 +422,10 @@ class WorkoutDelegateImpl(
         duration: Long,
         userId: UUID?
     ): WorkoutHistory {
-        val workoutId =
-            if (workout.id == "freestyle_workout_id") "freestyle_workout_id" else workout.id
+        val workoutId = workout.id
 
         return WorkoutHistory(
+            id = workout.historyId ?: UUID.randomUUID().toString(),
             name = workout.name,
             completionDate = completionDate,
             completionTime = completionTime,
@@ -471,7 +433,8 @@ class WorkoutDelegateImpl(
             workoutId = workoutId,
             difficulty = WorkoutDifficulty.MEDIUM,
             durationMillis = duration,
-            userId = userId.toString()
+            userId = userId.toString(),
+            isCompleted = true
         )
     }
 }

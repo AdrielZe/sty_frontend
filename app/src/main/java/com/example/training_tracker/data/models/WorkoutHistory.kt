@@ -18,5 +18,6 @@ data class WorkoutHistory(
     @ColumnInfo(name = "workoutId") val workoutId: String,
     @ColumnInfo(name = "difficulty") val difficulty: WorkoutDifficulty,
     @ColumnInfo(name = "durationMillis") val durationMillis: Long = 0L,
-    @ColumnInfo(name = "records") val records: Records ?= null
+    @ColumnInfo(name = "records") val records: Records ?= null,
+    @ColumnInfo(name = "isCompleted") val isCompleted: Boolean = true
 )

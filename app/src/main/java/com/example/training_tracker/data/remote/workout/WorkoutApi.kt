@@ -2,6 +2,7 @@ package com.example.training_tracker.data.remote.workout;
 
 
 import androidx.room.Delete
+import com.example.training_tracker.data.models.Workout
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
@@ -16,6 +17,9 @@ interface WorkoutApi {
 
     @POST("/workout/sync")
     suspend fun createWorkouts(@Body workoutsRequest: List<WorkoutRequest>)
+
+    @GET("/workout/{id}")
+    suspend fun getWorkoutById(@Path("id") workoutId: UUID) : WorkoutResponse
 
     @GET("/workout/user/{userId}/{dayOfWeek}")
     suspend fun getWorkoutByDay(

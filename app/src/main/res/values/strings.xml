@@ -1,6 +1,13 @@
 <resources>
     <string name="app_name">Sty</string>
 
+    <string name="notification_workout_title">Treino em andamento</string>
+    <string name="notification_workout_text">Tempo: %1$s</string>
+    <string name="notification_channel_name">Treino ativo</string>
+    <string name="notification_channel_description">Exibe o cronômetro do treino em andamento</string>
+    <string name="notification_action_pause">Pausar</string>
+    <string name="notification_action_resume">Retomar</string>
+
     <string name="title_home">Meus Treinos</string>
     <string name="title_active_workout">Treino Atual</string>
 

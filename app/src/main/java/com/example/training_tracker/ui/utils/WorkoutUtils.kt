@@ -1,5 +1,6 @@
 package com.example.training_tracker.ui.utils
 
+import com.example.training_tracker.data.models.isFreestyleWorkout
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
@@ -421,7 +422,7 @@ fun ExerciseCardUtils(
                                             )
                                         }
                                     )
-                                    if (workout?.id == "freestyle_workout_id") {
+                                    if (workout != null && workout.isFreestyleWorkout()) {
                                         DropdownMenuItem(
                                             text = {
                                                 Text(

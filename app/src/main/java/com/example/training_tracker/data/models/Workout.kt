@@ -27,4 +27,12 @@ data class Workout(
     @ColumnInfo(name = "rescheduledToDayOfWeek") val rescheduledToDayOfWeek: DayOfWeek? = null,
     @ColumnInfo(name = "rescheduledWeekStart") val rescheduledWeekStart: LocalDate? = null,
     @ColumnInfo(name = "isSynced") val isSynced: Boolean = false
-)
+) {
+    companion object {
+        // Cada usuário tem no máximo um freestyle workout, então o próprio userId serve
+        // como id único da linha — evita colisão entre contas diferentes no backend.
+        fun freestyleWorkoutId(userId: String): String = userId
+    }
+}
+
+fun Workout.isFreestyleWorkout(): Boolean = userId != null && id == userId

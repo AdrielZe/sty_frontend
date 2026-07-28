@@ -65,7 +65,7 @@ class WorkoutHistoryViewModel(
             val matchesQuery = workout.name.contains(query, ignoreCase = true)
             val matchesDate = selectedDate == null || workout.completionDate == selectedDate
             val matchesMuscle = selectedMuscle == null || workout.exercises.any { it.muscleGroup == selectedMuscle }
-            matchesQuery && matchesDate && matchesMuscle
+            workout.isCompleted && matchesQuery && matchesDate && matchesMuscle
         }
 
         val sortedList = when (sort) {

@@ -14,7 +14,7 @@ interface WorkoutRepository{
     suspend fun deleteWorkoutById(workoutId: String)
     suspend fun deleteAllWorkouts()
     fun getWorkoutById(id: String) : Flow<Workout?>
-    fun getWorkoutsByDay(day: DayOfWeek, userId: UUID?): Flow<List<Workout>>
+    fun getWorkoutsByDay(day: DayOfWeek, userId: UUID): Flow<List<Workout>>
     fun getTodayWorkout(day: DayOfWeek): Flow<Workout?>
     suspend fun getAllNotSyncedWorkouts(): List<Workout>
     suspend fun getPendingWorkoutsToDelete(): List<WorkoutToDelete>

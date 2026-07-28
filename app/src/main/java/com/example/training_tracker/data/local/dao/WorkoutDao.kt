@@ -37,6 +37,9 @@ interface WorkoutDao{
     @Upsert
     suspend fun insertOrUpdateAll(workouts: List<Workout>)
 
+    @Upsert
+    suspend fun insertOrUpdate(workout: Workout)
+
     @Query("DELETE FROM workouts")
     suspend fun deleteAll()
 

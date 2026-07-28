@@ -16,6 +16,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.training_tracker.data.routes.Routes
+import com.example.training_tracker.data.models.isFreestyleWorkout
 import androidx.compose.runtime.*
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -90,7 +91,7 @@ fun MainTabsScreen(
                                 rootNavController.navigate("${Routes.WorkoutDetails.name}/$workoutId/true")
                             } else if(clickedWorkout.isOnGoing == true) {
                                 // Redireciona corretamente se for o treino freestyle
-                                if (workoutId == "freestyle_workout_id" || clickedWorkout.id == "freestyle_workout_id") {
+                                if (clickedWorkout.isFreestyleWorkout()) {
                                     rootNavController.navigate(Routes.FreestyleWorkout.name)
                                 } else {
                                     rootNavController.navigate("${Routes.Workout.name}/$workoutId")

@@ -9,8 +9,11 @@ import com.example.training_tracker.GymTrackerApplication
 import com.example.training_tracker.domain.repository.UserRepository
 import com.example.training_tracker.domain.repository.WorkoutHistoryRepository
 import com.example.training_tracker.domain.repository.WorkoutRepository
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 
 class MainViewModel(
@@ -20,6 +23,15 @@ class MainViewModel(
     private val historyRepository: WorkoutHistoryRepository
     // adicionar mais(workout, exercises, etc)
 ) : ViewModel() {
+
+    private val _navigateToWorkout = Channel<String>()
+    val navigateToWorkout = _navigateToWorkout.receiveAsFlow()
+
+    fun onNotificationWorkoutTapped(workoutId: String) {
+        viewModelScope.launch {
+            _navigateToWorkout.send(workoutId)
+        }
+    }
 
     val isLoggedIn: StateFlow<Boolean> = sessionManager.isLoggedIn
         .stateIn(

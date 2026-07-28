@@ -34,4 +34,9 @@ class WorkoutHistoryImpl(
     override suspend fun deleteAll() {
         workoutHistoryDao.deleteAll()
     }
+
+    override suspend fun insert(workoutHistory: WorkoutHistory) : Long {
+        return workoutHistoryDao.insert(workoutHistory)
+    }
+
 }

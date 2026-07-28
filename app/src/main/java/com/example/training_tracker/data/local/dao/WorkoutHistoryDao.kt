@@ -24,6 +24,7 @@ interface WorkoutHistoryDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(workoutHistory: WorkoutHistory) : Long
 
+
     @Update
     suspend fun update(workoutHistory: WorkoutHistory)
 
@@ -32,4 +33,7 @@ interface WorkoutHistoryDao {
 
     @Query("DELETE FROM workoutHistories")
     suspend fun deleteAll()
+
+    @Query("SELECT * FROM workoutHistories WHERE isCompleted = 1 ORDER BY completionDate DESC, completionTime DESC")
+    fun getCompletedWorkoutHistories(): Flow<List<WorkoutHistory>>
 }

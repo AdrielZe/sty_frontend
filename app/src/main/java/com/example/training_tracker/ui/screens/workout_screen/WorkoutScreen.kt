@@ -13,7 +13,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -28,7 +27,6 @@ import com.example.training_tracker.data.models.Technique
 import com.example.training_tracker.ui.utils.ExerciseCardUtils
 import com.example.training_tracker.ui.utils.FinishWorkoutButton
 import com.example.training_tracker.ui.utils.WorkoutTopBar
-import kotlinx.coroutines.delay
 import nl.dionsegijn.konfetti.compose.KonfettiView
 import nl.dionsegijn.konfetti.core.Party
 import nl.dionsegijn.konfetti.core.Position
@@ -38,6 +36,7 @@ import java.util.concurrent.TimeUnit
 @Composable
 fun WorkoutScreen(
     workoutUiState: WorkoutUiState,
+    elapsedTime: Long = 0L,
     onWeightChange: (String, Int, String) -> Unit,
     onRepsChange: (String, Int, String) -> Unit,
     onCompleteSet: (String, Int) -> Unit,
@@ -66,34 +65,6 @@ fun WorkoutScreen(
 
     var hasInitialized by rememberSaveable(workout?.id) { mutableStateOf(false) }
     var expandedExercises by rememberSaveable { mutableStateOf(setOf<String>()) }
-
-    var currentTime by remember { mutableLongStateOf(System.currentTimeMillis()) }
-
-    LaunchedEffect(workout?.isOnGoing, workout?.isCompleted, workout?.isPaused) {
-        if (workout?.isOnGoing == true && !workout.isCompleted && !workout.isPaused) {
-            currentTime = System.currentTimeMillis() // Sync immediately
-            while (true) {
-                delay(1000)
-                currentTime = System.currentTimeMillis()
-            }
-        }
-    }
-
-    val elapsedTime = remember(
-        workout?.startTime,
-        currentTime,
-        workout?.isCompleted,
-        workout?.accumulatedTime,
-        workout?.isPaused
-    ) {
-        val baseTime = workout?.accumulatedTime ?: 0L
-        if (workout?.startTime != null && workout.isCompleted == false && workout.isPaused == false) {
-            val diff = currentTime - workout.startTime
-            if (diff > 0) baseTime + diff else baseTime
-        } else {
-            baseTime
-        }
-    }
 
     LaunchedEffect(workout?.id) {
         if (!hasInitialized && workout != null && !workout.isCompleted) {
