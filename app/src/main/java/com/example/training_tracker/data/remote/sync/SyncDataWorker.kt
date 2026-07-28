@@ -17,6 +17,7 @@ class SyncDataWorker(
         return try {
             syncConfig.syncDeletedWorkouts()
             syncConfig.syncPendingWorkouts()
+            syncConfig.syncUserData()
 
             Result.success()
         } catch (e: Exception) {

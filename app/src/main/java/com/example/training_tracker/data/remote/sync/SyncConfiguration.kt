@@ -7,14 +7,19 @@ import androidx.work.ExistingWorkPolicy
 import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
+import com.example.training_tracker.data.local.dao.UserDao
 import com.example.training_tracker.data.local.dao.WorkoutDao
 import com.example.training_tracker.data.local.dao.WorkoutToDeleteDao
 import com.example.training_tracker.data.remote.auth.AuthApi
 import com.example.training_tracker.data.remote.user.UserApi
+import com.example.training_tracker.data.remote.user.WeeklyGoalRequestDto
 import com.example.training_tracker.data.remote.workout.WorkoutApi
 import com.example.training_tracker.data.remote.workout.WorkoutRequest
 import com.example.training_tracker.domain.repository.UserRepository
 import com.example.training_tracker.domain.repository.WorkoutRepository
+import com.example.training_tracker.ui.screens.create_workout.LoginScreen
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.firstOrNull
 import okhttp3.internal.notify
 import java.util.UUID
 
@@ -23,6 +28,7 @@ data class SyncConfiguration(
     private val workoutRepository: WorkoutRepository,
     private val workoutApi: WorkoutApi,
     private val workoutToDeleteDao: WorkoutToDeleteDao,
+    private val userDao: UserDao,
     private val authApi: AuthApi,
     private val userApi: UserApi,
 ) {
@@ -65,6 +71,20 @@ data class SyncConfiguration(
                 Log.d("Sync Deleted workouts:", "Successfully synced and deleted workout ${workout.workoutId}")
             } catch (e: Exception) {
                 Log.e("Sync Deleted workouts:", "Error syncing", e)
+            }
+        }
+    }
+
+    suspend fun syncUserData() {
+        val user = userRepository.getUser().firstOrNull() ?: return
+
+        if (!user.isSynced && user.weeklyGoal != null) {
+            try {
+                userApi.setUserWeeklyGoal(UUID.fromString(user.id), WeeklyGoalRequestDto(weeklyGoal = user.weeklyGoal))
+                userDao.upsertUser(user.copy(isSynced = true))
+                Log.d("Sync Weekly Goal", "Successfully synced weekly goal")
+            } catch (e: Exception) {
+                Log.e("Sync Weekly Goal", "Error syncing weekly goal", e)
             }
         }
     }

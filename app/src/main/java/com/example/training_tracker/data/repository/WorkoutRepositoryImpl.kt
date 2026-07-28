@@ -13,6 +13,7 @@ import com.example.training_tracker.data.local.dao.WorkoutToDeleteDao
 import com.example.training_tracker.data.models.Workout
 import com.example.training_tracker.data.models.WorkoutToDelete
 import com.example.training_tracker.data.remote.sync.SyncDataWorker
+import com.example.training_tracker.data.remote.sync.SyncManager
 import com.example.training_tracker.data.remote.workout.WorkoutApi
 import com.example.training_tracker.data.remote.workout.WorkoutRequest
 import com.example.training_tracker.domain.repository.WorkoutRepository
@@ -30,7 +31,8 @@ class WorkoutRepositoryImpl(
     private val workoutApi: WorkoutApi,
     private val context: Context,
     private val workoutToDeleteDao: WorkoutToDeleteDao,
-    private val sessionManager: SessionManager
+    private val sessionManager: SessionManager,
+    private val syncManager: SyncManager
 ): WorkoutRepository {
     override val workouts = workoutDao.getAllWorkouts()
 
@@ -58,7 +60,7 @@ class WorkoutRepositoryImpl(
                     e
                 )
                 workoutDao.insert(workout.copy(isSynced = false))
-                scheduleSync(context)
+                syncManager.scheduleGlobalSync()
             }
         }
 
@@ -80,7 +82,7 @@ class WorkoutRepositoryImpl(
                 workoutDao.update(workout.copy(isSynced = true))
             } catch (e: Exception) {
                 Log.e("Update workout:", "Error updating workout: ", e)
-                scheduleSync(context)
+                syncManager.scheduleGlobalSync()
             }
         }
     }
@@ -95,7 +97,7 @@ class WorkoutRepositoryImpl(
                 workoutToDeleteDao.delete(workoutId)
             } catch (e: Exception) {
                 Log.e("Delete workouts", "Error deleting workouts in remote DB", e)
-                scheduleSync(context)
+                syncManager.scheduleGlobalSync()
             }
         }
     }
@@ -188,19 +190,4 @@ class WorkoutRepositoryImpl(
         return workoutToDeleteDao.getAllPendingDeletes();
     }
 
-    private fun scheduleSync(context: Context) {
-        val constraints = Constraints.Builder()
-            .setRequiredNetworkType(NetworkType.CONNECTED)
-            .build()
-
-        val syncWorkRequest = OneTimeWorkRequestBuilder<SyncDataWorker>()
-            .setConstraints(constraints)
-            .build()
-
-        WorkManager.getInstance(context).enqueueUniqueWork(
-            "SyncPendingWorkouts",
-            ExistingWorkPolicy.REPLACE, // se já tiver um sync na fila esperando, substitui por esse novo
-            syncWorkRequest
-        )
-    }
 }

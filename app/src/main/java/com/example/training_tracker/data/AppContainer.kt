@@ -3,6 +3,8 @@ package com.example.training_tracker.data
 import android.app.Application
 import android.content.Context
 import com.example.training_tracker.data.local.AppDatabase
+import com.example.training_tracker.data.local.dao.UserDao
+import com.example.training_tracker.data.local.dao.UserDao_Impl
 import com.example.training_tracker.data.local.dao.WorkoutToDeleteDao
 import com.example.training_tracker.data.models.Exercise
 import com.example.training_tracker.data.models.ExerciseType
@@ -10,6 +12,7 @@ import com.example.training_tracker.data.models.MuscleGroups
 import com.example.training_tracker.data.remote.RetrofitClient
 import com.example.training_tracker.data.remote.sync.SyncConfiguration
 import com.example.training_tracker.data.remote.auth.AuthApi
+import com.example.training_tracker.data.remote.sync.SyncManager
 import com.example.training_tracker.data.remote.user.UserApi
 import com.example.training_tracker.data.remote.workout.WorkoutApi
 import com.example.training_tracker.domain.repository.ExerciseRepository
@@ -37,8 +40,10 @@ interface AppContainer {
     val exerciseClassifier: ExerciseClassifier
     val workoutHistoryRepository: WorkoutHistoryRepository
     val sessionManager: SessionManager
+    val syncManager: SyncManager
     val userApi: UserApi
     val authApi: AuthApi
+    val userDao: UserDao
     val workoutApi: WorkoutApi
     val workoutToDeleteDao: WorkoutToDeleteDao
     val syncConfiguration: SyncConfiguration
@@ -62,9 +67,12 @@ class DefaultAppContainer(
     override val workoutApi = RetrofitClient.workoutApi
 
     override val userRepository: UserRepository by lazy {
-        UserRepositoryImpl(database.userDao(), userApi)
+        UserRepositoryImpl(database.userDao(), userApi, sessionManager, syncManager, context)
     }
 
+    override val userDao: UserDao by lazy {
+        database.userDao();
+    }
     override val workoutToDeleteDao: WorkoutToDeleteDao by lazy {
         database.workoutToDeleteDao()
     }
@@ -76,7 +84,8 @@ class DefaultAppContainer(
             userApi = userApi,
             workoutRepository = workoutRepository,
             workoutApi = workoutApi,
-            workoutToDeleteDao = workoutToDeleteDao
+            workoutToDeleteDao = workoutToDeleteDao,
+            userDao = userDao
         )
     }
 
@@ -84,12 +93,16 @@ class DefaultAppContainer(
         SessionManager(context)
     }
 
+    override val syncManager: SyncManager by lazy {
+        SyncManager(context)
+    }
+
     override val exerciseRepository: ExerciseRepository by lazy {
         ExerciseRepositoryImpl(database.exerciseDao(), exerciseApi)
     }
 
     override val workoutRepository: WorkoutRepository by lazy {
-        WorkoutRepositoryImpl(database.workoutDao(), workoutApi, context, workoutToDeleteDao, sessionManager)
+        WorkoutRepositoryImpl(database.workoutDao(), workoutApi, context, workoutToDeleteDao, sessionManager, syncManager)
     }
 
     override val recordsRepository: RecordsRepository by lazy {

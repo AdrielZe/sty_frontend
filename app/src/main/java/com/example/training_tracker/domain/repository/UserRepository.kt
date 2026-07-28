@@ -20,4 +20,5 @@ interface UserRepository {
     suspend fun updateLocalProfilePicture(newPicture: String)
     suspend fun fetchUserProfileFromRemote(userId: UUID)
     suspend fun updateLocalUsername(newName: String)
+    suspend fun updateLocalData(userResponse: UserProfileResponse)
 }

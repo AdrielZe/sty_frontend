@@ -17,4 +17,5 @@ data class User(
     @ColumnInfo("ageYears") val ageYears: Int? = null,
     @ColumnInfo("gender") val gender: String? = null, // "MALE" | "FEMALE" | "OTHER"
     @ColumnInfo("accentThemeName") val accentThemeName: String? = null,
+    @ColumnInfo("isSynced") val isSynced: Boolean = false
 )

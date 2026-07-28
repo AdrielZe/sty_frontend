@@ -49,6 +49,10 @@ class LoginViewModel(
             try {
                 val response = authApi.login(LoginRequest(currentState.user, currentState.password))
 
+                val localUser = userRepository.getUser().first()
+                if (localUser != null && localUser.id != response.id.toString()) {
+                    userRepository.updateUserId(localUser.id, response.id.toString())
+                }
 
                 sessionManager.saveSession(userId = response.id)
                 syncConfiguration(response.id.toString())

@@ -174,3 +174,10 @@ No Hilt, no Koin — keep it simple.
 - Storing mutable state in composables that belongs in the ViewModel
 - Using `LiveData` — `StateFlow` is the standard here
 - Speculative features or abstractions not tied to a current requirement
+
+## Comment Guidelines
+
+- Comments must be written in English, never in Portuguese
+- No uppercase letters, no accents, no emojis
+- Keep comments short and descriptive, explaining the "why" not the "what"
+- Avoid redundant comments that just restate the code
