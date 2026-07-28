@@ -63,6 +63,14 @@ fun GymTrackerNavHost(
     val navController = rememberNavController()
     val homeViewModel: HomeViewModel = viewModel(factory = HomeViewModel.Factory)
 
+    LaunchedEffect(Unit) {
+        mainViewModel.navigateToWorkout.collect { workoutId ->
+            navController.navigate("${Routes.Workout.name}/$workoutId") {
+                launchSingleTop = true
+            }
+        }
+    }
+
     NavHost(
         navController = navController,
         startDestination = "MAIN_TABS",
@@ -184,6 +192,7 @@ fun GymTrackerNavHost(
             val workoutViewModel: WorkoutViewModel = viewModel(factory = WorkoutViewModel.Factory)
             val workoutUiState by workoutViewModel.uiState.collectAsState()
             val navigateToId by workoutViewModel.navigateToReport.collectAsState()
+            val elapsedTime by workoutViewModel.elapsedTime.collectAsStateWithLifecycle()
 
             LaunchedEffect(navigateToId) {
                 navigateToId?.let { historyId ->
@@ -196,6 +205,7 @@ fun GymTrackerNavHost(
 
             WorkoutScreen(
                 workoutUiState = workoutUiState,
+                elapsedTime = elapsedTime,
                 onRepsChange = { id, setNumber, newReps ->
                     workoutViewModel.updateExercise(id, setNumber, newReps = newReps)
                 },
