@@ -20,12 +20,15 @@ import com.example.training_tracker.session_manager.SessionManager
 import com.example.training_tracker.ui.screens.workout_screen.WorkoutDelegate
 import com.example.training_tracker.ui.screens.workout_screen.WorkoutDelegateImpl
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.util.UUID
@@ -39,7 +42,14 @@ class FreestyleWorkoutViewModel(
     private val sessionManager: SessionManager
 ) : ViewModel(), WorkoutDelegate by delegate {
 
-    private val FREESTYLE_WORKOUT_ID = "freestyle_workout_id"
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private val freestyleWorkoutFlow = sessionManager.userIdFlow.flatMapLatest { userId ->
+        if (userId != null) {
+            workoutRepository.getWorkoutById(Workout.freestyleWorkoutId(userId.toString()))
+        } else {
+            flowOf(null)
+        }
+    }
 
     private val _showExercisePicker = MutableStateFlow(false)
     private val _navigateToReport = MutableStateFlow<String?>(null)
@@ -53,7 +63,8 @@ class FreestyleWorkoutViewModel(
     private val _finishedWorkoutSession = MutableStateFlow<Workout?>(null)
 
     val uiState: StateFlow<FreestyleWorkoutUiState> = combine(
-        workoutRepository.getWorkoutById(FREESTYLE_WORKOUT_ID),
+        sessionManager.userIdFlow,
+        freestyleWorkoutFlow,
         exerciseRepository.exercises,
         workoutHistoryRepository.workoutHistories,
         combine(
@@ -64,7 +75,7 @@ class FreestyleWorkoutViewModel(
         ) { showPicker, finishedWorkout, pendingName, (showMusclePicker, showSaveRoutine) ->
             InternalState(showPicker, finishedWorkout, pendingName, showMusclePicker, showSaveRoutine)
         }
-    ) { workout, availableExercises, histories, internalState ->
+    ) { userId, workout, availableExercises, histories, internalState ->
         if (internalState.finishedWorkoutSession != null) {
             FreestyleWorkoutUiState(
                 workout = internalState.finishedWorkoutSession,
@@ -82,7 +93,8 @@ class FreestyleWorkoutViewModel(
         } else {
             FreestyleWorkoutUiState(
                 workout = Workout(
-                    id = FREESTYLE_WORKOUT_ID,
+                    id = userId?.toString().orEmpty(),
+                    userId = userId?.toString(),
                     name = "Freestyle Workout",
                     isOnGoing = false
                 ),
@@ -112,11 +124,14 @@ class FreestyleWorkoutViewModel(
 
     private fun ensureFreestyleWorkoutExists() {
         viewModelScope.launch {
-            val existing = workoutRepository.getWorkoutById(FREESTYLE_WORKOUT_ID).first()
+            val userId = sessionManager.userIdFlow.first() ?: return@launch
+            val freestyleId = Workout.freestyleWorkoutId(userId.toString())
+            val existing = workoutRepository.getWorkoutById(freestyleId).first()
             if (existing == null) {
                 workoutRepository.addWorkout(
                     Workout(
-                        id = FREESTYLE_WORKOUT_ID,
+                        id = freestyleId,
+                        userId = userId.toString(),
                         name = "Freestyle Workout",
                         isOnGoing = false,
                         startTime = System.currentTimeMillis(),
@@ -132,7 +147,8 @@ class FreestyleWorkoutViewModel(
 
     fun togglePauseWorkout() {
         viewModelScope.launch {
-            uiState.value.workout.let { togglePauseWorkout(it) }
+            val updated = togglePauseWorkout(uiState.value.workout)
+            workoutRepository.updateWorkout(updated)
         }
     }
 
@@ -249,19 +265,22 @@ class FreestyleWorkoutViewModel(
 
     fun addNewSetLine(exerciseId: String) {
         viewModelScope.launch {
-            addNewSetLine(uiState.value.workout, exerciseId)
+            val updated = addNewSetLine(uiState.value.workout, exerciseId)
+            workoutRepository.updateWorkout(updated)
         }
     }
 
     fun removeSetLine(exerciseId: String, setNumber: Int) {
         viewModelScope.launch {
-            removeSetLine(uiState.value.workout, exerciseId, setNumber)
+            val updated = removeSetLine(uiState.value.workout, exerciseId, setNumber)
+            workoutRepository.updateWorkout(updated)
         }
     }
 
     fun completeSet(exerciseId: String, setNumber: Int) {
         viewModelScope.launch {
-            completeSet(uiState.value.workout, exerciseId, setNumber)
+            val updated = completeSet(uiState.value.workout, exerciseId, setNumber)
+            workoutRepository.updateWorkout(updated)
         }
     }
 
@@ -272,28 +291,29 @@ class FreestyleWorkoutViewModel(
         newWeight: String? = null
     ) {
         viewModelScope.launch {
-            updateExercise(uiState.value.workout, exerciseId, setNumber, newReps, newWeight)
+            val updated = updateExercise(uiState.value.workout, exerciseId, setNumber, newReps, newWeight)
+            workoutRepository.updateWorkout(updated)
         }
     }
 
     fun completeExercise(exerciseId: String) {
         viewModelScope.launch {
-            completeExercise(uiState.value.workout, exerciseId)
+            val updated = completeExercise(uiState.value.workout, exerciseId)
+            workoutRepository.updateWorkout(updated)
         }
     }
 
     fun reopenExercise(exerciseId: String) {
         viewModelScope.launch {
-            reopenExercise(uiState.value.workout, exerciseId)
+            val updated = reopenExercise(uiState.value.workout, exerciseId)
+            workoutRepository.updateWorkout(updated)
         }
     }
 
     fun updateSetTechnique(exerciseId: String, setNumber: Int, technique: Technique) {
         viewModelScope.launch {
-            uiState.value.workout?.let {
-                // Chamamos a função no delegate para tratar a lógica de atualização do objeto
-                updateSetTechnique(it, exerciseId, setNumber, technique)
-            }
+            val updated = updateSetTechnique(uiState.value.workout, exerciseId, setNumber, technique)
+            workoutRepository.updateWorkout(updated)
         }
     }
 
@@ -310,9 +330,10 @@ class FreestyleWorkoutViewModel(
                     _showSaveRoutineDialog.value = true
                 },
                 resetWorkout = {
+                    // Preserva id/userId da linha atual em vez de recriar do zero,
+                    // já que o id do freestyle workout é o próprio userId do dono.
                     workoutRepository.updateWorkout(
-                        Workout(
-                            id = FREESTYLE_WORKOUT_ID,
+                        uiState.value.workout.copy(
                             name = "Freestyle Workout",
                             isOnGoing = false,
                             startTime = null,
