@@ -109,7 +109,7 @@ class HomeViewModel(
 
         val thisWeekHistories = workoutHistories.filter { history ->
             val historyDate = history.completionDate
-            history.isCompleted && // 👈 ADICIONADO: Ignora rascunhos nas estatísticas
+            history.isCompleted &&
                     (historyDate.isEqual(startOfWeek) || historyDate.isAfter(startOfWeek)) &&
                     (historyDate.isEqual(endOfWeek) || historyDate.isBefore(endOfWeek))
         }
@@ -183,8 +183,6 @@ class HomeViewModel(
             val existing = workoutRepository.getWorkoutById(freestyleId).first()
 
             if (existing != null && existing.isOnGoing) {
-                // A freestyle workout is already in progress — resume it as-is,
-                // the user must complete or cancel it before starting a new one.
                 onConfirm()
                 return@launch
             }
