@@ -8,6 +8,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.training_tracker.GymTrackerApplication
 import com.example.training_tracker.data.models.Workout
+import com.example.training_tracker.data.models.isFreestyleWorkout
 import com.example.training_tracker.domain.repository.UserRepository
 import com.example.training_tracker.ui.utils.CalorieCalculator
 import com.example.training_tracker.domain.repository.WorkoutHistoryRepository
@@ -47,22 +48,51 @@ class HomeViewModel(
             flowOf(null)
         }
     }
-    private val FREESTYLE_WORKOUT_ID = "7ef1b4cc-38b1-465a-88b6-b67ac7c1d42e"
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private val freestyleWorkoutFlow = sessionManager.userIdFlow.flatMapLatest { userId ->
+        if (userId != null) {
+            workoutRepository.getWorkoutById(Workout.freestyleWorkoutId(userId.toString()))
+        } else {
+            flowOf(null)
+        }
+    }
 
     private val baseState = combine(
         userRepository.getUser(),
         todayWorkoutsFlow,
         workoutHistoryRepository.getHistoryByDate(LocalDate.now()),
         workoutHistoryRepository.workoutHistories,
-        workoutRepository.getWorkoutById(FREESTYLE_WORKOUT_ID)
+        freestyleWorkoutFlow
     ) { user, workouts, todayHistory, workoutHistories, freestyleWorkout ->
-        // Mapeia os treinos do template para ver se foram feitos hoje
-        val workoutsWithStatus = workouts?.map { workout ->
-            val isCompletedToday = todayHistory.any { history -> history.workoutId == workout.id }
-            workout.copy(isCompleted = isCompletedToday)
+
+        val workoutsWithStatus = workouts?.filter { !it.isFreestyleWorkout() }?.map { workout ->
+            val isCompletedToday = todayHistory.any { history ->
+                history.workoutId == workout.id && history.isCompleted
+            }
+
+            val draftHistory = workoutHistories.find { history ->
+                history.workoutId == workout.id && !history.isCompleted && history.completionDate == LocalDate.now()
+            }
+
+            if (isCompletedToday) {
+                workout.copy(isCompleted = true, progress = 1f, isOnGoing = false)
+
+            } else if (draftHistory != null) {
+                val totalExercises = draftHistory.exercises.size
+                val completedExercises = draftHistory.exercises.count { it.isCompleted }
+                val currentProgress = if (totalExercises > 0) completedExercises.toFloat() / totalExercises else 0f
+
+                workout.copy(
+                    isCompleted = false,
+                    isOnGoing = true,
+                    progress = currentProgress
+                )
+
+            } else {
+                workout.copy(isCompleted = false, isOnGoing = false, progress = 0f)
+            }
         }?.toMutableList()
 
-        // Adiciona o Freestyle Workout se ele estiver em andamento (isOnGoing == true)
         val activeFreestyle = if (freestyleWorkout != null && freestyleWorkout.isOnGoing) {
             freestyleWorkout
         } else {
@@ -73,15 +103,15 @@ class HomeViewModel(
             workoutsWithStatus?.add(activeFreestyle)
         }
 
-        // Calcula treinos feitos na semana atual (Segunda a Domingo)
         val today = LocalDate.now()
         val startOfWeek = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
         val endOfWeek = today.with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY))
 
         val thisWeekHistories = workoutHistories.filter { history ->
             val historyDate = history.completionDate
-            (historyDate.isEqual(startOfWeek) || historyDate.isAfter(startOfWeek)) &&
-            (historyDate.isEqual(endOfWeek) || historyDate.isBefore(endOfWeek))
+            history.isCompleted && // 👈 ADICIONADO: Ignora rascunhos nas estatísticas
+                    (historyDate.isEqual(startOfWeek) || historyDate.isAfter(startOfWeek)) &&
+                    (historyDate.isEqual(endOfWeek) || historyDate.isBefore(endOfWeek))
         }
 
         val weeklyCalories = if (user?.weightKg != null) {
@@ -104,7 +134,7 @@ class HomeViewModel(
             user = user,
             currentDate = getCurrentDate(),
             todayWorkouts = workoutsWithStatus,
-            totalWorkoutsCompleted = workoutHistories.size,
+            totalWorkoutsCompleted = thisWeekHistories.size,
             workoutsCompletedThisWeek = thisWeekHistories.size,
             activeFreestyleWorkout = activeFreestyle,
             weeklyCalories = weeklyCalories,
@@ -119,7 +149,7 @@ class HomeViewModel(
         if (state !is HomeUiState.Success) return@combine state
         val currentWeekMonday = LocalDate.now().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
         val perDay = mutableMapOf<DayOfWeek, Int>()
-        for (workout in allWorkouts.filter { it.id != FREESTYLE_WORKOUT_ID }) {
+        for (workout in allWorkouts.filter { !it.isFreestyleWorkout() }) {
             val isRescheduledThisWeek = workout.rescheduledWeekStart == currentWeekMonday && workout.rescheduledToDayOfWeek != null
             if (isRescheduledThisWeek) {
                 val newDay = workout.rescheduledToDayOfWeek!!
@@ -148,19 +178,26 @@ class HomeViewModel(
 
     fun startFreestyleWorkout(name: String, onConfirm: () -> Unit) {
         viewModelScope.launch {
-            val existing = workoutRepository.getWorkoutById(FREESTYLE_WORKOUT_ID).first()
+            val userId = sessionManager.userIdFlow.first() ?: return@launch
+            val freestyleId = Workout.freestyleWorkoutId(userId.toString())
+            val existing = workoutRepository.getWorkoutById(freestyleId).first()
+
+            if (existing != null && existing.isOnGoing) {
+                // A freestyle workout is already in progress — resume it as-is,
+                // the user must complete or cancel it before starting a new one.
+                onConfirm()
+                return@launch
+            }
 
             if (existing != null) {
                 workoutRepository.updateWorkout(existing.copy(name = name, isOnGoing = true, startTime = System.currentTimeMillis()))
             } else {
-                println("DEBUG FREESTYLE WORKOUT: $existing")
-
                 workoutRepository.addWorkout(
                     Workout(
-                        id = FREESTYLE_WORKOUT_ID,
+                        id = freestyleId,
                         name = name,
                         dayOfWeek = LocalDate.now().dayOfWeek,
-                        userId = sessionManager.userIdFlow.first().toString(),
+                        userId = userId.toString(),
                         isOnGoing = true,
                         startTime = System.currentTimeMillis(),
                         exercises = emptyList()
@@ -174,7 +211,9 @@ class HomeViewModel(
     fun removeFreestyleWorkout(){
         viewModelScope.launch {
             try {
-                val existing = workoutRepository.getWorkoutById(FREESTYLE_WORKOUT_ID).first()
+                val userId = sessionManager.userIdFlow.first() ?: return@launch
+                val freestyleId = Workout.freestyleWorkoutId(userId.toString())
+                val existing = workoutRepository.getWorkoutById(freestyleId).first()
                 existing?.let {
                     workoutRepository.deleteWorkoutById(existing.id)
                 }
