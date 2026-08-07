@@ -57,25 +57,38 @@ class HomeViewModel(
         }
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private val workoutHistoriesFlow = sessionManager.userIdFlow.flatMapLatest { userId ->
+        if (userId != null) {
+            workoutHistoryRepository.getHistories(userId.toString())
+        } else {
+            flowOf(emptyList())
+        }
+    }
+
     private val baseState = combine(
         userRepository.getUser(),
         todayWorkoutsFlow,
-        workoutHistoryRepository.getHistoryByDate(LocalDate.now()),
-        workoutHistoryRepository.workoutHistories,
+        workoutHistoriesFlow,
         freestyleWorkoutFlow
-    ) { user, workouts, todayHistory, workoutHistories, freestyleWorkout ->
+    ) { user, workouts, workoutHistories, freestyleWorkout ->
+
+        val today = LocalDate.now()
+
+        val todayHistory = workoutHistories.filter { it.completionDate == today }
+
+        println("TODAY HISTORIES: $todayHistory")
 
         val workoutsWithStatus = workouts?.filter { !it.isFreestyleWorkout() }?.map { workout ->
-            val isCompletedToday = todayHistory.any { history ->
+            val completedHistory = todayHistory.find { history ->
                 history.workoutId == workout.id && history.isCompleted
             }
-
             val draftHistory = workoutHistories.find { history ->
                 history.workoutId == workout.id && !history.isCompleted && history.completionDate == LocalDate.now()
             }
 
-            if (isCompletedToday) {
-                workout.copy(isCompleted = true, progress = 1f, isOnGoing = false)
+            if (completedHistory != null) {
+                workout.copy(isCompleted = true, progress = 1f, isOnGoing = false, historyId = completedHistory.id)
 
             } else if (draftHistory != null) {
                 val totalExercises = draftHistory.exercises.size
@@ -103,7 +116,6 @@ class HomeViewModel(
             workoutsWithStatus?.add(activeFreestyle)
         }
 
-        val today = LocalDate.now()
         val startOfWeek = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
         val endOfWeek = today.with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY))
 

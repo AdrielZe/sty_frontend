@@ -1,5 +1,7 @@
 package com.example.training_tracker.data.models
 
+import java.util.UUID
+
 data class ExerciseSet(
     val set: Int,
     val reps: String = "",
@@ -13,5 +15,6 @@ data class ExerciseSet(
     val previousDistance: String ?= "",
     val technique: Technique = Technique.NORMAL,
     val targetReps: String = "",
+    val exerciseId: UUID,
     val targetWeight: String = ""
 )

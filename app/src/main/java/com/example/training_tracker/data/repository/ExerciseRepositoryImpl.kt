@@ -40,6 +40,29 @@ class ExerciseRepositoryImpl(
         }
     }
 
+    override suspend fun addExercises(exercises: List<Exercise>) {
+        exerciseDao.insertAll(exercises)
+
+        exercises.forEach { exercise ->
+            try {
+                val response = exerciseApi.addExercise(
+                    ExerciseRequest(
+                        id = exercise.id,
+                        name = exercise.name,
+                        exerciseType = exercise.type,
+                        muscleGroup = exercise.muscleGroup!!
+                    )
+                )
+
+                if (!response.isSuccessful) {
+                    Log.e("SYNC", "O servidor recusou: ${response.code()} - ${response.errorBody()?.string()}")
+                }
+            } catch (e: Exception) {
+                Log.w("SYNC", "Sem internet ou falha de rede. O dado está seguro no Room para envio futuro. Erro: ${e.message}")
+            }
+        }
+    }
+
     override suspend fun updateExercise(exercise: Exercise) {
         exerciseDao.update(exercise)
     }

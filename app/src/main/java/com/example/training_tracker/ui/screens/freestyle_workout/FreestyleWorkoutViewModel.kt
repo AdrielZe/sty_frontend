@@ -200,9 +200,10 @@ class FreestyleWorkoutViewModel(
                 }
             }
         } else {
+            val newExerciseId = UUID.randomUUID().toString()
             val exerciseToAdd = existingExercise.copy(
-                id = UUID.randomUUID().toString(),
-                exerciseSets = listOf(ExerciseSet(set = 1)),
+                id = newExerciseId,
+                exerciseSets = listOf(ExerciseSet(set = 1, exerciseId = UUID.fromString(newExerciseId))),
                 isCompleted = false
             )
             val updatedWorkout = uiState.value.workout.copy(
@@ -235,9 +236,10 @@ class FreestyleWorkoutViewModel(
         )
         exerciseRepository.addExercise(newExerciseToDB)
 
+        val newExerciseId = UUID.randomUUID().toString()
         val exerciseToAdd = newExerciseToDB.copy(
-            id = UUID.randomUUID().toString(),
-            exerciseSets = listOf(ExerciseSet(set = 1)),
+            id = newExerciseId,
+            exerciseSets = listOf(ExerciseSet(set = 1, exerciseId = UUID.fromString(newExerciseId))),
             isCompleted = false
         )
 

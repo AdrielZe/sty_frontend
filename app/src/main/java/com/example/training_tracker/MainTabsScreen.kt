@@ -97,7 +97,7 @@ fun MainTabsScreen(
                                     rootNavController.navigate("${Routes.Workout.name}/$workoutId")
                                 }
                             }
-                            else {
+                            else if (clickedWorkout.historyId != null) {
                                 rootNavController.navigate("${Routes.WorkoutReport.name}/${clickedWorkout.historyId}")
                             }
                         }

@@ -11,11 +11,15 @@ import com.example.training_tracker.data.local.dao.UserDao
 import com.example.training_tracker.data.local.dao.WorkoutDao
 import com.example.training_tracker.data.local.dao.WorkoutToDeleteDao
 import com.example.training_tracker.data.remote.auth.AuthApi
+import com.example.training_tracker.data.remote.history.AllHistoryRequestDto
+import com.example.training_tracker.data.remote.history.HistoryApi
+import com.example.training_tracker.data.remote.history.HistoryResponseDto
 import com.example.training_tracker.data.remote.user.UserApi
 import com.example.training_tracker.data.remote.user.WeeklyGoalRequestDto
 import com.example.training_tracker.data.remote.workout.WorkoutApi
 import com.example.training_tracker.data.remote.workout.WorkoutRequest
 import com.example.training_tracker.domain.repository.UserRepository
+import com.example.training_tracker.domain.repository.WorkoutHistoryRepository
 import com.example.training_tracker.domain.repository.WorkoutRepository
 import com.example.training_tracker.ui.screens.create_workout.LoginScreen
 import kotlinx.coroutines.flow.first
@@ -28,6 +32,8 @@ data class SyncConfiguration(
     private val workoutRepository: WorkoutRepository,
     private val workoutApi: WorkoutApi,
     private val workoutToDeleteDao: WorkoutToDeleteDao,
+    private val historyRepository: WorkoutHistoryRepository,
+    private val historyApi: HistoryApi,
     private val userDao: UserDao,
     private val authApi: AuthApi,
     private val userApi: UserApi,
@@ -41,6 +47,7 @@ data class SyncConfiguration(
 
         if (workoutsToSync.isNotEmpty()) {
             val workoutsRequest = workoutsToSync.map { workout ->
+                println("Complete workout being sent: {${workout}")
                 WorkoutRequest(
                     workoutId = UUID.fromString(workout.id),
                     userId = UUID.fromString(workout.userId),
@@ -56,7 +63,26 @@ data class SyncConfiguration(
                 val syncedWorkoutsCount = workoutRepository.updateWorkoutsWithCount(syncedWorkouts)
                 Log.d("Workout Sync:", "$syncedWorkoutsCount workout(s) updated successfully.")
             } catch (e: Exception) {
-                Log.e("Workout Sync:", "Failed to sync workouts:", e)
+
+                Log.e("Workout Sync:", "Failed to sync workouts: ${workoutsRequest}", e)
+            }
+        }
+    }
+
+    suspend fun syncPendingHistories() {
+        val historiesToSync = historyRepository.getAllNotSyncedHistories();
+
+        println("DEBUG HISTORIES TO SYNC ARE: $historiesToSync")
+
+        if (historiesToSync.isNotEmpty()) {
+            try {
+                val historiesToSyncDto = AllHistoryRequestDto(UUID.fromString(historiesToSync.first().userId), historiesToSync)
+                historyApi.createAll(historiesToSyncDto)
+                val updatedHistories = historiesToSync.map { it.copy(isSynced = true)}
+                historyRepository.updateAll(updatedHistories)
+                Log.d("Histories Sync:", "Histories synced successfully")
+            } catch (e: Exception) {
+                Log.e("Histories Sync:", "Failed to sync histories", e)
             }
         }
     }
@@ -74,6 +100,7 @@ data class SyncConfiguration(
             }
         }
     }
+
 
     suspend fun syncUserData() {
         val user = userRepository.getUser().firstOrNull() ?: return

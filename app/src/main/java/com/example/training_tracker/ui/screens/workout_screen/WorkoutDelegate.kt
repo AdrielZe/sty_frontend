@@ -104,7 +104,7 @@ class WorkoutDelegateImpl(
         val updatedExercises = workout.exercises.map { exercise ->
             if (exercise.id == exerciseId) {
                 val maxSetNumber = exercise.exerciseSets.maxOfOrNull { it.set } ?: 0
-                exercise.copy(exerciseSets = exercise.exerciseSets + ExerciseSet(set = maxSetNumber + 1))
+                exercise.copy(exerciseSets = exercise.exerciseSets + ExerciseSet(set = maxSetNumber + 1, exerciseId = UUID.fromString(exerciseId)))
             } else exercise
         }
         val updatedWorkout = workout.copy(exercises = updatedExercises)
@@ -381,6 +381,7 @@ class WorkoutDelegateImpl(
             progress = 1f
         )
 
+        println("USER ID DEBUG HISTORY: ${sessionManager.getUserId()}")
         val newHistoryEntry = generateHistoryEntry(
             workout = workout,
             completionDate = completionDate,
@@ -389,6 +390,7 @@ class WorkoutDelegateImpl(
             duration = duration,
             userId = sessionManager.getUserId()
         )
+
         val historyId = newHistoryEntry.id
 
         onWorkoutFinished(completedWorkout)
@@ -404,6 +406,8 @@ class WorkoutDelegateImpl(
                     cardioRecordsMap = cardioRecords
                 )
             )
+
+            println("USER ID DEBUG HISTORY22222222222: $newHistoryEntryRecords")
 
             workoutHistoryRepository.addWorkoutHistory(newHistoryEntryRecords)
 

@@ -7,7 +7,7 @@ This file gives context to AI assistants working on this codebase.
 ## Project Overview
 
 **Sty** is a native Android workout tracking app built in Kotlin and Jetpack Compose.  
-Single-module, offline-first, no remote backend. All data is persisted locally via Room.
+Single-module, offline-first, with a local backend (Spring Boot, `sty_backend_def`). All data is persisted locally via Room, and synced to the backend.
 
 **Core features:**
 - Create and manage workout routines
@@ -23,7 +23,8 @@ Single-module, offline-first, no remote backend. All data is persisted locally v
 - **Language:** Kotlin
 - **UI:** Jetpack Compose
 - **Architecture:** MVVM + UDF + Repository Pattern
-- **Local DB:** Room (sole data source — no network layer)
+- **Local DB:** Room (primary data source for the UI)
+- **Backend:** Spring Boot (`sty_backend_def`), running locally
 - **DI:** Manual injection via `AppContainer` (no Hilt/Koin)
 - **Navigation:** Single NavHost (`GymTrackerNavHost`)
 - **ML:** TFLite (`TFLiteExerciseClassifier`) for exercise classification
@@ -48,6 +49,17 @@ training_tracker/
 │   │   └── dao/                      # One DAO per entity
 │   ├── models/                       # Room entities + domain models
 │   │   └── extensions/
+│   ├── remote/
+│   │   ├── RetrofitClient.kt         # Retrofit/OkHttp setup
+│   │   ├── auth/                     # AuthApi + login/register request/response DTOs
+│   │   ├── exercise/                 # ExerciseApi + request/response DTOs
+│   │   ├── history/                  # HistoryApi + request/response DTOs
+│   │   ├── user/                     # UserApi + profile/picture/weekly-goal DTOs
+│   │   ├── workout/                  # WorkoutApi + request/response DTOs
+│   │   └── sync/
+│   │       ├── SyncManager.kt        # Orchestrates push of local changes to the API
+│   │       ├── SyncDataWorker.kt     # WorkManager worker that runs periodic/background sync
+│   │       └── SyncConfiguration.kt  # WorkManager scheduling/config for sync
 │   ├── repository/                   # Repository implementations
 │   └── routes/
 │       └── Routes.kt                 # Navigation route definitions
@@ -55,6 +67,13 @@ training_tracker/
 ├── domain/
 │   ├── classifiers/                  # TFLite exercise classifier
 │   └── repository/                   # Repository interfaces (contracts)
+│
+├── session_manager/
+│   ├── SessionManager.kt             # Holds/persists current auth session (token, logged-in user)
+│   └── MainViewModel.kt              # App-level ViewModel (session/auth-driven start destination)
+│
+├── service/
+│   └── WorkoutTimerService.kt        # Foreground service for the active workout timer
 │
 └── ui/
     ├── components/                   # Shared reusable composables
@@ -78,7 +97,7 @@ Composable → ViewModel → Repository → DAO
 
 - Composables observe `UiState` via `collectAsStateWithLifecycle()` and emit events to the ViewModel.
 - ViewModels hold state as `StateFlow<XUiState>` and use `viewModelScope` for all coroutines.
-- Repositories are the single source of truth. They talk to DAOs directly (no network).
+- Repositories are the single source of truth for the UI. They talk to DAOs directly, and orchestrate the sync flow with the backend (see "Offline-First Data Flow" below).
 - Don't use Magic Strings. Whenever you implement a string, always extract the string resource in PT-BR and its translation in EN.
 - No UseCase layer — if a function only delegates to a repository, it stays in the ViewModel.
 - When making changes to the UI, ALWAYS make the changes as responsive as possible, making it fit in most android screen sizes.
@@ -88,6 +107,23 @@ Composable → ViewModel → Repository → DAO
 - ViewModels don't reference `Context` (except `ApplicationContext` via constructor if truly needed)
 - DAOs are never called outside of repository implementations
 - `GlobalScope` is never used
+- The UI never reads data straight from the API. Room is always the source the UI observes.
+
+---
+
+## Offline-First Data Flow (Backend Integration)
+
+The app now has a local backend (`sty_backend_def`, Spring Boot). Even so, the app stays offline-first. The rule is fixed and doesn't change per screen:
+
+**save local -> save api -> consume local**
+
+- Every write goes to Room first. The UI updates immediately from that write.
+- After the local save succeeds, the repository pushes the same change to the API.
+- The UI always reads from Room, never directly from the API response.
+- If the API call fails (no connection, backend down, etc), the local write already happened, so the app keeps working. The failed sync gets retried later.
+- Never build a flow where a screen or ViewModel calls the API directly and renders that response. If a screen needs fresh data, the repository fetches from the API and writes it into Room, then the UI observes Room like normal.
+
+This applies to all repositories from now on, not just new ones. When touching existing repositories, check they follow this pattern before assuming they're fine.
 
 ---
 
@@ -159,7 +195,7 @@ No Hilt, no Koin — keep it simple.
 
 ## Key Design Decisions
 
-- **Offline-first by design** — no network layer is planned; all state lives in Room
+- **Offline-first by design** — Room is the source the UI reads from. The backend exists for sync/persistence, not for the UI to consume directly. See "Offline-First Data Flow" above.
 - **No Hilt** — `AppContainer` is sufficient for this scope; don't add Hilt unless the graph becomes unmanageable
 - **WorkoutDelegate** — `workout_screen` uses a delegate pattern to split ViewModel responsibilities; respect this boundary
 - **TFLite classifier** — lives in `domain/classifiers/`; treat it as a read-only inference utility, not a data source
@@ -174,6 +210,7 @@ No Hilt, no Koin — keep it simple.
 - Storing mutable state in composables that belongs in the ViewModel
 - Using `LiveData` — `StateFlow` is the standard here
 - Speculative features or abstractions not tied to a current requirement
+- Reading data straight from the API anywhere in the app. Always go through Room.
 
 ## Comment Guidelines
 

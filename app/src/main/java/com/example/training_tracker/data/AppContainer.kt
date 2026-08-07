@@ -12,6 +12,7 @@ import com.example.training_tracker.data.models.MuscleGroups
 import com.example.training_tracker.data.remote.RetrofitClient
 import com.example.training_tracker.data.remote.sync.SyncConfiguration
 import com.example.training_tracker.data.remote.auth.AuthApi
+import com.example.training_tracker.data.remote.history.HistoryApi
 import com.example.training_tracker.data.remote.sync.SyncManager
 import com.example.training_tracker.data.remote.user.UserApi
 import com.example.training_tracker.data.remote.workout.WorkoutApi
@@ -46,6 +47,7 @@ interface AppContainer {
     val userDao: UserDao
     val workoutApi: WorkoutApi
     val workoutToDeleteDao: WorkoutToDeleteDao
+    val historyApi: HistoryApi
     val syncConfiguration: SyncConfiguration
 }
 
@@ -66,6 +68,8 @@ class DefaultAppContainer(
 
     override val workoutApi = RetrofitClient.workoutApi
 
+    override val historyApi = RetrofitClient.historyApi
+
     override val userRepository: UserRepository by lazy {
         UserRepositoryImpl(database.userDao(), userApi, sessionManager, syncManager, context)
     }
@@ -82,8 +86,10 @@ class DefaultAppContainer(
             userRepository = userRepository,
             authApi = authApi,
             userApi = userApi,
-            workoutRepository = workoutRepository,
+            historyApi = historyApi,
             workoutApi = workoutApi,
+            workoutRepository = workoutRepository,
+            historyRepository = workoutHistoryRepository,
             workoutToDeleteDao = workoutToDeleteDao,
             userDao = userDao
         )
@@ -110,7 +116,7 @@ class DefaultAppContainer(
     }
 
     override val workoutHistoryRepository: WorkoutHistoryRepository by lazy {
-        WorkoutHistoryImpl(database.workoutHistoryDao())
+        WorkoutHistoryImpl(database.workoutHistoryDao(), historyApi = historyApi, sessionManager = sessionManager, syncManager = syncManager)
     }
 
     override val exerciseClassifier: ExerciseClassifier by lazy {
@@ -1226,13 +1232,15 @@ class DefaultAppContainer(
             val currentExercises = exerciseRepository.exercises.first()
             val currentExercisesByName = currentExercises.associateBy { it.name }
 
+            val exercisesToInsert = mutableListOf<Exercise>()
+
             defaultExercises.forEach { defaultExercise ->
                 val existing = currentExercisesByName[defaultExercise.name]
 
                 when {
                     // Não existe -> insere
                     existing == null -> {
-                        exerciseRepository.addExercise(defaultExercise)
+                        exercisesToInsert.add(defaultExercise)
                     }
                     // Existe mas algum atributo mudou -> atualiza
                     hasChanges(existing, defaultExercise) -> {
@@ -1246,6 +1254,12 @@ class DefaultAppContainer(
                         )
                     }
                 }
+            }
+
+            // insere todos os exercícios novos de uma vez, para que a Flow do Room
+            // emita a lista completa em uma única atualização, em vez de uma por item
+            if (exercisesToInsert.isNotEmpty()) {
+                exerciseRepository.addExercises(exercisesToInsert)
             }
         }
     }

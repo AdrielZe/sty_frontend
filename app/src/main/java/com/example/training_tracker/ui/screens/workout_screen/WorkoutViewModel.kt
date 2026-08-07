@@ -245,7 +245,7 @@ class WorkoutViewModel(
                 },
                 resetWorkout = { historyId ->
                     val resetExercises = currentWorkout.exercises.map { exercise ->
-                        val resetSets = listOf(ExerciseSet(set = 1))
+                        val resetSets = listOf(ExerciseSet(set = 1, exerciseId = UUID.fromString(exercise.id)))
                         exercise.copy(isCompleted = false, exerciseSets = resetSets)
                     }
                     val resetWorkout = currentWorkout.copy(

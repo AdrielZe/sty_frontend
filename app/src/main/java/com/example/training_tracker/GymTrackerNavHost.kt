@@ -132,7 +132,7 @@ fun GymTrackerNavHost(
             FreestyleWorkoutScreen(
                 onBackClick = { navController.popBackStack() },
                 onNavigateToReport = { historyId ->
-                    navController.navigate("${Routes.WorkoutReport.name}/$historyId?fromWorkout=true") {
+                    navController.navigate("${Routes.WorkoutReport.name}/$historyId") {
                         popUpTo("MAIN_TABS") { inclusive = false }
                     }
                 },
@@ -196,7 +196,7 @@ fun GymTrackerNavHost(
 
             LaunchedEffect(navigateToId) {
                 navigateToId?.let { historyId ->
-                    navController.navigate("${Routes.WorkoutReport.name}/$historyId?fromWorkout=true") {
+                    navController.navigate("${Routes.WorkoutReport.name}/$historyId") {
                         popUpTo("MAIN_TABS") { inclusive = false }
                     }
                     workoutViewModel.onNavigatedToReport()
@@ -243,10 +243,9 @@ fun GymTrackerNavHost(
 
         // Full Screen: Workout Report
         composable(
-            route = "${Routes.WorkoutReport.name}/{workoutId}?fromWorkout={fromWorkout}",
+            route = "${Routes.WorkoutReport.name}/{workoutId}",
             arguments = listOf(
-                navArgument("workoutId") { type = NavType.StringType },
-                navArgument("fromWorkout") { type = NavType.BoolType; defaultValue = false }
+                navArgument("workoutId") { type = NavType.StringType }
             )
         ) { backStackEntry ->
             val workoutReportViewModel: WorkoutReportViewModel =

@@ -5,10 +5,10 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Transaction
 import androidx.room.Update
 import com.example.training_tracker.data.models.Exercise
 import kotlinx.coroutines.flow.Flow
-import java.nio.charset.CodingErrorAction.REPLACE
 
 @Dao
 interface ExerciseDao {
@@ -17,6 +17,10 @@ interface ExerciseDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(exercise: Exercise)
+
+    @Transaction
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAll(exercises: List<Exercise>)
 
     @Update
     suspend fun update(exercise: Exercise)

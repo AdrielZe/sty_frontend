@@ -29,6 +29,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.DayOfWeek
+import java.util.UUID
 
 class CreateWorkoutViewModel(
     private val workoutRepository: WorkoutRepository,
@@ -231,7 +232,7 @@ class CreateWorkoutViewModel(
                 val current = exercise.exerciseSets
                 val newSets = when {
                     clamped > current.size -> current + (current.size + 1..clamped).map { n ->
-                        ExerciseSet(set = n)
+                        ExerciseSet(set = n, exerciseId = UUID.fromString(exercise.id))
                     }
                     clamped < current.size -> current.take(clamped)
                     else -> current

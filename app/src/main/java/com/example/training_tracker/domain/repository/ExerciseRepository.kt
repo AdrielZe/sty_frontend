@@ -6,6 +6,7 @@ import kotlinx.coroutines.flow.Flow
 interface ExerciseRepository {
     val exercises : Flow<List<Exercise>>
     suspend fun addExercise(exercise: Exercise)
+    suspend fun addExercises(exercises: List<Exercise>)
     suspend fun updateExercise(exercise: Exercise)
     suspend fun deleteExercise(exercise: Exercise)
 }

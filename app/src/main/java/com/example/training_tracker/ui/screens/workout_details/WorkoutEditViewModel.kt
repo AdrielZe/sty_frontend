@@ -24,6 +24,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import java.util.UUID
 
 class WorkoutEditViewModel(
     private val workoutRepository: WorkoutRepository,
@@ -222,7 +223,7 @@ class WorkoutEditViewModel(
             if (exercise.id != exerciseId) return@map exercise
             val current = exercise.exerciseSets
             val newSets = when {
-                clamped > current.size -> current + (current.size + 1..clamped).map { n -> ExerciseSet(set = n) }
+                clamped > current.size -> current + (current.size + 1..clamped).map { n -> ExerciseSet(set = n, exerciseId = UUID.fromString(exerciseId)) }
                 clamped < current.size -> current.take(clamped)
                 else -> current
             }

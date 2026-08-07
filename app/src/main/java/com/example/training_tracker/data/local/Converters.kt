@@ -17,6 +17,7 @@ import com.google.gson.stream.JsonWriter
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.LocalTime
+import java.util.UUID
 
 class Converters {
     private val gson = com.google.gson.GsonBuilder()
@@ -82,12 +83,16 @@ class Converters {
             it.copy(
                 type = it.type ?: ExerciseType.STRENGTH,
                 // 2. A CORREÇÃO DE OURO: Proteção contra Gson injetando null na lista
-                exerciseSets = it.exerciseSets?.map { set -> sanitizeExerciseSet(set) } ?: emptyList()
+                exerciseSets = it.exerciseSets?.map { set -> sanitizeExerciseSet(set, it.id) } ?: emptyList()
             )
         }
     }
 
-    private fun sanitizeExerciseSet(it: ExerciseSet) = it.copy(
+    // exerciseId e um UUID nao-nulo no Kotlin, mas o Gson usa reflexao e pode
+    // injetar null nesse campo ao desserializar dados antigos, ignorando a
+    // garantia de null-safety. Sem esse fallback, um exerciseId nulo persiste
+    // ate o sync e quebra a constraint NOT NULL no backend.
+    private fun sanitizeExerciseSet(it: ExerciseSet, ownerExerciseId: String? = null) = it.copy(
         reps = it.reps ?: "",
         weight = it.weight ?: "",
         previousReps = it.previousReps ?: "",
@@ -98,7 +103,8 @@ class Converters {
         previousDistance = it.previousDistance ?: "",
         technique = it.technique ?: Technique.NORMAL,
         targetReps = it.targetReps ?: "",
-        targetWeight = it.targetWeight ?: ""
+        targetWeight = it.targetWeight ?: "",
+        exerciseId = it.exerciseId ?: ownerExerciseId?.let { id -> UUID.fromString(id) } ?: it.exerciseId
     )
 
     @TypeConverter

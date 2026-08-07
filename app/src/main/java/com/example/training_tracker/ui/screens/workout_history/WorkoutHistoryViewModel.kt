@@ -61,6 +61,7 @@ class WorkoutHistoryViewModel(
         val currentMonth = args[5] as LocalDate
         val page = args[6] as Int
 
+        println("FETCHED HISTORIES IN PAGE: $history")
         val filteredList = history.filter { workout ->
             val matchesQuery = workout.name.contains(query, ignoreCase = true)
             val matchesDate = selectedDate == null || workout.completionDate == selectedDate

@@ -28,6 +28,10 @@ android {
             // Isso fará o ID virar "com.seunome.seuapp.debug"
             applicationIdSuffix = ".debug"
             versionNameSuffix = "-DEV"
+            // IP local da maquina rodando o backend na rede Wi-Fi.
+            // 10.0.2.2 so funciona no emulador; num dispositivo fisico use o IP
+            // real da maquina (ex: ipconfig / ifconfig), com celular e PC na mesma rede.
+            buildConfigField("String", "BASE_URL", "\"http://192.168.0.107:8080/\"")
         }
         release {
             isMinifyEnabled = false
@@ -35,6 +39,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            buildConfigField("String", "BASE_URL", "\"http://192.168.0.107:8080/\"")
         }
     }
     compileOptions {
@@ -47,6 +52,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 

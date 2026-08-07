@@ -19,7 +19,7 @@ data class Exercise (
     @ColumnInfo(name = "time") val time: String ?= null, // Adicionado --> MIGRAÇÃO DB
     @ColumnInfo(name = "distance") val distance: String ?= null, // Adicionado --> MIGRAÇÃO DB
     @ColumnInfo(name = "muscleGroup") val muscleGroup: MuscleGroups? = null,
-    @ColumnInfo(name = "exerciseSets") val exerciseSets: List<ExerciseSet> = listOf(ExerciseSet(1, "", "")),
+    @ColumnInfo(name = "exerciseSets") val exerciseSets: List<ExerciseSet> = emptyList(),
     @ColumnInfo(name = "isDefault") val isDefault: Boolean = false,
     @ColumnInfo(name = "isCompleted") val isCompleted: Boolean = false,
     @ColumnInfo(name = "setsCompleted") val setsCompleted: Int = 1,

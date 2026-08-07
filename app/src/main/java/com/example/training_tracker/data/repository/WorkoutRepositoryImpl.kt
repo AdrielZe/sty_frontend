@@ -39,6 +39,7 @@ class WorkoutRepositoryImpl(
     override suspend fun addWorkout(workout: Workout) {
         val isLoggedIn = sessionManager.isLoggedIn.first()
         workoutDao.insert(workout)
+        println("workout offline $workout")
 
         if (isLoggedIn) {
             try {
