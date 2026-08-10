@@ -1,107 +1,289 @@
 package com.example.training_tracker.ui.screens.register_screen
 
 import android.widget.Toast
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Mail
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.training_tracker.R
+import com.example.training_tracker.ui.theme.AppTheme
 
 @Composable
 fun RegisterScreen(
     viewModel: RegisterViewModel,
-    onNavigateToLogin: () -> Unit
+    onNavigateToLogin: () -> Unit,
+    onClickGoogleLoginButton: () -> Unit = {},
+    onClickForgotMyPasswordButton: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val isDark = isSystemInDarkTheme()
+
+    var isPasswordVisible by remember { mutableStateOf(false) }
+
+    val bgBrush = Brush.verticalGradient(
+        colors = if (isDark) {
+            listOf(Color(0xFF131319), Color(0xFF0C0C11))
+        } else {
+            listOf(Color(0xFFFDFDFD), Color(0xFFF5F5FA))
+        }
+    )
+    val fieldContainerColor = if (isDark) Color(0xFF1F1F29) else Color(0xFFF0F4F8)
+    val textMain = if (isDark) Color(0xFFECECF3) else Color(0xFF1A1A2E)
+    val textDim = if (isDark) Color(0xFF9A9AAA) else Color(0xFF55556A)
 
     LaunchedEffect(uiState.isRegisterSuccessful) {
         if (uiState.isRegisterSuccessful) {
             Toast.makeText(context, "Conta criada com sucesso! Faça login.", Toast.LENGTH_LONG).show()
-
             onNavigateToLogin()
-
             viewModel.onRegisterHandled()
         }
     }
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+            .background(bgBrush)
     ) {
-        Text(
-            text = "Criar Conta",
-            style = MaterialTheme.typography.headlineMedium,
-            modifier = Modifier.padding(bottom = 32.dp)
-        )
-
-        OutlinedTextField(
-            value = uiState.email,
-            onValueChange = viewModel::onEmailChanged,
-            label = { Text("E-mail") },
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Email,
-                imeAction = ImeAction.Next
-            ),
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        OutlinedTextField(
-            value = uiState.password,
-            onValueChange = viewModel::onPasswordChanged,
-            label = { Text("Senha") },
-            visualTransformation = PasswordVisualTransformation(),
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Password,
-                imeAction = ImeAction.Done
-            ),
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        if (uiState.errorMessage != null) {
-            Text(
-                text = uiState.errorMessage!!,
-                color = MaterialTheme.colorScheme.error,
-                style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.align(Alignment.Start)
-            )
-        } else {
-            Spacer(modifier = Modifier.height(16.dp)) // Mantém o layout estável
-        }
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        Button(
-            onClick = viewModel::onRegisterClick,
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .height(50.dp),
-            enabled = !uiState.isLoading
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 24.dp)
+                .padding(vertical = 24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
-            if (uiState.isLoading) {
-                CircularProgressIndicator(
-                    color = MaterialTheme.colorScheme.onPrimary,
-                    modifier = Modifier.size(24.dp),
-                    strokeWidth = 2.dp
+            // === App logo =========================================================
+            Box(
+                modifier = Modifier
+                    .size(84.dp)
+                    .shadow(elevation = 16.dp, shape = CircleShape, spotColor = AppTheme.accent.light)
+                    .clip(CircleShape)
+                    .background(AppTheme.accent.light.copy(alpha = 0.14f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Image(
+                    painter = painterResource(id = R.mipmap.ic_launcher_foreground),
+                    contentDescription = null,
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier
+                        .size(58.dp)
+                        .clip(CircleShape)
                 )
-            } else {
-                Text("Registrar")
+            }
+
+            Spacer(Modifier.height(20.dp))
+
+            Text(
+                text = "Crie sua conta",
+                color = textMain,
+                fontWeight = FontWeight.Black,
+                fontSize = 26.sp,
+                textAlign = TextAlign.Center
+            )
+            Spacer(Modifier.height(6.dp))
+            Text(
+                text = "Comece a acompanhar sua evolução hoje",
+                color = textDim,
+                fontSize = 13.sp,
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(Modifier.height(32.dp))
+
+            // === Email field =======================================================
+            OutlinedTextField(
+                value = uiState.email,
+                onValueChange = viewModel::onEmailChanged,
+                label = { Text("E-mail") },
+                leadingIcon = { Icon(Icons.Default.Mail, contentDescription = null) },
+                singleLine = true,
+                shape = RoundedCornerShape(16.dp),
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Email,
+                    imeAction = ImeAction.Next
+                ),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedContainerColor = fieldContainerColor,
+                    unfocusedContainerColor = fieldContainerColor,
+                    focusedBorderColor = AppTheme.accent.light,
+                    unfocusedBorderColor = Color.Transparent
+                ),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(Modifier.height(14.dp))
+
+            // === Password field =====================================================
+            OutlinedTextField(
+                value = uiState.password,
+                onValueChange = viewModel::onPasswordChanged,
+                label = { Text("Senha") },
+                leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null) },
+                trailingIcon = {
+                    IconButton(onClick = { isPasswordVisible = !isPasswordVisible }) {
+                        Icon(
+                            imageVector = if (isPasswordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                            contentDescription = null
+                        )
+                    }
+                },
+                visualTransformation = if (isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                singleLine = true,
+                shape = RoundedCornerShape(16.dp),
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Password,
+                    imeAction = ImeAction.Done
+                ),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedContainerColor = fieldContainerColor,
+                    unfocusedContainerColor = fieldContainerColor,
+                    focusedBorderColor = AppTheme.accent.light,
+                    unfocusedBorderColor = Color.Transparent
+                ),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(Modifier.height(6.dp))
+
+            // === Forgot password ====================================================
+            Text(
+                text = "Esqueci minha senha",
+                color = AppTheme.accent.light,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 13.sp,
+                modifier = Modifier
+                    .align(Alignment.End)
+                    .clickable { onClickForgotMyPasswordButton() }
+                    .padding(top = 4.dp)
+            )
+
+            if (uiState.errorMessage != null) {
+                Spacer(Modifier.height(10.dp))
+                Text(
+                    text = uiState.errorMessage!!,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.align(Alignment.Start)
+                )
+            }
+
+            Spacer(Modifier.height(20.dp))
+
+            // === Register button =====================================================
+            Button(
+                onClick = viewModel::onRegisterClick,
+                enabled = !uiState.isLoading,
+                shape = RoundedCornerShape(16.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = AppTheme.accent.light,
+                    contentColor = Color(0xFF08131E)
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp)
+            ) {
+                if (uiState.isLoading) {
+                    CircularProgressIndicator(
+                        color = Color(0xFF08131E),
+                        modifier = Modifier.size(22.dp),
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Text("Registrar", fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                }
+            }
+
+            Spacer(Modifier.height(20.dp))
+
+            // === Divider "ou" =========================================================
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                HorizontalDivider(modifier = Modifier.weight(1f), color = textDim.copy(alpha = 0.25f))
+                Text(
+                    text = "ou",
+                    color = textDim,
+                    fontSize = 12.sp,
+                    modifier = Modifier.padding(horizontal = 12.dp)
+                )
+                HorizontalDivider(modifier = Modifier.weight(1f), color = textDim.copy(alpha = 0.25f))
+            }
+
+            Spacer(Modifier.height(20.dp))
+
+            // === Google login button ==================================================
+            OutlinedButton(
+                onClick = onClickGoogleLoginButton,
+                shape = RoundedCornerShape(16.dp),
+                border = androidx.compose.foundation.BorderStroke(1.dp, textDim.copy(alpha = 0.25f)),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = textMain),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp)
+            ) {
+                Text(
+                    text = "G",
+                    color = Color(0xFF4285F4),
+                    fontWeight = FontWeight.Black,
+                    fontSize = 18.sp
+                )
+                Spacer(Modifier.width(10.dp))
+                Text(
+                    text = "Continuar com Google",
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 14.sp
+                )
+            }
+
+            Spacer(Modifier.height(24.dp))
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = "Já tem uma conta? ",
+                    color = textDim,
+                    fontSize = 13.sp
+                )
+                Text(
+                    text = "Faça login",
+                    color = AppTheme.accent.light,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 13.sp,
+                    modifier = Modifier.clickable { onNavigateToLogin() }
+                )
             }
         }
     }

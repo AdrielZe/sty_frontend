@@ -102,6 +102,17 @@ fun GymTrackerNavHost(
                     navController.navigate("MAIN_TABS") {
                         popUpTo("LOGIN") { inclusive = true }
                     }
+                },
+                onNavigateToRegister = {
+                    navController.navigate(Routes.Register.name) {
+                        popUpTo("LOGIN") { inclusive = true }
+                    }
+                },
+                onClickGoogleLoginButton = {
+                    // TODO: wire up Google sign-in flow
+                },
+                onClickForgotMyPasswordButton = {
+                    // TODO: wire up forgot-password flow
                 }
             )
         }
@@ -114,6 +125,12 @@ fun GymTrackerNavHost(
                     navController.navigate("LOGIN") {
                         popUpTo(Routes.Register.name) { inclusive = true }
                     }
+                },
+                onClickGoogleLoginButton = {
+                    // TODO: wire up Google sign-in flow
+                },
+                onClickForgotMyPasswordButton = {
+                    // TODO: wire up forgot-password flow
                 }
             )
         }

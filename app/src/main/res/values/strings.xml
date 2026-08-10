@@ -57,6 +57,10 @@
     <string name="content_description_history">Histórico</string>
     <string name="home_bottom_bar_history">Histórico</string>
     <string name="home_browse_workouts"> Ver seus treinos</string>
+    <string name="home_guest_banner_message">Registre-se para salvar o seu progresso — é rápido e vale muito a pena.</string>
+    <string name="home_guest_banner_register_action">Registre-se</string>
+    <string name="home_guest_banner_login_message">Já tem uma conta? Faça login!</string>
+    <string name="home_guest_banner_login_action">Faça login!</string>
     <string name="error">Ocorreu um erro inesperado</string>
 
 

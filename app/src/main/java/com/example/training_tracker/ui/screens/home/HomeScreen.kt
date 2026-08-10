@@ -500,6 +500,14 @@ private fun GreetingBlock(
     isUserLoggedIn: Boolean
 ) {
     Column(modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp)) {
+        if (!isUserLoggedIn) {
+            GuestBanner(
+                onLoginClick = onLoginClick,
+                onRegisterClick = onRegisterClick
+            )
+            Spacer(Modifier.height(12.dp))
+        }
+
         if (!dateLine.isNullOrBlank()) {
             Text(
                 text = dateLine.uppercase(Locale.getDefault()),
@@ -526,46 +534,54 @@ private fun GreetingBlock(
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
+    }
+}
 
-        if (!isUserLoggedIn) {
-            Text(
-                text = buildAnnotatedString {
-                    append("Já tem conta?")
-                    withStyle(SpanStyle(color = AppTheme.accent.light)) { append("Faça login!") }
-                    append(".")
-                },
-                modifier = Modifier
-                    .padding(top = 4.dp)
-                    .clickable { onLoginClick() },
-                color = Sty.TextMain,
-                fontFamily = com.example.training_tracker.ui.theme.Montserrat,
-                fontWeight = FontWeight.Black,
-                fontSize = 30.sp,
-                letterSpacing = (-0.5).sp,
-                lineHeight = 33.sp,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-
-            Text(
-                text = buildAnnotatedString {
-                    append("Não tem conta? ")
-                    withStyle(SpanStyle(color = AppTheme.accent.light)) { append("Registre-se") }
-                    append(".")
-                },
-                modifier = Modifier
-                    .padding(top = 4.dp)
-                    .clickable { onRegisterClick() },
-                color = Sty.OnAccent,
-                fontFamily = com.example.training_tracker.ui.theme.Montserrat,
-                fontWeight = FontWeight.Black,
-                fontSize = 30.sp,
-                letterSpacing = (-0.5).sp,
-                lineHeight = 33.sp,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-        }
+// =============================================================================
+// === Guest banner — soft prompt to sign up / log in                       ===
+// =============================================================================
+@Composable
+private fun GuestBanner(
+    onLoginClick: () -> Unit,
+    onRegisterClick: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(AppTheme.accent.light.copy(alpha = 0.12f))
+            .padding(horizontal = 16.dp, vertical = 12.dp)
+    ) {
+        Text(
+            text = buildAnnotatedString {
+                append(stringResource(R.string.home_guest_banner_message).substringBefore(stringResource(R.string.home_guest_banner_register_action)))
+                withStyle(SpanStyle(color = AppTheme.accent.light, fontWeight = FontWeight.Bold)) {
+                    append(stringResource(R.string.home_guest_banner_register_action))
+                }
+                append(stringResource(R.string.home_guest_banner_message).substringAfter(stringResource(R.string.home_guest_banner_register_action)))
+            },
+            modifier = Modifier.clickable { onRegisterClick() },
+            color = Sty.TextMain,
+            fontFamily = com.example.training_tracker.ui.theme.Montserrat,
+            fontWeight = FontWeight.Medium,
+            fontSize = 13.sp,
+            lineHeight = 18.sp
+        )
+        Spacer(Modifier.height(6.dp))
+        Text(
+            text = buildAnnotatedString {
+                append(stringResource(R.string.home_guest_banner_login_message).substringBefore(stringResource(R.string.home_guest_banner_login_action)))
+                withStyle(SpanStyle(color = AppTheme.accent.light, fontWeight = FontWeight.Bold)) {
+                    append(stringResource(R.string.home_guest_banner_login_action))
+                }
+            },
+            modifier = Modifier.clickable { onLoginClick() },
+            color = Sty.TextDim,
+            fontFamily = com.example.training_tracker.ui.theme.Montserrat,
+            fontWeight = FontWeight.Medium,
+            fontSize = 12.sp,
+            lineHeight = 16.sp
+        )
     }
 }
 
