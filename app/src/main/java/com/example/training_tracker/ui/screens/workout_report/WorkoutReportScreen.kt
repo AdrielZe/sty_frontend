@@ -588,25 +588,23 @@ private fun HeroBlock(
             maxLines = 2,
             overflow = TextOverflow.Ellipsis
         )
-        if (subtitle.isNotBlank()) {
-            Spacer(Modifier.height(4.dp))
-            val dateLabel = remember(completedAt) {
-                val months = listOf("JAN","FEV","MAR","ABR","MAI","JUN","JUL","AGO","SET","OUT","NOV","DEZ")
-                "%d %s · %02d:%02d".format(
-                    completedAt.dayOfMonth,
-                    months[completedAt.monthValue - 1],
-                    completedAt.hour,
-                    completedAt.minute
-                )
-            }
-            Text(
-                "$subtitle · $dateLabel",
-                color = RepSty.TextDim,
-                fontSize = 12.sp,
-                letterSpacing = 0.2.sp,
-                textAlign = TextAlign.Center
+        Spacer(Modifier.height(4.dp))
+        val dateLabel = remember(completedAt) {
+            val months = listOf("JAN","FEV","MAR","ABR","MAI","JUN","JUL","AGO","SET","OUT","NOV","DEZ")
+            "%d %s · %02d:%02d".format(
+                completedAt.dayOfMonth,
+                months[completedAt.monthValue - 1],
+                completedAt.hour,
+                completedAt.minute
             )
         }
+        Text(
+            if (subtitle.isNotBlank()) "$subtitle · $dateLabel" else dateLabel,
+            color = RepSty.TextDim,
+            fontSize = 12.sp,
+            letterSpacing = 0.2.sp,
+            textAlign = TextAlign.Center
+        )
 
         Spacer(Modifier.height(16.dp))
 

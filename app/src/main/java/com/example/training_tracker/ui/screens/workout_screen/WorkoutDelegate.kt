@@ -355,11 +355,17 @@ class WorkoutDelegateImpl(
         sessionManager: SessionManager
     ) {
         val completedExercises = workout.exercises.map { exercise ->
+            // history exercises get their own id, distinct from the workout's
+            // exercise id: the backend keys "exercises" by a single shared id
+            // tied to either a workout or a history, so reusing the workout's
+            // exercise id here lets a later workout sync reclaim this row and
+            // wipe out the completed sets
+            val historyExerciseId = java.util.UUID.randomUUID().toString()
             val completedSets = exercise.exerciseSets.map { set ->
-                set.copy(isCompleted = true)
+                set.copy(isCompleted = true, exerciseId = UUID.fromString(historyExerciseId))
             }
             exercise.copy(
-                isCompleted = true, exerciseSets = completedSets
+                id = historyExerciseId, isCompleted = true, exerciseSets = completedSets
             )
         }
 

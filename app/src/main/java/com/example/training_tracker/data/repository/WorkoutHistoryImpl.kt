@@ -39,8 +39,10 @@ class WorkoutHistoryImpl(
 
                     val histories = historyResponse.histories
 
-                    val syncedHistories = histories.map { it.copy(exercises = it.exercises ?: emptyList(), isSynced = true) }
+                    val syncedHistories = histories.map { it.copy(isSynced = true) }
+
                     workoutHistoryDao.insertOrUpdateAll(syncedHistories)
+                    Log.d("Histories get", "Histories fetched successfully: $syncedHistories")
                 } catch (e: Exception) {
                     Log.e("Histories repo", "Unable to fetch history from API", e)
                 }

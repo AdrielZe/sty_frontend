@@ -48,6 +48,9 @@ interface WorkoutHistoryDao {
     @Query("SELECT * FROM workoutHistories WHERE isCompleted = 1 ORDER BY completionDate DESC, completionTime DESC")
     fun getCompletedWorkoutHistories(): Flow<List<WorkoutHistory>>
 
-    @Query("SELECT * FROM workoutHistories WHERE isSynced = 0")
+    // drafts (isCompleted = 0) are local-only autosaves and must never be
+    // pushed by the background sync, or they can overwrite an already
+    // completed history on the backend with a stale in-progress snapshot
+    @Query("SELECT * FROM workoutHistories WHERE isSynced = 0 AND isCompleted = 1")
     suspend fun getAllNotSyncedHistories(): List<WorkoutHistory>
 }
